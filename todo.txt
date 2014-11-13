@@ -1,0 +1,8 @@
+TODO
+=====
+
+Agent
+------
+Should agents mutate? If so, how does that work with species processors?
+The agent has to store their need values anyways, so that's where the
+mutations will be stored.
