@@ -9,6 +9,9 @@ NeedProcessor::NeedProcessor(eptFile* spec)
     defaultNeed.needID = attrToInt(defaultNeedVars->getAttribute("needID"));
     defaultNeed.fulfilledThreshold = (unsigned char)attrToInt(defaultNeedVars->getAttribute("fulfilledThreshold"));
 }
+NeedProcessor::~NeedProcessor()
+{
+}
 int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* currentTime)
 {
     std::cout << (int) currentNeed->currentValue << "\n";

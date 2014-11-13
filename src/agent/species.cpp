@@ -3,6 +3,7 @@
 #include <iostream>
 #include "species.hpp"
 
+//TODO: Replace needProcessorDir with a class?
 Species::Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProcessorDir)
 {
     eptGroup* vitalNeedsGroup = spec->getGroup("vitalNeeds");
@@ -27,7 +28,21 @@ Species::Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProce
         nonvitalNeedProcessors.push_back((*needProcessorDir)[nonvitalNeedsGroup->getAttributeFromIndex(i, attrName)]);
     }
 }
-int Species::updateAgent(Agent* agent, Time* currentTime)
+Species::~Species()
+{
+    /*//Get rid of all unneccessary needProcessors
+    for (std::vector<NeedProcessor*>::iterator it = vitalNeedProcessors.begin();
+        it != vitalNeedProcessors.end(); ++it)
+    {
+        delete (*it);
+    }
+    for (std::vector<NeedProcessor*>::iterator it = nonvitalNeedProcessors.begin();
+        it != nonvitalNeedProcessors.end(); ++it)
+    {
+        delete (*it);
+    }*/ //NeedProcessors are taken from a directory, so they don't need deletion here
+}
+int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* processDir)
 {
     //Find the lowest need and process that one
     unsigned char minVitalValue = 255;
@@ -65,7 +80,15 @@ int Species::updateAgent(Agent* agent, Time* currentTime)
         if (agent->processChainVitalNeedID != minVitalIndex ||
         agent->processChainVitalNeedID==-1)
         {
-            //TODO search for suitable process chain
+            int needID = agent->vitalNeeds[minVitalIndex].needID;
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->vitalNeeds[minVitalIndex], needID);
+            if (optimalChain)
+            {
+                agent->currentProcessChain = optimalChain;
+                agent->currentProcessIndex = 0;
+                agent->processChainVitalNeedID = minVitalIndex;
+                agent->processChainNonvitalNeedID = -1;
+            }
         }
         //Otherwise, continue on the current process (or give time for
         //nonvital processes)
@@ -78,14 +101,31 @@ int Species::updateAgent(Agent* agent, Time* currentTime)
         //to prevent nonvital thrashing
         if (agent->processChainNonvitalNeedID==-1)
         {
-            //TODO search for suitable process chain
+            int needID = agent->nonvitalNeeds[minNonvitalIndex].needID;
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->nonvitalNeeds[minNonvitalIndex], needID);
+            if (optimalChain)
+            {
+                agent->currentProcessChain = optimalChain;
+                agent->currentProcessIndex = 0;
+                agent->processChainVitalNeedID = minVitalIndex;
+                agent->processChainNonvitalNeedID = -1;
+            }
         }
         //Else continue with the current process
     }
     //Update the current process chain
     if (agent->currentProcessIndex!=-1)
     {
-        (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, currentTime);
+        //TODO: Replace NULL with need
+        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, NULL, currentTime);
+        if (result==1) agent->currentProcessIndex++; //Move to next process in chain
+        if (result==-1 || (unsigned int) agent->currentProcessIndex >= agent->currentProcessChain->size()) //Process chain finished
+        {
+            agent->currentProcessIndex=-1;
+            agent->processChainNonvitalNeedID=-1;
+            agent->processChainVitalNeedID=-1;
+            agent->currentProcessChain=NULL;
+        }
     }
     //Else idle (no needs need processing)
     

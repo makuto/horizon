@@ -6,6 +6,7 @@
 #include "agent.hpp"
 #include "needProcessor.hpp"
 #include "../world/time.hpp"
+#include "processDirectory.hpp"
 /* --Species--
  * Species abstracts the processing of agents of that species
  * Agents contain only their own data, so species must provide
@@ -18,6 +19,7 @@ class Species
 {
     private:
         //These exactly line up with vital needs in the agent
+        //They are pointers to NeedProcessors in needProcessDir
         std::vector<NeedProcessor*> vitalNeedProcessors;
         std::vector<NeedProcessor*> nonvitalNeedProcessors;
         int numVitalNeeds;
@@ -25,8 +27,9 @@ class Species
     public:
         int speciesID;
         Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProcessorDir);
+        ~Species();
         //updateAgent returns -1 if the agent should die
-        int updateAgent(Agent* agent, Time* currentTime);
+        int updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* processDir);
         Agent* createAgent();
 };
 #endif

@@ -26,16 +26,20 @@
  * */
 class Agent;
 class Process;
+//TODO: Should ProcessChain be its own class?
 typedef std::vector<Process*> ProcessChain;
 
 class Process
 {
     public:
+        virtual ~Process();
+        //TODO: Is need needed? (UPDATE: Yes, so generic search processes
+        //etc. know what to look for
         virtual int getDifficulty(Agent* agent, Need* need);
         virtual unsigned char getValue(Agent* agent, Need* need);
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately
-        virtual int update(Agent* agent, Time* currentTime);
+        virtual int update(Agent* agent, Need* need, Time* currentTime);
 };
 #endif
