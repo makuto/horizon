@@ -6,3 +6,6 @@ Agent
 Should agents mutate? If so, how does that work with species processors?
 The agent has to store their need values anyways, so that's where the
 mutations will be stored.
+
+NeedProcessors might need additional data from the agent - should Need
+hold a void* array or something to allow for any additional data?

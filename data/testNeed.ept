@@ -1,0 +1,6 @@
+<need.1>
+
+defaults:
+    currentValue=255;
+    needID=1;
+    fulfilledThreshold=200;
