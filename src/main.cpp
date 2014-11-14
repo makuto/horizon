@@ -22,7 +22,7 @@ int main()
     processMap.addProcess("useItem", new Process);
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     Agent* testAgent = testSpecies.createAgent();
-    for (int i = 0; i < 150; ++i)
+    for (int i = 0; i < 15; ++i)
     {
         testSpecies.updateAgent(testAgent, new Time, &processDir);
     }

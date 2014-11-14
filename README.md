@@ -15,3 +15,10 @@ Interested?
 -----------
 
 This is a really large undertaking, so I'd love collaborators. Message me or email me at macoymadson@gmail.com.
+
+DEPENDENCIES
+-------------
+[Base 2.0](https://github.com/makuto/personal/tree/master/gameDev/resources/base2.0)
+[SFML 2](http://sfml-dev.org/download/sfml/2.1/)
+
+Make, G++
