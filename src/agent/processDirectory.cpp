@@ -61,7 +61,16 @@ ProcessDirectory::ProcessDirectory(eptParser* parser, eptFile* needFileListing, 
 }
 ProcessDirectory::~ProcessDirectory()
 {
-    
+    for (std::map<int, std::vector<ProcessChain*>* >::iterator it=directory.begin(); it!=directory.end(); it++)
+    { //Loop through map
+        for (std::vector<ProcessChain*>::iterator pIt = it->second->begin(); pIt != it->second->end(); pIt++)
+        { //Loop through vector
+            //Delete ProcessChain
+            delete (*pIt);
+        }
+        //Delete vector
+        delete it->second;
+    }
 }
 std::vector<ProcessChain*>* ProcessDirectory::getNeedListings(int needID)
 {
@@ -69,7 +78,7 @@ std::vector<ProcessChain*>* ProcessDirectory::getNeedListings(int needID)
 	if (it==directory.end()) return NULL;
 	else return it->second;
 }
-ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need, std::vector<ProcessChain*>* listing)
+ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need, std::vector<ProcessChain*>* listing, int& difficulty)
 {
     int minimumDifficulty = MAX_DIFFICULTY;
     ProcessChain* currentBestChain = NULL;
@@ -95,13 +104,13 @@ ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need
             minimumDifficulty = totalDifficulty;
         }
     }
-    std::cout << "Best chain has difficulty of " << minimumDifficulty << "\n";
+    difficulty = minimumDifficulty;
     return currentBestChain;
 }
-ProcessChain* ProcessDirectory::getOptimalChain(Agent* agent, Need* need, int needID)
+ProcessChain* ProcessDirectory::getOptimalChain(Agent* agent, Need* need, int needID, int& difficulty)
 {
     std::vector<ProcessChain*>* listings = getNeedListings(needID);
     if (!listings) return NULL;
-    return getLeastDifficultyChain(agent, need, listings);
+    return getLeastDifficultyChain(agent, need, listings, difficulty);
 }
 #endif

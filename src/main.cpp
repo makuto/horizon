@@ -23,8 +23,9 @@ int main()
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     testSpecies.updateAgent(testSpecies.createAgent(), new Time, &processDir);
     Agent testAgent;
-    ProcessChain* testChain = processDir.getOptimalChain(&testAgent, NULL, 1);
-    if (testChain==NULL) std::cout << "No optimal chain found\n";
+    int difficulty;
+    ProcessChain* testChain = processDir.getOptimalChain(&testAgent, NULL, 1, difficulty);
+    std::cout << "Difficulty: " << difficulty << "\n";
     testAgent.currentProcessChain = new ProcessChain;
     testAgent.currentProcessChain->push_back(new Process);
     (*testAgent.currentProcessChain)[0]->update(&testAgent, NULL, NULL);

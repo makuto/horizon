@@ -81,7 +81,8 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
         agent->processChainVitalNeedID==-1)
         {
             int needID = agent->vitalNeeds[minVitalIndex].needID;
-            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->vitalNeeds[minVitalIndex], needID);
+            int difficulty;
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->vitalNeeds[minVitalIndex], needID, difficulty);
             if (optimalChain)
             {
                 agent->currentProcessChain = optimalChain;
@@ -102,7 +103,8 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
         if (agent->processChainNonvitalNeedID==-1)
         {
             int needID = agent->nonvitalNeeds[minNonvitalIndex].needID;
-            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->nonvitalNeeds[minNonvitalIndex], needID);
+            int difficulty;
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->nonvitalNeeds[minNonvitalIndex], needID, difficulty);
             if (optimalChain)
             {
                 agent->currentProcessChain = optimalChain;
