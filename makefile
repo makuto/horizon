@@ -3,12 +3,15 @@ EXECUTABLE_NAME= LOCAL_horizon
 OBJ_DIR= LOCAL_obj
 LINK= g++ -Wall -o "$(EXECUTABLE_NAME)" 
 LINKLIBS= -lbase2.0 -lsfml-graphics -lsfml-window -lsfml-system
-horizon: $(OBJ_DIR)/time.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
+horizon: $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
 	@echo -----------Linking horizon-------------------------
 	mv *.o $(OBJ_DIR)
-	(cd $(OBJ_DIR) && $(LINK) needMath.o time.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
+	(cd $(OBJ_DIR) && $(LINK) coord.o time.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
 
+$(OBJ_DIR)/coord.o: src/world/coord.hpp src/world/coord.cpp
+	$(FLAGS) src/world/coord.hpp
+	$(FLAGS) src/world/coord.cpp
 $(OBJ_DIR)/time.o: src/world/time.hpp src/world/time.cpp
 	$(FLAGS) src/world/time.hpp
 	$(FLAGS) src/world/time.cpp
@@ -40,5 +43,5 @@ $(OBJ_DIR)/main.o: src/main.cpp
 	$(FLAGS) src/main.cpp
 clean:
 	rm -f $(OBJ_DIR)/*.o
-	rm -f *.gch
+	rm -f -r *.gch
 	rm -f LOCAL_horizon

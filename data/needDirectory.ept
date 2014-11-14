@@ -5,6 +5,6 @@
     //Critical for finding spec and chain files
     //Spec is named like so: <{id}_spec.{version}>
     id=1;
-    spec=data/need1.ept;
+    spec=data/testNeed.ept;
     //Chains is named like so: <{id}_chains.{version}>
     chains=data/testChain.ept;

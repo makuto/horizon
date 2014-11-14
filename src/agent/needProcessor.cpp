@@ -13,10 +13,12 @@ NeedProcessor::NeedProcessor(eptFile* spec)
 NeedProcessor::~NeedProcessor()
 {
 }
-int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* currentTime)
+int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime)
 {
     std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
-    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
+    std::cout << "dTime: " << deltaTime->seconds << " seconds, " << deltaTime->milliseconds << " ms\n";
+    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
+    agent->worldPosition.addVector(0, 10);
     return 1;
 }
 void NeedProcessor::initNeed(Need* currentNeed)

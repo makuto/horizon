@@ -21,7 +21,7 @@ class NeedProcessor
 
         NeedProcessor(eptFile* spec);
         virtual ~NeedProcessor();
-        virtual int updateNeed(Agent* agent, Need* currentNeed, Time* currentTime);
+        virtual int updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime);
         //Sets the passed need's fields to defaults (specified by defaultNeed)
         void initNeed(Need* currentNeed);
 };

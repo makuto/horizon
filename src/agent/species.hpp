@@ -29,7 +29,9 @@ class Species
         Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProcessorDir);
         ~Species();
         //updateAgent returns -1 if the agent should die
-        int updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* processDir);
+        //Pass in the difference in time since the last agent update
+        //TODO: Should agents store lastUpdate time?
+        int updateAgent(Agent* agent, Time* deltaTime, ProcessDirectory* processDir);
         Agent* createAgent();
 };
 #endif

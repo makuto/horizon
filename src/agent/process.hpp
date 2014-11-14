@@ -40,6 +40,6 @@ class Process
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately
-        virtual int update(Agent* agent, Need* need, Time* currentTime);
+        virtual int update(Agent* agent, Need* need, Time* deltaTime);
 };
 #endif
