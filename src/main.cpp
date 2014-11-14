@@ -72,13 +72,14 @@ int main()
         globalTime.reset();
         globalTime.addMilliseconds(worldTime.getTime());
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
-        deltaTime.invert();
-        if (deltaTime.seconds>=1)
+        //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
+        //previousUpdate = globalTime;
+        if (deltaTime.milliseconds>=0.1 || deltaTime.seconds!=0)
         {
-            testSpecies.updateAgent(testAgent, &deltaTime, &processDir);
+            testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             previousUpdate = globalTime;
-            previousUpdate.print();
-            globalTime.print();
+            /*previousUpdate.print();
+            globalTime.print();*/
         }
     }
     /*Agent testAgent;

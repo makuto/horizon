@@ -3,14 +3,15 @@
 class Time
 {
     public:
-        unsigned int years;
-        unsigned int days;
-        unsigned int seconds;
+        int years;
+        int days;
+        int seconds;
         float milliseconds;
 
         Time();
         void addMilliseconds(float msToAdd);
         void getDeltaTime(Time* timeToCompare, Time& deltaTime);
+        bool isGreaterThan(Time* timeToCompare);
         void invert();
         void print();
         void reset();

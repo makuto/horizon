@@ -42,8 +42,9 @@ Species::~Species()
         delete (*it);
     }*/ //NeedProcessors are taken from a directory, so they don't need deletion here
 }
-int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* processDir)
+int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, ProcessDirectory* processDir)
 {
+    std::cout << "---------------Updating agent " << agent->id << "\n";
     //Find the lowest need and process that one
     unsigned char minVitalValue = 255;
     unsigned char minNonvitalValue = 255;
@@ -53,7 +54,17 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
     //Update vital needs; watch for lowest need currentValue
     for (int i = 0; i < numVitalNeeds; ++i)
     {
-        vitalNeedProcessors[i]->updateNeed(agent, &agent->vitalNeeds[i], currentTime);
+        //Get time since last update
+        Time delta;
+        agent->vitalNeeds[i].lastUpdateGlobal.getDeltaTime(globalTime, delta);
+        //delta.print();
+        if (delta.isGreaterThan(&agent->vitalNeeds[i].updateRate))
+        {
+            //Update need
+            vitalNeedProcessors[i]->updateNeed(agent, &agent->vitalNeeds[i], deltaTime);
+            agent->vitalNeeds[i].lastUpdateGlobal = *globalTime;
+        }
+        //Check if need is the lowest
         int currentNeedValue = agent->vitalNeeds[i].currentValue;
         if (currentNeedValue < minVitalValue)
         {
@@ -65,7 +76,17 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
     //Update nonvital needs; watch for lowest need currentValue
     for (int i = 0; i < numNonvitalNeeds; ++i)
     {
-        nonvitalNeedProcessors[i]->updateNeed(agent, &agent->nonvitalNeeds[i], currentTime);
+        //Get time since last update
+        Time delta;
+        agent->nonvitalNeeds[i].lastUpdateGlobal.getDeltaTime(globalTime, delta);
+        //delta.print();
+        if (delta.isGreaterThan(&agent->nonvitalNeeds[i].updateRate))
+        {
+            //Update need
+            nonvitalNeedProcessors[i]->updateNeed(agent, &agent->nonvitalNeeds[i], deltaTime);
+            agent->nonvitalNeeds[i].lastUpdateGlobal = *globalTime;
+        }
+        //Check if need is the lowest
         int currentNeedValue = agent->nonvitalNeeds[i].currentValue;
         if (currentNeedValue < minNonvitalValue)
         {
@@ -132,7 +153,7 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
             needToProcess = &agent->vitalNeeds[agent->processChainVitalNeedID];
             //std::cout << "Processing vital need; val: " << (int)needToProcess->currentValue << " threshold: " << (int)needToProcess->fulfilledThreshold << "\n";
         }
-        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, needToProcess, currentTime);
+        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, needToProcess, deltaTime);
         if (result==1) agent->currentProcessIndex++; //Move to next process in chain
         if (result==-1 || (unsigned int) agent->currentProcessIndex >= agent->currentProcessChain->size()) //Process chain finished
         {

@@ -26,6 +26,8 @@ int Process::update(Agent* agent, Need* need, Time* deltaTime)
     {
         need->currentValue=addNoOverflow(need->currentValue, 60);
         agent->worldPosition.addVector(0, -60);
+        //TODO: REPLACE NEEDPROCESSOR UPDATE WITH SIMPLE GENERIC DECAY?
+        //TODO: Probably need to use floats or two chars due to very low update times (need.currentValue)
         return 1;
     }
     return 1;

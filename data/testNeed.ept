@@ -4,3 +4,7 @@ defaults:
     currentValue=255;
     needID=1;
     fulfilledThreshold=200;
+    updateRateMS=0;
+    updateRateSeconds=5;
+    updateRateDays=0;
+    updateRateYears=0;
