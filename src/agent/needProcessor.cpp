@@ -2,6 +2,7 @@
 #define NEEDPROCESSOR_CPP
 #include <iostream>
 #include "needProcessor.hpp"
+#include "needMath.hpp"
 NeedProcessor::NeedProcessor(eptFile* spec)
 {
     eptGroup* defaultNeedVars = spec->getGroup("defaults");
@@ -14,8 +15,8 @@ NeedProcessor::~NeedProcessor()
 }
 int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* currentTime)
 {
-    std::cout << (int) currentNeed->currentValue << "\n";
-    currentNeed->currentValue-=10;
+    std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
+    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
     return 1;
 }
 void NeedProcessor::initNeed(Need* currentNeed)

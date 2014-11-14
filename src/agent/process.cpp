@@ -2,6 +2,8 @@
 #define PROCESS_CPP
 #include <iostream>
 #include "process.hpp"
+#include "agent.hpp"
+#include "needMath.hpp"
 Process::~Process()
 {
     
@@ -19,7 +21,12 @@ unsigned char Process::getValue(Agent* agent, Need* need)
 //-1 if process chain should end immediately
 int Process::update(Agent* agent, Need* need, Time* currentTime)
 {
-    std::cout << "Updated Process\n";
+    std::cout << "Updated Process; index: "<< agent->currentProcessIndex <<"\n";
+    if (agent->currentProcessIndex==0)
+    {
+        need->currentValue=addNoOverflow(need->currentValue, 60);
+        return 1;
+    }
     return 1;
 }
 #endif

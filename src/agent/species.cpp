@@ -49,7 +49,8 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
     unsigned char minNonvitalValue = 255;
     int minVitalIndex = -1;
     int minNonvitalIndex = -1;
-    
+
+    //Update vital needs; watch for lowest need currentValue
     for (int i = 0; i < numVitalNeeds; ++i)
     {
         vitalNeedProcessors[i]->updateNeed(agent, &agent->vitalNeeds[i], currentTime);
@@ -61,11 +62,12 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
         }
         
     }
+    //Update nonvital needs; watch for lowest need currentValue
     for (int i = 0; i < numNonvitalNeeds; ++i)
     {
         nonvitalNeedProcessors[i]->updateNeed(agent, &agent->nonvitalNeeds[i], currentTime);
         int currentNeedValue = agent->nonvitalNeeds[i].currentValue;
-        if (currentNeedValue < minVitalValue)
+        if (currentNeedValue < minNonvitalValue)
         {
             minNonvitalValue = currentNeedValue;
             minNonvitalIndex = i;
@@ -94,7 +96,7 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
         //Otherwise, continue on the current process (or give time for
         //nonvital processes)
     }
-    if (minNonvitalValue < agent->nonvitalNeeds[minNonvitalIndex].fulfilledThreshold)
+    else if (minNonvitalValue < agent->nonvitalNeeds[minNonvitalIndex].fulfilledThreshold)
     {
         //Instead of stopping the process if the minimum need is lower than
         //the currently processing need (like above for vital needs),
@@ -109,8 +111,8 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
             {
                 agent->currentProcessChain = optimalChain;
                 agent->currentProcessIndex = 0;
-                agent->processChainVitalNeedID = minVitalIndex;
-                agent->processChainNonvitalNeedID = -1;
+                agent->processChainVitalNeedID = -1;
+                agent->processChainNonvitalNeedID = minNonvitalIndex;
             }
         }
         //Else continue with the current process
@@ -119,7 +121,18 @@ int Species::updateAgent(Agent* agent, Time* currentTime, ProcessDirectory* proc
     if (agent->currentProcessIndex!=-1)
     {
         //TODO: Replace NULL with need
-        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, NULL, currentTime);
+        Need* needToProcess = NULL;
+        if (agent->processChainNonvitalNeedID != -1) //currently processing nonvital
+        {
+            needToProcess = &agent->nonvitalNeeds[agent->processChainNonvitalNeedID];
+            //std::cout << "Processing NONvital need; val: " << (int)needToProcess->currentValue << " threshold: " << (int)needToProcess->fulfilledThreshold << "\n";
+        }
+        if (agent->processChainVitalNeedID != -1) //currently processing vital
+        {
+            needToProcess = &agent->vitalNeeds[agent->processChainVitalNeedID];
+            //std::cout << "Processing vital need; val: " << (int)needToProcess->currentValue << " threshold: " << (int)needToProcess->fulfilledThreshold << "\n";
+        }
+        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, needToProcess, currentTime);
         if (result==1) agent->currentProcessIndex++; //Move to next process in chain
         if (result==-1 || (unsigned int) agent->currentProcessIndex >= agent->currentProcessChain->size()) //Process chain finished
         {

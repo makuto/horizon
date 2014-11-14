@@ -5,7 +5,6 @@
 //be conscious of group name!)
 1_EatPocket:
     1=useItem;
-    2=useItem;
 2_OtherThing:
     1=useItem;
     2=useItem;

@@ -78,6 +78,7 @@ std::vector<ProcessChain*>* ProcessDirectory::getNeedListings(int needID)
 	if (it==directory.end()) return NULL;
 	else return it->second;
 }
+//TODO: use Process.getValue()?
 ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need, std::vector<ProcessChain*>* listing, int& difficulty)
 {
     int minimumDifficulty = MAX_DIFFICULTY;

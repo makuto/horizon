@@ -24,7 +24,7 @@
  * chain as its current process chain, and marks the current process in
  * the chain.
  * */
-class Agent;
+struct Agent;
 class Process;
 //TODO: Should ProcessChain be its own class?
 typedef std::vector<Process*> ProcessChain;
