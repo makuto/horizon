@@ -1,5 +1,6 @@
 <1_spec.1>
-
+//^ Spec must be named like so: {id}_spec
+//Spec for needID 1
 defaults:
     currentValue=255;
     needID=1;

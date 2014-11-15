@@ -1,10 +1,10 @@
 <needDirectory.1>
 //NeedDirectory contains a list of all needs, their ids, specs, and chains files
+
 //Group name isn't important
 1:
     //Critical for finding spec and chain files
     //The actual needID is set in the spec
-    //Spec is named like so: <{id}_spec.{version}>
     id=1;
     spec=data/testNeed.ept;
     //Chains is named like so: <{id}_chains.{version}>

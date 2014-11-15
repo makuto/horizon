@@ -4,7 +4,7 @@
 #include "species.hpp"
 
 //TODO: Replace needProcessorDir with a class?
-Species::Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProcessorDir)
+Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir)
 {
     eptGroup* vitalNeedsGroup = spec->getGroup("vitalNeeds");
     eptGroup* nonvitalNeedsGroup = spec->getGroup("nonvitalNeeds");
@@ -16,16 +16,17 @@ Species::Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProce
     speciesID = attrToInt(spec->getGroup("vars")->getAttribute("id"));
     
     //Get the vital need processors as specified in the spec
+    //TODO: Make this take needIDs instead of processor names?
     for (int i = 0; i < numVitalNeeds; i++)
     {
         std::string attrName;
-        vitalNeedProcessors.push_back((*needProcessorDir)[vitalNeedsGroup->getAttributeFromIndex(i, attrName)]);
+        vitalNeedProcessors.push_back((*needProcessorDir)[attrToInt(vitalNeedsGroup->getAttributeFromIndex(i, attrName))]);
     }
     //Get the nonvital need processors as specified in the spec
     for (int i = 0; i < numNonvitalNeeds; i++)
     {
         std::string attrName;
-        nonvitalNeedProcessors.push_back((*needProcessorDir)[nonvitalNeedsGroup->getAttributeFromIndex(i, attrName)]);
+        nonvitalNeedProcessors.push_back((*needProcessorDir)[attrToInt(nonvitalNeedsGroup->getAttributeFromIndex(i, attrName))]);
     }
 }
 Species::~Species()

@@ -26,7 +26,7 @@ class Species
         int numNonvitalNeeds;
     public:
         int speciesID;
-        Species(eptFile* spec, std::map<std::string, NeedProcessor*>* needProcessorDir);
+        Species(eptFile* spec, NeedProcessorDir* needProcessorDir);
         ~Species();
         //updateAgent returns -1 if the agent should die
         //Pass in the difference in time since the last agent update

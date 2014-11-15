@@ -1,10 +1,13 @@
 <testSpecies.1>
 
 vars:
+    //Species ID
     id=1;
 vitalNeeds:
-    need1=need;
-    need2=need;
+    //Name does not matter, value is needProcessor name (should be needID)
+    //Need names come from needProcessor keys in needProcessorDir (should be needID)
+    need1=1;
+    need2=1;
 nonvitalNeeds:
-    need1=need;
-    need2=need;
+    need1=1;
+    need2=1;

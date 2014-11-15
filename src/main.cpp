@@ -25,8 +25,8 @@ int main()
     }
     
     //TODO: Convert to class?
-    std::map<std::string, NeedProcessor*> needProcessorDir;
-    needProcessorDir["need"] = new NeedProcessor(parser.getFile("1_spec"));
+    NeedProcessorDir needProcessorDir;
+    needProcessorDir[1] = new NeedProcessor(parser.getFile("1_spec"));
     Species testSpecies(parser.getFile("testSpecies"), &needProcessorDir);
 
     ProcessMap processMap;
@@ -51,7 +51,8 @@ int main()
     Coord windowPosition;
     windowPosition.setPosition(0, 0);
     float viewSpeed = 200;
-    while (!win.shouldClose() && !in.isPressed(inputCode::Return))
+    //Main loop
+    while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
         //Move view
         if (in.isPressed(inputCode::Up))
@@ -89,6 +90,9 @@ int main()
             globalTime.print();
         }
     }
+    //Remember to do this!
+    delete testAgent;
+    
     /*Agent testAgent;
     int difficulty;
     ProcessChain* testChain = processDir.getOptimalChain(&testAgent, NULL, 1, difficulty);

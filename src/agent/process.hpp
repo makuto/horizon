@@ -34,7 +34,7 @@ class Process
     public:
         virtual ~Process();
         //TODO: Is need needed? (UPDATE: Yes, so generic search processes
-        //etc. know what to look for
+        //etc. know what to look for)
         virtual int getDifficulty(Agent* agent, Need* need);
         virtual unsigned char getValue(Agent* agent, Need* need);
         //Update should return 0 if process didn't complete (run next frame)
