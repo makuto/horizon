@@ -21,6 +21,7 @@ class NeedProcessor
 
         NeedProcessor(eptFile* spec);
         virtual ~NeedProcessor();
+        //deltaTime should be the time since this need was last updated
         virtual int updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime);
         //Sets the passed need's fields to defaults (specified by defaultNeed)
         virtual void initNeed(Need* currentNeed);

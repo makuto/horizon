@@ -1,0 +1,6 @@
+<files.1>
+
+testScripts:
+    needDirectory=data/needDirectory.ept;
+    testNeed=data/testNeed.ept;
+    testSpecies=data/testSpecies.ept;

@@ -7,12 +7,13 @@ NeedProcessor::NeedProcessor(eptFile* spec)
 {
     eptGroup* defaultNeedVars = spec->getGroup("defaults");
     defaultNeed.currentValue = (unsigned char)attrToInt(defaultNeedVars->getAttribute("currentValue"));
-    defaultNeed.needID = attrToInt(defaultNeedVars->getAttribute("needID"));
+    needID = attrToInt(defaultNeedVars->getAttribute("needID"));
+    defaultNeed.needID = needID;
     defaultNeed.fulfilledThreshold = (unsigned char)attrToInt(defaultNeedVars->getAttribute("fulfilledThreshold"));
-    defaultNeed.updateRate.milliseconds = attrToFloat(defaultNeedVars->getAttribute("updateRateMS"));
-    defaultNeed.updateRate.seconds = attrToInt(defaultNeedVars->getAttribute("updateRateSeconds"));
-    defaultNeed.updateRate.days = attrToInt(defaultNeedVars->getAttribute("updateRateDays"));
-    defaultNeed.updateRate.years = attrToInt(defaultNeedVars->getAttribute("updateRateYears"));
+    defaultNeed.updateRate.setMilliseconds(attrToFloat(defaultNeedVars->getAttribute("updateRateMS")));
+    defaultNeed.updateRate.setSeconds(attrToInt(defaultNeedVars->getAttribute("updateRateSeconds")));
+    defaultNeed.updateRate.setDays(attrToInt(defaultNeedVars->getAttribute("updateRateDays")));
+    defaultNeed.updateRate.setYears(attrToInt(defaultNeedVars->getAttribute("updateRateYears")));
 }
 NeedProcessor::~NeedProcessor()
 {

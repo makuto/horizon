@@ -1,0 +1,10 @@
+<testSpecies.1>
+
+vars:
+    id=1;
+vitalNeeds:
+    need1=need;
+    need2=need;
+nonvitalNeeds:
+    need1=need;
+    need2=need;

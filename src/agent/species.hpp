@@ -30,7 +30,7 @@ class Species
         ~Species();
         //updateAgent returns -1 if the agent should die
         //Pass in the difference in time since the last agent update
-        //TODO: Should agents store lastUpdate time?
+        //Note that deltaTime is only used for agent processes, not need updates
         int updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, ProcessDirectory* processDir);
         Agent* createAgent();
 };

@@ -13,9 +13,17 @@
 int main()
 {
     eptParser parser;
-    parser.load("data/LOCAL_test.ept");
-    parser.load("data/testNeed.ept");
-    parser.load("data/needDirectory.ept");
+    if(!parser.load("data/files.ept")) return -1;
+    eptGroup* filesToLoad = parser.getGroup("files.testScripts");
+    //Parse all files in files.testScripts
+    std::string attrName;
+    std::string currentFileName = filesToLoad->getAttributeFromIndex(0, attrName);
+    for (int i = 1; currentFileName!=""; ++i)
+    {
+        if (!parser.load(currentFileName.c_str())) return -1;
+        currentFileName = filesToLoad->getAttributeFromIndex(i, attrName);
+    }
+    
     //TODO: Convert to class?
     std::map<std::string, NeedProcessor*> needProcessorDir;
     needProcessorDir["need"] = new NeedProcessor(parser.getFile("1_spec"));
@@ -70,16 +78,15 @@ int main()
         
         //globalTime.addMilliseconds(frameTime.getTime());
         globalTime.reset();
-        globalTime.addMilliseconds(worldTime.getTime());
+        globalTime.addSeconds(worldTime.getTime());
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
         //previousUpdate = globalTime;
-        if (deltaTime.milliseconds>=0.1 || deltaTime.seconds!=0)
+        if (deltaTime.getExactSeconds()>=0.1 || deltaTime.getExactSeconds()!=0)
         {
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             previousUpdate = globalTime;
-            /*previousUpdate.print();
-            globalTime.print();*/
+            globalTime.print();
         }
     }
     /*Agent testAgent;
