@@ -130,6 +130,13 @@ void World::render(Coord& viewPosition)
         {
             currentCell->render(camera, masterMap, win);
         }
+        //Eventually this will be somewhere else
+        else
+        {
+            Cell* newCell = new Cell(cellsToRender[i]);
+            newCell->generate(worldID, cellsToRender[i].x + cellsToRender[i].y + worldID, 1);
+            cells[cellsToRender[i]] = newCell;
+        }
     }
     
     delete[] cellsToRender;
