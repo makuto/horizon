@@ -4,3 +4,6 @@ testScripts:
     needDirectory=data/needDirectory.ept;
     testNeed=data/testNeed.ept;
     testSpecies=data/testSpecies.ept;
+worldDefaults:
+    tileSet=data/images/castle.png;
+    defaultMap=data/maps/default.map;

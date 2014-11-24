@@ -141,7 +141,7 @@ int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, Proces
     //Update the current process chain
     if (agent->currentProcessIndex!=-1)
     {
-        //TODO: Replace NULL with need
+        //Get the currently processing need
         Need* needToProcess = NULL;
         if (agent->processChainNonvitalNeedID != -1) //currently processing nonvital
         {
