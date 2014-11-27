@@ -32,6 +32,7 @@ class Species
         //Pass in the difference in time since the last agent update
         //Note that deltaTime is only used for agent processes, not need updates
         int updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, ProcessDirectory* processDir);
+        //TODO: Should this just init an object instead (easier pooling?)
         Agent* createAgent();
 };
 #endif

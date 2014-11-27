@@ -1,0 +1,19 @@
+<pickup.1>
+
+renderSettings:
+    image=data/agent.png;
+    //Set subRect for this object in the specified image
+    //This doesn't have to be present
+    subRectX=0;
+    subRectY=0;
+    //Width and height of subrect (only matters if subRectX and Y are
+    //specified, otherwise these are ignored)
+    width=32;
+    height=32;
+    //The origin of the Object sprite
+    originX=16;
+    originY=16;
+
+defaults:
+    //Governs which ObjectProcessor is used
+    type=1;

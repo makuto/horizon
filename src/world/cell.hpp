@@ -48,6 +48,9 @@ class Cell
         //any cell files were not found
         bool load(int worldID);
         //Saves everything a Cell has
+        //TODO: Once editTile functions are made, keep a changed bool
+        //that will be checked so that freshly generated tiles are not
+        //saved
         bool save(int worldID, multilayerMap* map);
         //Generates a new cell with the specified algorithm
         //Algorithms: 1 = simple fill
