@@ -24,11 +24,10 @@ void ObjectProcessor::initialize(eptFile* spec)
 //Called to initialize a new-ed object - use this function to make sure
 //objects are valid subtypes in valid positions
 //Return false if the object cannot be created
-bool ObjectProcessor::createObject(Object* newObj, int subType, Coord& position, float rotation)
+bool ObjectProcessor::createObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager& manager)
 {
     newObj->subType = subType;
-    CellIndex newCell = position.getCell();
-    newObj->position.setPosition(newCell, position.getCellOffsetX(), position.getCellOffsetY());
+    newObj->setPosition(position, manager);
     newObj->rotation = rotation;
     return true;
 }

@@ -2,6 +2,7 @@
 #define OBJECTPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
 #include "object.hpp"
+#include "objectManager.hpp"
 #include "../agent/agent.hpp"
 /* --ObjectProcessor--
  * ObjectProcessors take Objects and perform actions on them. This class
@@ -25,7 +26,7 @@ class ObjectProcessor
         //Called to initialize a new-ed object - use this function to make sure
         //objects are valid subtypes in valid positions.
         //Return false if the object cannot be created
-        virtual bool createObject(Object* newObj, int subType, Coord& position, float rotation);
+        virtual bool createObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager& manager);
         //Do a routine update on the object
         virtual int updateObject(Object* obj);
         //Render the object (it is in view of player)

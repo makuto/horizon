@@ -21,7 +21,7 @@ World::~World()
 }
 bool World::loadCell(CellIndex cellToLoad)
 {
-    Cell* newCell = new Cell(cellToLoad);
+    Cell* newCell = new Cell(cellToLoad, this);
     if (!newCell->load(worldID))
     {
         delete newCell;
@@ -133,7 +133,7 @@ void World::render(Coord& viewPosition)
         //Eventually this will be somewhere else
         else
         {
-            Cell* newCell = new Cell(cellsToRender[i]);
+            Cell* newCell = new Cell(cellsToRender[i], this);
             newCell->generate(worldID, cellsToRender[i].x + cellsToRender[i].y + worldID, 1);
             cells[cellsToRender[i]] = newCell;
         }

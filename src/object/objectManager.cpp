@@ -4,11 +4,18 @@
 #include <vector>
 #include <iostream>
 #include <base2.0/collision/collision.hpp>
+#include "../world/cell.hpp"
 const unsigned int MAX_NODE_CAPACITY = 4;
 const unsigned int POOL_SIZE = 10;
 ObjectManager::ObjectManager()
 {
+
+}
+ObjectManager::ObjectManager(World* newWorld, Cell* newParent)
+{
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
+    world = newWorld;
+    parentCell = newParent;
 }
 ObjectManager::~ObjectManager()
 {
@@ -129,5 +136,32 @@ void ObjectManager::removeObject(Object* objectToRemove)
     objectToRemove->_nextPoolObject = objects->firstEmptyObj;
     objects->firstEmptyObj = objectToRemove;
 }
+void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
+{
+    //Remove the object pointer from the quadtree
+    if (!indexQuadTree->remove(objectToMove, objectToMove->position.getCellOffsetX(), objectToMove->position.getCellOffsetY()))
+    {
+        std::cout << "WARNING: QuadTree removal failed: object position does not match data position\n";
+    }
 
+    //Make sure object isn't colliding with anything
+    //TODO
+    Coord newDisplacement;
+    CellIndex cell = newPosition.getCell();
+    newDisplacement.setPosition(cell, newPosition.getCellOffsetX(), newPosition.getCellOffsetY());
+
+    //Apply the displacement
+    CellIndex displaceCell = newDisplacement.getCell();
+    objectToMove->position.setPosition(displaceCell,
+    newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
+
+    //Make sure object is still in this cell; if not, tell world and remove object
+    //TODO
+    
+    //Reinsert object into quadtree
+    if (!indexQuadTree->insert(objectToMove, newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY()))
+    {
+        std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
+    }
+}
 #endif

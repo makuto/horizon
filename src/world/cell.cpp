@@ -10,17 +10,12 @@
 #include <base2.0/tileMap/tileCamera.hpp>
 #include "world.hpp"
 #include "cell.hpp"
+#include "../object/objectManager.hpp"
+
 
 //Used with system to create cell dirs
 const std::string MAKE_DIR_COMMAND = "mkdir ";
 const int NUM_LAYERS = 3;
-const int CELL_WIDTH = 64;
-const int CELL_HEIGHT = 64;
-const int TILE_WIDTH = 32;
-const int TILE_HEIGHT = 32;
-//Note that you want this value to always be larger than screen size
-const int CELL_WIDTH_PIXELS = CELL_WIDTH * TILE_WIDTH;
-const int CELL_HEIGHT_PIXELS = CELL_HEIGHT * TILE_HEIGHT;
 
 bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& second) const
 {
@@ -29,8 +24,9 @@ bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& seco
     return first.y > second.y;
 }
 
-Cell::Cell(CellIndex newCellID)
-{   
+Cell::Cell(CellIndex newCellID, World* newWorld):objectManager(newWorld, this)
+{
+    world = newWorld;
     cellID = newCellID;
     tiles.resize(NUM_LAYERS);
 }
@@ -110,7 +106,7 @@ void Cell::generate(int worldID, int seed, int algorithm)
             {
                 std::vector<tile*> layer;
                 layer.resize(CELL_WIDTH * CELL_HEIGHT);
-                for (unsigned int n = 0; n < CELL_WIDTH * CELL_HEIGHT; ++n)
+                for (int n = 0; n < CELL_WIDTH * CELL_HEIGHT; ++n)
                 {
                     tile* newTile = new tile;
                     //Different values based on layer

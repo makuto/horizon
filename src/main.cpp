@@ -43,6 +43,11 @@ int main()
     index.x = -1;
     index.y = 0;
     if (!newWorld.loadCell(index)) return -1;
+    ObjectManager test(&newWorld, NULL);
+    Object* testObj = test.getNewObject(1, 1, 1);
+    Coord newPos;
+    newPos.setPosition(index, 0, 10);
+    testObj->setPosition(newPos, test);
     
     eptGroup* filesToLoad = parser.getGroup("files.testScripts");
     //Parse all files in files.testScripts

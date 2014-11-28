@@ -4,22 +4,11 @@
 #include <base2.0/tileMap/tileMap.hpp>
 #include <base2.0/tileMap/multilayerMap.hpp>
 #include <base2.0/tileMap/tileCamera.hpp>
+#include "../object/objectManager.hpp"
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
-extern const int CELL_WIDTH;
-extern const int CELL_HEIGHT;
-extern const int TILE_WIDTH;
-extern const int TILE_HEIGHT;
-//Note that you want this value to always be larger than screen size
-extern const int CELL_WIDTH_PIXELS;
-extern const int CELL_HEIGHT_PIXELS;
-//Simple x,y index to a cell
-struct CellIndex
-{
-    int x;
-    int y;
-};
+
 //Used to be able to use CellIndex as a key in a std::map. See 
 //http://stackoverflow.com/questions/6973406/c-stl-map-container-with-class-key-and-class-value
 struct CellIndexComparer
@@ -31,18 +20,23 @@ struct CellIndexComparer
  * Cells always assume the multilayerMap is set up correctly;
  * cells never load information about displaying
  * */
+class ObjectManager;
 class Cell
 {
     private:
         CellIndex cellID;
+        //ObjectManager that holds all objects in this cell
+        ObjectManager objectManager;
         //TODO: Consider putting layer information together (like RGB)
         //instead of in separate arrays (faster)
         std::vector<std::vector<tile*> > tiles;
         //If isMasterLayer is true, this function will skip over the master
         //layer header and load the raw tiles
         bool loadLayer(const std::string& filename, int layerNum, bool isMasterLayer);
+
+        World* world;
     public:
-        Cell(CellIndex cellID);
+        Cell(CellIndex newCellID, World* newWorld);
         ~Cell();
         //Loads everything a Cell needs. Returns false if
         //any cell files were not found

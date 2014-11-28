@@ -1,9 +1,21 @@
 #ifndef COORD_HPP
 #define COORD_HPP
-#include "cell.hpp"
 /* --Coord--
  * Coord is a universal position coordinate.
  * */
+extern const int CELL_WIDTH;
+extern const int CELL_HEIGHT;
+extern const int TILE_WIDTH;
+extern const int TILE_HEIGHT;
+//Note that you want this value to always be larger than screen size
+extern const int CELL_WIDTH_PIXELS;
+extern const int CELL_HEIGHT_PIXELS;
+//Simple x,y index to a cell
+struct CellIndex
+{
+    int x;
+    int y;
+};
 class Coord
 {
     protected:

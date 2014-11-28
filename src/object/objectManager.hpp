@@ -2,9 +2,12 @@
 #define OBJECTMANAGER_HPP
 #include <map>
 #include <vector>
+//#include "../world/world.hpp"
+#include "../world/coord.hpp"
+//#include "../world/cell.hpp"
 #include "../utilities/quadTree.hpp"
-#include "object.hpp"
 #include "objectProcessor.hpp"
+#include "object.hpp"
 /* --ObjectManager--
  * ObjectManagers control the creation, rendering, interaction, and deletion
  * of Objects. ObjectManagers don't care what type the objects are.
@@ -14,6 +17,8 @@ struct ObjectPool
     Object* firstEmptyObj;
     std::vector<Object> pool;
 };
+class Cell;
+class World;
 class ObjectManager
 {
     private:
@@ -29,8 +34,13 @@ class ObjectManager
         //Abstracts map insertion (objectPools[type])
         //Returns NULL if something went wrong
         ObjectPool* createPool(int type, unsigned int size);
+        //ObjectManager needs the world in case objects go out of its bounds
+        //and a different ObjectManager should take over
+       World* world;
+        Cell* parentCell;
     public:
         ObjectManager();
+     ObjectManager(World* newWorld, Cell* newParent);
         ~ObjectManager();
         
         //Returns a pointer to a vector with all objects in this
@@ -45,5 +55,9 @@ class ObjectManager
         //Bad things will happen if you try to remove an object from the wrong manager
         //(malformed uninitialized object)
         void removeObject(Object* objectToRemove);
+        //Objects must call this function to change position if they are going
+        //to work with collisions and quadtree. Pass the new desired position
+        //and ObjectManager handles the rest. Do not try to set position yourself
+        void moveObject(Object* objectToMove, Coord& newPosition);
 };
 #endif
