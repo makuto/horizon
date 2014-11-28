@@ -14,6 +14,8 @@
 #include "world/world.hpp"
 #include "world/cell.hpp"
 
+#include "object/objectManager.hpp"
+
 int main()
 {
     eptParser parser;

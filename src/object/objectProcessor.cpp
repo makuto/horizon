@@ -40,7 +40,7 @@ int ObjectProcessor::updateObject(Object* obj)
 //Render the object (it is in view of player)
 void ObjectProcessor::renderObject(Object* obj)
 {
-    return 1;
+    return;
 }
 //Agent uses/activates object
 int ObjectProcessor::activateObject(Object* obj, Agent* agent)

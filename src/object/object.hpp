@@ -11,6 +11,9 @@
  * */
 struct Object
 {
+    //TODO: Make this union?
+    Object* _nextPoolObject; //Don't use this for anything
+    //type and subType are used by ObjectManager pools when an obj is uninitialized
     int type;       //General type of object, e.g. pickup, actor, usable
     int subType;    //Specific object of type, e.g. food pickup, human-species, bed
     int id;         //Universal ID for this instance

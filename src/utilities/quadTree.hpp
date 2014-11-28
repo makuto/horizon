@@ -6,6 +6,8 @@
 #include <iostream>
 
 const unsigned int MAX_TREE_DEPTH = 10;
+const float POINT_SEARCH_WIDTH = 1;
+const float POINT_SEARCH_HEIGHT = 1;
 //QuadPoints store the coordinate of the data along with the data itself
 template<class R>
 class QuadPoint
@@ -18,6 +20,11 @@ class QuadPoint
 /* --QuadTree--
  * Template spacial quadtree
  * I referred to http://en.wikipedia.org/wiki/Quadtree while coding this
+ * If >maxCapacity points are placed in the same position or cell, bad things
+ * will happen :(. Bad things won't make the structure not work, but it will
+ * make things less efficient. TODO: Fix this :(
+ * Make sure things are recursively subdivided and spread no matter what,
+ * unless n depth is reached (not so close points will still not be distributed?)
  * */
 template<class T>
 class QuadTree
@@ -35,7 +42,7 @@ class QuadTree
         QuadTree(unsigned int newMaxCapacity, float newX, float newY, float newWidth, float newHeight, unsigned int newDepth)
         {
             depth = newDepth + 1;
-            std::cout << "["<< depth <<"]node created\n";
+            //std::cout << "["<< depth <<"]node created\n";
             maxCapacity = newMaxCapacity;
             tL=NULL;
             tR=NULL;
@@ -51,13 +58,13 @@ class QuadTree
         //this is the case. Not the most elegant, but it segfaults otherwise :)
         bool subdivideInsert(T newData, float x, float y)
         {
-            std::cout << this << "\n";
-            std::cout << "subdiv insert bounds: " << bounds.x << " , " << bounds.y << " w " << bounds.w << " h " << bounds.h;
-            std::cout << "; is in range: ";
+            //std::cout << this << "\n";
+            //std::cout << "subdiv insert bounds: " << bounds.x << " , " << bounds.y << " w " << bounds.w << " h " << bounds.h;
+            //std::cout << "; is in range: ";
             //Make sure point is within the bounds of this node
             if (!isPointInRange(x, y, bounds))
             {
-                std::cout << "rejected b/c bounds\n";
+                //std::cout << "rejected b/c bounds\n";
                 //Point is not within bounds
                 return false;
             }
@@ -70,12 +77,12 @@ class QuadTree
                 newPoint.y = y;
                 newPoint.data = newData;
                 data.push_back(newPoint);
-                std::cout << "data added\n";
+                //std::cout << "data added\n";
                 return true;
             }
 
             //Node is already full; don't try to add any more
-            std::cout << "rejected b/c full\n";
+            //std::cout << "rejected b/c full\n";
             return false;
         }
         void subdivide()
@@ -90,55 +97,55 @@ class QuadTree
             //Redistribute points into child nodes
             while(!data.empty())
             {
-                std::cout << "REDIS\n";
+                //std::cout << "REDIS\n";
                 QuadPoint<T> newDataPoint = data.back();
                 T newData = newDataPoint.data;
                 float x = newDataPoint.x;
                 float y = newDataPoint.y;
-                std::cout << "redis tl\n";
+                //std::cout << "redis tl\n";
                 if (tL->subdivideInsert(newData, x, y))
                 {
-                    std::cout << "success\n";
+                    //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
-                std::cout << "redis tr\n";
+                //std::cout << "redis tr\n";
                 if (tR->subdivideInsert(newData, x, y))
                 {
-                    std::cout << "success\n";
+                    //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
-                std::cout << "redis bl\n";
+                //std::cout << "redis bl\n";
                 if (bL->subdivideInsert(newData, x, y))
                 {
-                    std::cout << "success\n";
+                    //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
-                std::cout << "redis br\n";
+                //std::cout << "redis br\n";
                 if (bR->subdivideInsert(newData, x, y))
                 {
-                    std::cout << "success\n";
+                    //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
                 //For some reason a point will not be accepted, so
                 //stop redistributing
-                std::cout << "[!] point not accepted\n";
+                //std::cout << "[!] point not accepted\n";
                 break;
             } 
         }
         bool isPointInRange(float x, float y, aabb& range)
         {
-            std::cout << "Is " << x << " , " << y << " in range " << range.x << " , " << range.y << " w " << range.w << " h " << range.h << "?";
+            //std::cout << "Is " << x << " , " << y << " in range " << range.x << " , " << range.y << " w " << range.w << " h " << range.h << "?";
             //See if point is within range
             if (x <= range.x + range.w && x >= range.x && y <= range.y + range.h && y >= range.y)
             {
-                std::cout << " yes\n";
+                //std::cout << " yes\n";
                 return true;
             }
-            std::cout << " nope\n";
+            //std::cout << " nope\n";
             return false;
         }
     public:
@@ -146,7 +153,7 @@ class QuadTree
         QuadTree(unsigned int newMaxCapacity, float newX, float newY, float newWidth, float newHeight)
         {
             depth = 1;
-            std::cout << "["<< depth <<"]node created\n";
+            //std::cout << "["<< depth <<"]node created\n";
             maxCapacity = newMaxCapacity;
             tL=NULL;
             tR=NULL;
@@ -157,7 +164,7 @@ class QuadTree
         }
         bool insert(T newData, float x, float y)
         {
-            std::cout << "["<< depth <<"] " << newData << " at " << x << " , " << y << " \n";
+            //std::cout << "["<< depth <<"] " << newData << " at " << x << " , " << y << " \n";
             //Make sure point is within the bounds of this node
             if (!isPointInRange(x, y, bounds))
             {
@@ -192,7 +199,7 @@ class QuadTree
                 if (bL->subdivideInsert(newData, x, y)) return true;
                 if (bR->subdivideInsert(newData, x, y)) return true;
                 //Point wouldn't be accepted by any nodes
-                std::cout <<"point rejected; keeping\n";
+                //std::cout <<"point rejected; keeping\n";
                 QuadPoint<T> newPoint;
                 newPoint.x = x;
                 newPoint.y = y;
@@ -207,46 +214,72 @@ class QuadTree
             if (bL->insert(newData, x, y)) return true;
             if (bR->insert(newData, x, y)) return true;
             //Shouldn't ever happen
-            std::cout << "This shouldn't happen\n";
+            //std::cout << "This shouldn't happen\n";
+            return false;
+        }
+        //Returns false if the point could not be removed (it doesn't exist)
+        //data is used to make sure it is the point requested
+        //NOTE: X and Y are not used when comparing the point, just for walking the tree,
+        //so if you have two of the same data, it might not remove the one
+        //at the position specified (the system assumes you are using pointers
+        bool remove(T searchData, float x, float y)
+        {
+            //Point will not be in this node's bounds
+            if(!isPointInRange(x, y, bounds)) return false;
+            
+            //Search through points for the data
+            for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!= data.end(); ++it)
+            {
+                //Found the data point; erase it (inefficient only in large vectors)
+                //TODO: Replace vector with list or something?
+                if ((*it).data==searchData)
+                {
+                    data.erase(it);
+                    return true;
+                }
+            }
+            
+            //Search children (if any)
+            if (!tL) return false;
+            if (tL->remove(searchData, x, y)) return true;
+            if (tR->remove(searchData, x, y)) return true;
+            if (bL->remove(searchData, x, y)) return true;
+            if (bR->remove(searchData, x, y)) return true;
+            //Data point not in quadtree
             return false;
         }
         //Fills the provided vector with resultant points (points
         //contained in the specified range). Returns total results
         unsigned int queryRange(aabb& range, std::vector<T>& results)
         {
-            std::cout << "querying\n";
+            //std::cout << bounds.x << " , " << bounds.y << " w " << bounds.w << " h " << bounds.h << " \n";
             unsigned int totalResults = 0;
             //Make sure range is touching this node
             if (!isColliding(&range, &bounds))
             {
-                std::cout << "range not touching\n";
                 return 0;
             }
-            std::cout << "range colliding\n";
+            
             //Add points in this node to results if contained in range
             for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
             {
-                std::cout << "query:";
+                //std::cout << "has point\n";
                 if (isPointInRange((*it).x, (*it).y, range))
                 {
                     results.push_back((*it).data);
                     totalResults++;
                 }
             }
-            std::cout << "Done with points in this node (size " << data.size() << "), checking children\n";
 
             //Let all child nodes (if any) add points
             if (!tL)
             {
-                std::cout << " no children\n";
                 return totalResults;
             }
-            std::cout << "Children exist\n";
             totalResults += tL->queryRange(range, results);
             totalResults += tR->queryRange(range, results);
             totalResults += bL->queryRange(range, results);
             totalResults += bR->queryRange(range, results);
-            std::cout << "Done checking children\n";
             
             return totalResults;
         }
