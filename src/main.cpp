@@ -45,6 +45,7 @@ int main()
     if (!newWorld.loadCell(index)) return -1;
     ObjectManager test(&newWorld, NULL);
     Object* testObj = test.getNewObject(1, 1, 1);
+    testObj->type=1;
     Coord newPos;
     newPos.setPosition(index, 0, 10);
     testObj->setPosition(newPos, test);

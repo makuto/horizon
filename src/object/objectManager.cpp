@@ -58,9 +58,19 @@ ObjectPool* ObjectManager::createPool(int type, unsigned int size)
 //Returns a pointer to a vector with all objects in this
 //manager of the requested type or NULL if there are no objects of
 //the requested type
-std::vector<Object>* ObjectManager::getObjectsOfType(int type)
+std::vector<Object*>* ObjectManager::getObjectsOfType(int type)
 {
-    return &getObjectPool(type)->pool;
+    std::vector<Object*>* objectsOfType = new std::vector<Object*>;
+    ObjectPool* pool = getObjectPool(type);
+    for (std::vector<Object>::iterator it = pool->pool.begin(); it!= pool->pool.end(); ++it)
+    {
+        //Make sure it is initialized
+        if ((*it).type != -1)
+        {
+            objectsOfType->push_back(&(*it));
+        }
+    }
+    return objectsOfType;
 }
 //Returns a pointer to an uninitialized (nor constructed) object
 //or NULL if there are no free pool spaces. The object will be added

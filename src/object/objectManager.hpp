@@ -45,8 +45,9 @@ class ObjectManager
         
         //Returns a pointer to a vector with all objects in this
         //manager of the requested type or NULL if there are no objects of
-        //the requested type
-        std::vector<Object>* getObjectsOfType(int type);
+        //the requested type. All objects in the array are initialized (in use)
+        //Delete the array once you are done.
+        std::vector<Object*>* getObjectsOfType(int type);
         //Returns a pointer to an uninitialized (nor constructed) object
         //or NULL if there are no free pool spaces
         Object* getNewObject(int type, float x, float y);
