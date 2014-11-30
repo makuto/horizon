@@ -5,7 +5,10 @@
 #include <base2.0/collision/collision.hpp>
 #include <iostream>
 
-const unsigned int MAX_TREE_DEPTH = 10;
+const unsigned int MAX_TREE_DEPTH = 6;
+//If multiple objects are in the same place, tree will go to max depth,
+//then capacity will become MAX_DEPTH_CAPACITY to handle the leftovers
+const unsigned int MAX_DEPTH_CAPACITY = 100;
 const float POINT_SEARCH_WIDTH = 1;
 const float POINT_SEARCH_HEIGHT = 1;
 //QuadPoints store the coordinate of the data along with the data itself
@@ -42,8 +45,14 @@ class QuadTree
         QuadTree(unsigned int newMaxCapacity, float newX, float newY, float newWidth, float newHeight, unsigned int newDepth)
         {
             depth = newDepth + 1;
-            //std::cout << "["<< depth <<"]node created\n";
             maxCapacity = newMaxCapacity;
+            //Max depth reached; make sure this node holds a lot because
+            //it won't subdivide any more
+            if (depth >= MAX_TREE_DEPTH)
+            {
+                std::cout << "Max depth reached; setting capacity to MAX_DEPTH_CAPACITY\n";
+                maxCapacity = MAX_DEPTH_CAPACITY;
+            }
             tL=NULL;
             tR=NULL;
             bL=NULL;
@@ -56,7 +65,7 @@ class QuadTree
         //don't try to subdivide (problem if [maxCapacity + 1] points are placed
         //in the exact same place). Node will contain more than maxCapacity if
         //this is the case. Not the most elegant, but it segfaults otherwise :)
-        bool subdivideInsert(T newData, float x, float y)
+        /*bool subdivideInsert(T newData, float x, float y)
         {
             //std::cout << this << "\n";
             //std::cout << "subdiv insert bounds: " << bounds.x << " , " << bounds.y << " w " << bounds.w << " h " << bounds.h;
@@ -84,7 +93,7 @@ class QuadTree
             //Node is already full; don't try to add any more
             //std::cout << "rejected b/c full\n";
             return false;
-        }
+        }*/
         void subdivide()
         {
             float halfWidth = bounds.w/2;
@@ -103,28 +112,28 @@ class QuadTree
                 float x = newDataPoint.x;
                 float y = newDataPoint.y;
                 //std::cout << "redis tl\n";
-                if (tL->subdivideInsert(newData, x, y))
+                if (tL->insert(newData, x, y))
                 {
                     //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
                 //std::cout << "redis tr\n";
-                if (tR->subdivideInsert(newData, x, y))
+                if (tR->insert(newData, x, y))
                 {
                     //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
                 //std::cout << "redis bl\n";
-                if (bL->subdivideInsert(newData, x, y))
+                if (bL->insert(newData, x, y))
                 {
                     //std::cout << "success\n";
                     data.pop_back();
                     continue;
                 }
                 //std::cout << "redis br\n";
-                if (bR->subdivideInsert(newData, x, y))
+                if (bR->insert(newData, x, y))
                 {
                     //std::cout << "success\n";
                     data.pop_back();
@@ -168,6 +177,7 @@ class QuadTree
             //Make sure point is within the bounds of this node
             if (!isPointInRange(x, y, bounds))
             {
+                //std::cout << "point not in bounds\n";
                 //Point is not within bounds
                 return false;
             }
@@ -194,7 +204,7 @@ class QuadTree
             if (!tL)
             {
                 subdivide();
-                if (tL->subdivideInsert(newData, x, y)) return true;
+                /*if (tL->subdivideInsert(newData, x, y)) return true;
                 if (tR->subdivideInsert(newData, x, y)) return true;
                 if (bL->subdivideInsert(newData, x, y)) return true;
                 if (bR->subdivideInsert(newData, x, y)) return true;
@@ -205,7 +215,7 @@ class QuadTree
                 newPoint.y = y;
                 newPoint.data = newData;
                 data.push_back(newPoint);
-                return true;
+                return true;*/
             }
 
             //If already subdivided, try inserting into child nodes
