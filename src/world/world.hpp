@@ -17,10 +17,11 @@ class World
         std::map<CellIndex, Cell*, CellIndexComparer> cells;
         multilayerMap* masterMap;
         window* win;
+        ObjectProcessorDir* processorDir;
         tileCamera camera;
     public:
-        //newMasterMap should
-        World(window* newWin, multilayerMap* newMasterMap, int newWorldID);
+        //newMasterMap should be set up correctly already
+        World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
         ~World();
         //Returns NULL if cell is not in map
         Cell* getCell(CellIndex cell);

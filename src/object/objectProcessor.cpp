@@ -1,9 +1,12 @@
 #ifndef OBJECTPROCESSOR_CPP
 #define OBJECTPROCESSOR_CPP
 #include "objectProcessor.hpp"
+#include "objectManager.hpp"
 ObjectProcessor::ObjectProcessor()
 {
     processorType = -1;
+    testSpr.load("data/agent.png");
+    testSpr.setOrigin(16, 16);
 }
 ObjectProcessor::~ObjectProcessor()
 {
@@ -24,10 +27,10 @@ void ObjectProcessor::initialize(eptFile* spec)
 //Called to initialize a new-ed object - use this function to make sure
 //objects are valid subtypes in valid positions
 //Return false if the object cannot be created
-bool ObjectProcessor::createObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager& manager)
+bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager)
 {
     newObj->subType = subType;
-    newObj->setPosition(position, manager);
+    newObj->setPosition(position, *manager);
     newObj->rotation = rotation;
     return true;
 }
@@ -37,8 +40,12 @@ int ObjectProcessor::updateObject(Object* obj)
     return 1;
 }
 //Render the object (it is in view of player)
-void ObjectProcessor::renderObject(Object* obj)
+void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win)
 {
+    Coord pos = obj->getPosition();
+    testSpr.setPosition(pos.getCellOffsetX() - viewX, pos.getCellOffsetY() - viewY);
+    testSpr.setRotation(obj->rotation);
+    win->draw(&testSpr);
     return;
 }
 //Agent uses/activates object

@@ -6,12 +6,13 @@
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
 
-World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID)
+World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir)
 {
     win = newWin;
     masterMap = newMasterMap;
     camera.setMap(masterMap->getMasterMap());
     camera.setViewSize(win->getWidth(), win->getHeight());
+    processorDir = newDir;
     //TODO
     worldID = newWorldID;
 }
@@ -21,7 +22,7 @@ World::~World()
 }
 bool World::loadCell(CellIndex cellToLoad)
 {
-    Cell* newCell = new Cell(cellToLoad, this);
+    Cell* newCell = new Cell(cellToLoad, this, processorDir);
     if (!newCell->load(worldID))
     {
         delete newCell;
@@ -128,12 +129,12 @@ void World::render(Coord& viewPosition)
         Cell* currentCell = getCell(cellsToRender[i]);
         if (currentCell)
         {
-            currentCell->render(camera, masterMap, win);
+            currentCell->render(camera, newX, newY, masterMap, win);
         }
-        //Eventually this will be somewhere else
+        //TODO: Move this generation code
         else
         {
-            Cell* newCell = new Cell(cellsToRender[i], this);
+            Cell* newCell = new Cell(cellsToRender[i], this, processorDir);
             newCell->generate(worldID, cellsToRender[i].x + cellsToRender[i].y + worldID, 1);
             cells[cellsToRender[i]] = newCell;
         }

@@ -24,7 +24,7 @@ bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& seco
     return first.y > second.y;
 }
 
-Cell::Cell(CellIndex newCellID, World* newWorld):objectManager(newWorld, newCellID, this)
+Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir):objectManager(newWorld, processorDir, newCellID, this)
 {
     world = newWorld;
     cellID = newCellID;
@@ -33,6 +33,10 @@ Cell::Cell(CellIndex newCellID, World* newWorld):objectManager(newWorld, newCell
 Cell::~Cell()
 {
     //TODO: Delete cell data
+}
+ObjectManager* Cell::getObjectManager()
+{
+    return &objectManager;
 }
 bool Cell::loadLayer(const std::string& filename, int layerNum, bool isMasterLayer)
 {
@@ -238,7 +242,11 @@ bool Cell::save(int worldID, multilayerMap* map)
     cellID.y << " ] to " << masterFileName.str() << "\n";
     return true;
 }
-void Cell::render(tileCamera& cam, multilayerMap* map, window* win)
+void Cell::renderObjects(float viewX, float viewY, window* win)
+{
+    objectManager.renderObjects(viewX, viewY, win);
+}
+void Cell::render(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
 {
     //TODO: Make this less tedious
     //Grab all layers already in the map
@@ -256,6 +264,8 @@ void Cell::render(tileCamera& cam, multilayerMap* map, window* win)
     
     //Render ground and onground
     map->render(0, 1, cam.getX(), cam.getY(), win);
+    //Render Objects
+    renderObjects(viewX, viewY, win);
     //Render aboveGround
     map->render(2, 0, cam.getX(), cam.getY(), win);
     

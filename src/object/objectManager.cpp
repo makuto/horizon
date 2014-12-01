@@ -5,14 +5,17 @@
 #include <iostream>
 #include <base2.0/collision/collision.hpp>
 #include "../world/cell.hpp"
-const unsigned int MAX_NODE_CAPACITY = 4;
-const unsigned int POOL_SIZE = 10;
-ObjectManager::ObjectManager(World* newWorld, CellIndex newParentCellID, Cell* newParent)
+
+const unsigned int MAX_NODE_CAPACITY = 2;
+const unsigned int POOL_SIZE = 100;
+const float VIEW_TOLERANCE = 64;
+ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent)
 {
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
     world = newWorld;
     parentCell = newParent;
     parentCellID = newParentCellID;
+    processorDir = newProcessorDir;
 }
 ObjectManager::~ObjectManager()
 {
@@ -72,14 +75,14 @@ std::vector<Object*>* ObjectManager::getObjectsOfType(int type)
 std::vector<Object*>* ObjectManager::getObjectsInRange(aabb& range)
 {
     std::vector<Object*>* objectsInRange = new std::vector<Object*>;
-    int totalResults = indexQuadTree->queryRange(range, *objectsInRange);
+    indexQuadTree->queryRange(range, *objectsInRange);
     return objectsInRange;
 }
 //Returns a pointer to an uninitialized (nor constructed) object
 //or NULL if there are no free pool spaces. The object will be added
 //to the quadtree at the specified position. position will be set to
 //This current cell and x, y; type will also be set
-Object* ObjectManager::getNewObject(int type, float x, float y)
+Object* ObjectManager::getNewRawObject(int type, float x, float y)
 {
     //Get the object pool
     ObjectPool* objects = getObjectPool(type);
@@ -132,6 +135,24 @@ Object* ObjectManager::getNewObject(int type, float x, float y)
     emptyObject->position.setPosition(parentCellID, x, y);
     return emptyObject;
 }
+//Uses getNewRawObject and calls initObject() for the object's type
+Object* ObjectManager::getNewInitializedObject(int type, int subType, float x, float y, float rotation)
+{
+    Object* newObj = getNewRawObject(type, x, y);
+    if (newObj)
+    {
+        ObjectProcessor* processor = processorDir->getObjProcessor(type);
+        if (!processor)
+        {
+            removeObject(newObj);
+            std::cout << "ERROR: getNewInitializedObject(): Obj Processor for type " << type << " not found!\n";
+            return NULL;
+        }
+        processor->initObject(newObj, subType, newObj->position, rotation, this);
+        return newObj;
+    }
+    return NULL;
+}
 //Removes an object from the pool (must call this to work with pool)
 //Type comes from object, so don't wipe the memory
 void ObjectManager::removeObject(Object* objectToRemove)
@@ -179,5 +200,41 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     {
         std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
     }
+}
+void ObjectManager::renderObjects(float viewX, float viewY, window* win)
+{
+    //Construct view bounds
+    aabb view(viewX - VIEW_TOLERANCE, viewY - VIEW_TOLERANCE,
+    win->getWidth() + VIEW_TOLERANCE, win->getHeight() + VIEW_TOLERANCE);
+    //Get visible objects
+    std::vector<Object*> visibleObjs;
+    int resultCount = indexQuadTree->queryRange(view, visibleObjs);
+    if (resultCount > 0)
+    {
+        ObjectProcessor* processor = NULL;
+        int lastType = -1;
+        for (std::vector<Object*>::iterator it = visibleObjs.begin();
+        it != visibleObjs.end(); ++it)
+        {
+            Object* currentObject = (*it);
+            if (currentObject != NULL)
+            {
+                //Find this object's processor (unless it's the same as last obj)
+                if (processor==NULL || currentObject->type != lastType)
+                {
+                    //Find associated processor
+                    processor = processorDir->getObjProcessor(currentObject->type);
+                    //Skip object if its processor wasn't found
+                    if (processor==NULL) continue;
+                    //Successfully found processor; save its type in case next obj is that type
+                    lastType = currentObject->type;
+                }
+                
+                processor->renderObject(currentObject, viewX, viewY, win);
+            }
+        }
+    }
+    //Debug render quadtree
+    indexQuadTree->render(win, -viewX, -viewY);
 }
 #endif

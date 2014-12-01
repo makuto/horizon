@@ -1,5 +1,11 @@
 #ifndef QUADTREE_HPP
 #define QUADTREE_HPP
+//Only for render
+#include <base2.0/graphics/graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+
 #include <vector>
 #include <stdlib.h>     /* system, NULL, EXIT_FAILURE */
 #include <base2.0/collision/collision.hpp>
@@ -293,6 +299,30 @@ class QuadTree
             
             return totalResults;
         }
-        
+
+        void render(window* win, float viewX, float viewY)
+        {
+            sf::RenderWindow* sfWin = win->getBase();
+            sf::RectangleShape rectangle;
+            rectangle.setSize(sf::Vector2f(bounds.w, bounds.h));
+            rectangle.setFillColor(sf::Color::Transparent);
+            if (data.size() > 0)
+            {
+                rectangle.setOutlineColor(sf::Color::Blue);
+            }
+            else rectangle.setOutlineColor(sf::Color::Green);
+            if (depth >= MAX_TREE_DEPTH) rectangle.setOutlineColor(sf::Color::Red);
+            rectangle.setOutlineThickness(2);
+            rectangle.setPosition(viewX + bounds.x, viewY + bounds.y);
+            sfWin->draw(rectangle);
+
+            if (tL)
+            {
+                tL->render(win, viewX, viewY);
+                tR->render(win, viewX, viewY);
+                bL->render(win, viewX, viewY);
+                bR->render(win, viewX, viewY);
+            }
+        }
 };
 #endif

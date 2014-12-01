@@ -5,6 +5,7 @@
 #include <base2.0/tileMap/multilayerMap.hpp>
 #include <base2.0/tileMap/tileCamera.hpp>
 #include "../object/objectManager.hpp"
+#include "../object/objectProcessorDir.hpp"
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
@@ -36,8 +37,9 @@ class Cell
 
         World* world;
     public:
-        Cell(CellIndex newCellID, World* newWorld);
+        Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
         ~Cell();
+        ObjectManager* getObjectManager();
         //Loads everything a Cell needs. Returns false if
         //any cell files were not found
         bool load(int worldID);
@@ -49,9 +51,13 @@ class Cell
         //Generates a new cell with the specified algorithm
         //Algorithms: 1 = simple fill
         void generate(int worldID, int seed, int algorithm);
+        //Renders objects relative to the provided coordinates
+        void renderObjects(float viewX, float viewY, window* win);
         //Cam should be relative to the cell (use getCellOffsetX instead
-        //of getTrueX)
-        void render(tileCamera& cam, multilayerMap* map, window* win);
+        //of getTrueX) UPDATE: That comment might not be right; see world.cpp
+        //ViewX and Y are only used for renderObjects()
+        void render(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win);
+        
 };
 #endif
 

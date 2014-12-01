@@ -1,18 +1,22 @@
 #ifndef OBJECTPROCESSOR_HPP
 #define OBJECTPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
+#include <base2.0/graphics/graphics.hpp>
 #include "object.hpp"
-#include "objectManager.hpp"
+//#include "objectManager.hpp"
 #include "../agent/agent.hpp"
 /* --ObjectProcessor--
  * ObjectProcessors take Objects and perform actions on them. This class
  * is polymorphic so new object behaviors can be implemented easily.
  * */
+class ObjectManager;
 class ObjectProcessor
 {
     private:
         //The supertype/type of objects this processor handles
         int processorType;  //Set to -1 by default (error if left at -1)
+
+        sprite testSpr;
     public:
         ObjectProcessor();
         virtual ~ObjectProcessor();
@@ -26,11 +30,12 @@ class ObjectProcessor
         //Called to initialize a new-ed object - use this function to make sure
         //objects are valid subtypes in valid positions.
         //Return false if the object cannot be created
-        virtual bool createObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager& manager);
+        virtual bool initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager);
         //Do a routine update on the object
         virtual int updateObject(Object* obj);
-        //Render the object (it is in view of player)
-        virtual void renderObject(Object* obj);
+        //Render the object (it is in view). ViewX and Y are the window's top left corner coordinates
+        //relative to the current cell.
+        virtual void renderObject(Object* obj, float viewX, float viewY, window* win);
         //Agent uses/activates object
         virtual int activateObject(Object* obj, Agent* agent);
         //Agent collides with object

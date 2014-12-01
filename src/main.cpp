@@ -15,17 +15,23 @@
 #include "world/cell.hpp"
 
 #include "object/objectManager.hpp"
-
+#include "object/objectProcessorDir.hpp"
+#include "object/objectProcessor.hpp"
 int main()
 {
+    ObjectProcessorDir testDir;
+    ObjectProcessor* test2 = new ObjectProcessor();
+    //test2->initialize(
+    testDir.addObjProcessor(test2, 1);
+    
     CellIndex testID;
     testID.x = 1;
     testID.y = 1;
-    ObjectManager testManager(NULL, testID, NULL);
-    Object* testObj2 = testManager.getNewObject(1, 1230, 2000);
-    testManager.getNewObject(1, 1230, 2000);
-    testManager.getNewObject(1, 1230, 200);
-    testManager.getNewObject(1, 1230, 21);
+    ObjectManager testManager(NULL, &testDir, testID, NULL);
+    Object* testObj2 = testManager.getNewRawObject(1, 1230, 2000);
+    testManager.getNewRawObject(1, 1230, 2000);
+    testManager.getNewRawObject(1, 1230, 200);
+    testManager.getNewInitializedObject(1, 1, 1230, 21, 0);
     testObj2->type = 1;
     aabb testRange(0, 0, 2048, 2000);
     std::vector<Object*>* results = testManager.getObjectsInRange(testRange);
@@ -37,7 +43,7 @@ int main()
         std::cout << "\n";
     }
     delete results;
-    return 1;
+    //return 1;
     eptParser parser;
     if(!parser.load("data/files.ept")) return -1;
     
@@ -49,7 +55,7 @@ int main()
     if (!tileSet.load(parser.getAttribute("files.worldDefaults.tileSet").c_str())) return -1;
     defaultMap.setImage(&tileSet);
     int worldToLoad = 0;
-    World newWorld(&win, &defaultMap, worldToLoad);
+    World newWorld(&win, &defaultMap, worldToLoad, &testDir);
     CellIndex index;
     index.x = 0;
     index.y = 0;
@@ -63,8 +69,8 @@ int main()
     index.x = -1;
     index.y = 0;
     if (!newWorld.loadCell(index)) return -1;
-    ObjectManager test(&newWorld, testID, NULL);
-    Object* testObj = test.getNewObject(1, 1, 1);
+    ObjectManager test(&newWorld, &testDir, testID, NULL);
+    Object* testObj = test.getNewInitializedObject(1, 1, 1, 1, 1);
     testObj->type=1;
     Coord newPos;
     newPos.setPosition(index, 0, 10);
@@ -107,12 +113,26 @@ int main()
     testAgent->worldPosition.setPosition(agentCell, 100, 100);
     Coord windowPosition;
     windowPosition.setPosition(agentCell, 0, 0);
-    float viewSpeed = 200;
+    float defaultViewSpeed = 400;
+    float viewSpeed = defaultViewSpeed;
     profiler prof;
     prof.startTiming("frame");
     timer totalTime;
     totalTime.start();
     timing* avgFrameTiming = prof.getTiming("frame");
+
+    CellIndex cellToGet;
+    cellToGet.x = 0;
+    cellToGet.y = 0;
+    Cell* originCell = newWorld.getCell(cellToGet);
+    if (originCell==NULL) return -1;
+    ObjectManager* originObjMan = originCell->getObjectManager();
+    for (int i = 0; i < 100; ++i)
+    {
+        srand(i);
+        //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
+        originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
+    }
 
     //win.shouldClear(false);
     //Main loop
@@ -124,6 +144,11 @@ int main()
         float avgFrameTime = avgFrameTiming->average; //Average frame time (profiler)
         //float avgFrameTime = 0.016; //http://gafferongames.com/game-physics/fix-your-timestep/ ?
         //float avgFrameTime = frameTime.getTime(); //Current frame time
+        if (in.isPressed(inputCode::LShift))
+        {
+            viewSpeed = defaultViewSpeed / 4;
+        }
+        else viewSpeed = defaultViewSpeed;
         if (in.isPressed(inputCode::Up))
         {
             windowPosition.addVector(0, -viewSpeed * avgFrameTime);
