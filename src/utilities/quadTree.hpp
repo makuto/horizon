@@ -11,7 +11,7 @@
 #include <base2.0/collision/collision.hpp>
 #include <iostream>
 
-const unsigned int MAX_TREE_DEPTH = 6;
+const unsigned int MAX_TREE_DEPTH = 8;
 //If multiple objects are in the same place, tree will go to max depth,
 //then capacity will become MAX_DEPTH_CAPACITY to handle the leftovers
 const unsigned int MAX_DEPTH_CAPACITY = 100;

@@ -8,7 +8,8 @@
 
 const unsigned int MAX_NODE_CAPACITY = 2;
 const unsigned int POOL_SIZE = 100;
-const float VIEW_TOLERANCE = 64;
+//Should equal largest object sprite half width
+const float VIEW_TOLERANCE = 32;
 ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent)
 {
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
@@ -205,12 +206,13 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
 {
     //Construct view bounds
     aabb view(viewX - VIEW_TOLERANCE, viewY - VIEW_TOLERANCE,
-    win->getWidth() + VIEW_TOLERANCE, win->getHeight() + VIEW_TOLERANCE);
+    win->getWidth() + (VIEW_TOLERANCE * 2), win->getHeight() + (VIEW_TOLERANCE * 2));
     //Get visible objects
     std::vector<Object*> visibleObjs;
     int resultCount = indexQuadTree->queryRange(view, visibleObjs);
     if (resultCount > 0)
     {
+        std::cout << resultCount << " objs to render\n";
         ObjectProcessor* processor = NULL;
         int lastType = -1;
         for (std::vector<Object*>::iterator it = visibleObjs.begin();

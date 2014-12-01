@@ -129,6 +129,8 @@ void World::render(Coord& viewPosition)
         Cell* currentCell = getCell(cellsToRender[i]);
         if (currentCell)
         {
+            //TODO: Separate so that all cell grounds & ongrounds render,
+            //then all cell objects, then all cell abovegrounds.
             currentCell->render(camera, newX, newY, masterMap, win);
         }
         //TODO: Move this generation code
