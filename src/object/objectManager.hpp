@@ -2,6 +2,7 @@
 #define OBJECTMANAGER_HPP
 #include <map>
 #include <vector>
+#include <base2.0/collision/collision.hpp>
 //#include "../world/world.hpp"
 #include "../world/coord.hpp"
 //#include "../world/cell.hpp"
@@ -38,9 +39,9 @@ class ObjectManager
         //and a different ObjectManager should take over
        World* world;
         Cell* parentCell;
+        CellIndex parentCellID;
     public:
-        ObjectManager();
-     ObjectManager(World* newWorld, Cell* newParent);
+        ObjectManager(World* newWorld, CellIndex newParentCellID, Cell* newParent);
         ~ObjectManager();
         
         //Returns a pointer to a vector with all objects in this
@@ -48,8 +49,14 @@ class ObjectManager
         //the requested type. All objects in the array are initialized (in use)
         //Delete the array once you are done.
         std::vector<Object*>* getObjectsOfType(int type);
+        //Returns a pointer to a vector with all objects in the area in this
+        //cell or NULL if there are no objects in the range.
+        //Delete the array once you are done.
+        std::vector<Object*>* getObjectsInRange(aabb& range);
         //Returns a pointer to an uninitialized (nor constructed) object
-        //or NULL if there are no free pool spaces
+        //or NULL if there are no free pool spaces. The object will be added
+        //to the quadtree at the specified position. position will be set to
+        //This current cell and x, y; type will also be set
         Object* getNewObject(int type, float x, float y);
         //Removes an object from the pool (must call this to work with pool)
         //Type comes from object, so don't wipe the memory

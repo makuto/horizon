@@ -34,6 +34,7 @@ class Object
         //These functions make sure quadtree and collisions are handled
         void setPosition(Coord& newPosition, ObjectManager& manager);
         void addVector(float dx, float dy, ObjectManager& manager);
+        Coord getPosition();
         
 };
 #endif

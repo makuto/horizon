@@ -24,7 +24,7 @@ bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& seco
     return first.y > second.y;
 }
 
-Cell::Cell(CellIndex newCellID, World* newWorld):objectManager(newWorld, this)
+Cell::Cell(CellIndex newCellID, World* newWorld):objectManager(newWorld, newCellID, this)
 {
     world = newWorld;
     cellID = newCellID;
@@ -254,8 +254,10 @@ void Cell::render(tileCamera& cam, multilayerMap* map, window* win)
         map->setLayer(i, &tiles[i]);
     }
     
-    //Render
-    map->render(0, 2, cam.getX(), cam.getY(), win);
+    //Render ground and onground
+    map->render(0, 1, cam.getX(), cam.getY(), win);
+    //Render aboveGround
+    map->render(2, 0, cam.getX(), cam.getY(), win);
     
     //Reset the layers
     for (unsigned int i = 0; i < map->getTotalLayers(); i++)

@@ -7,15 +7,12 @@
 #include "../world/cell.hpp"
 const unsigned int MAX_NODE_CAPACITY = 4;
 const unsigned int POOL_SIZE = 10;
-ObjectManager::ObjectManager()
-{
-
-}
-ObjectManager::ObjectManager(World* newWorld, Cell* newParent)
+ObjectManager::ObjectManager(World* newWorld, CellIndex newParentCellID, Cell* newParent)
 {
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
     world = newWorld;
     parentCell = newParent;
+    parentCellID = newParentCellID;
 }
 ObjectManager::~ObjectManager()
 {
@@ -72,9 +69,16 @@ std::vector<Object*>* ObjectManager::getObjectsOfType(int type)
     }
     return objectsOfType;
 }
+std::vector<Object*>* ObjectManager::getObjectsInRange(aabb& range)
+{
+    std::vector<Object*>* objectsInRange = new std::vector<Object*>;
+    int totalResults = indexQuadTree->queryRange(range, *objectsInRange);
+    return objectsInRange;
+}
 //Returns a pointer to an uninitialized (nor constructed) object
 //or NULL if there are no free pool spaces. The object will be added
-//to the quadtree at the specified position (but YOU MUST SET POSITION in obj)
+//to the quadtree at the specified position. position will be set to
+//This current cell and x, y; type will also be set
 Object* ObjectManager::getNewObject(int type, float x, float y)
 {
     //Get the object pool
@@ -118,12 +122,14 @@ Object* ObjectManager::getNewObject(int type, float x, float y)
         return NULL;
     }
     Object* emptyObject = objects->firstEmptyObj;
-    //Show this object is in use
-    emptyObject->type=0;
     //Set the index to the next empty object
     objects->firstEmptyObj = emptyObject->_nextPoolObject;
     //Add object to quadtree at specified position
     indexQuadTree->insert(emptyObject, x, y);
+    //Set the object type to the type passed in (dually set to in use)
+    emptyObject->type=type;
+    //Set the object position to this cell + x y offsets
+    emptyObject->position.setPosition(parentCellID, x, y);
     return emptyObject;
 }
 //Removes an object from the pool (must call this to work with pool)

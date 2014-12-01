@@ -18,6 +18,26 @@
 
 int main()
 {
+    CellIndex testID;
+    testID.x = 1;
+    testID.y = 1;
+    ObjectManager testManager(NULL, testID, NULL);
+    Object* testObj2 = testManager.getNewObject(1, 1230, 2000);
+    testManager.getNewObject(1, 1230, 2000);
+    testManager.getNewObject(1, 1230, 200);
+    testManager.getNewObject(1, 1230, 21);
+    testObj2->type = 1;
+    aabb testRange(0, 0, 2048, 2000);
+    std::vector<Object*>* results = testManager.getObjectsInRange(testRange);
+    if (!results) return -1;
+    for (std::vector<Object*>::iterator it = results->begin(); it != results->end(); ++it)
+    {
+        std::cout << (*it)->type << " pos: ";
+        (*it)->getPosition().print();
+        std::cout << "\n";
+    }
+    delete results;
+    return 1;
     eptParser parser;
     if(!parser.load("data/files.ept")) return -1;
     
@@ -43,7 +63,7 @@ int main()
     index.x = -1;
     index.y = 0;
     if (!newWorld.loadCell(index)) return -1;
-    ObjectManager test(&newWorld, NULL);
+    ObjectManager test(&newWorld, testID, NULL);
     Object* testObj = test.getNewObject(1, 1, 1);
     testObj->type=1;
     Coord newPos;

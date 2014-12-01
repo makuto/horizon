@@ -12,4 +12,8 @@ void Object::addVector(float dx, float dy, ObjectManager& manager)
     newPosition.addVector(dx, dy);
     manager.moveObject(this, newPosition);
 }
+Coord Object::getPosition()
+{
+    return position;
+}
 #endif
