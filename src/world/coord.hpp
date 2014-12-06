@@ -8,6 +8,7 @@ extern const int CELL_HEIGHT;
 extern const int TILE_WIDTH;
 extern const int TILE_HEIGHT;
 //Note that you want this value to always be larger than screen size
+//UPDATE: No longer required to be larger than screen
 extern const int CELL_WIDTH_PIXELS;
 extern const int CELL_HEIGHT_PIXELS;
 //Simple x,y index to a cell

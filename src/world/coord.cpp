@@ -8,6 +8,7 @@ const int CELL_HEIGHT = 64;
 const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
 //Note that you want this value to always be larger than screen size
+//UPDATE: No longer required to be larger than screen
 const int CELL_WIDTH_PIXELS = CELL_WIDTH * TILE_WIDTH;
 const int CELL_HEIGHT_PIXELS = CELL_HEIGHT * TILE_HEIGHT;
 

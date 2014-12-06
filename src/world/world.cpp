@@ -52,7 +52,23 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
     Coord bottomR = topLeftCorner;
     bottomR.addVector(width, height);
     CellIndex bottomRCellIndex = bottomR.getCell();
-    //The bottom corner is in a different cell
+    
+    int numCols = abs(topLeftCellIndex.x - bottomRCellIndex.x) + 1;
+    int numRows = abs(topLeftCellIndex.y - bottomRCellIndex.y) + 1;
+    cellArray = new CellIndex[numCols * numRows];
+    size = numCols * numRows;
+    int p = 0;
+    for (int i = topLeftCellIndex.y; i < topLeftCellIndex.y + numRows; ++i)
+    {
+        for (int n = topLeftCellIndex.x; n < topLeftCellIndex.x + numCols; ++n)
+        {
+            cellArray[p].x = n;
+            cellArray[p].y = i;
+            p++;
+        }
+    }
+    return cellArray;
+    /*//The bottom corner is in a different cell
     if (bottomRCellIndex.x != topLeftCellIndex.x)
     {
         if (bottomRCellIndex.y != topLeftCellIndex.y)
@@ -96,7 +112,7 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
         cellArray[0].x = topLeftCellIndex.x; //Top left
         cellArray[0].y = topLeftCellIndex.y;
     }
-    return cellArray;
+    return cellArray;*/
 }
 void World::render(Coord& viewPosition)
 {
