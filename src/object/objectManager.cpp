@@ -132,6 +132,8 @@ Object* ObjectManager::getNewRawObject(int type, float x, float y)
     indexQuadTree->insert(emptyObject, x, y);
     //Set the object type to the type passed in (dually set to in use)
     emptyObject->type=type;
+    //TODO Set the object id
+    emptyObject->id = rand() % 100000;
     //Set the object position to this cell + x y offsets
     emptyObject->position.setPosition(parentCellID, x, y);
     return emptyObject;
@@ -149,7 +151,10 @@ Object* ObjectManager::getNewInitializedObject(int type, int subType, float x, f
             std::cout << "ERROR: getNewInitializedObject(): Obj Processor for type " << type << " not found!\n";
             return NULL;
         }
-        processor->initObject(newObj, subType, newObj->position, rotation, this);
+        Coord newPosition;
+        newPosition.setPosition(parentCellID, x, y);
+        //processor->initObject(newObj, subType, newObj->position, rotation, this);
+        processor->initObject(newObj, subType, newPosition, rotation, this);
         return newObj;
     }
     return NULL;
@@ -167,35 +172,66 @@ void ObjectManager::removeObject(Object* objectToRemove)
     //Remove the object pointer from the quadtree
     if (!indexQuadTree->remove(objectToRemove, objectToRemove->position.getCellOffsetX(), objectToRemove->position.getCellOffsetY()))
     {
-        std::cout << "WARNING: QuadTree removal failed: object position does not match data position\n";
+        std::cout << "WARNING: QuadTree removal failed: object position does not match data position:\n";
+        objectToRemove->position.print();
+        std::cout << "(In cell " << parentCellID.x << " , " << parentCellID.y << ")\n";
     }
     //Set the object to uninitialized
     objectToRemove->type = -1;
+    objectToRemove->id = 0;
     objectToRemove->_nextPoolObject = objects->firstEmptyObj;
     objects->firstEmptyObj = objectToRemove;
 }
 void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
 {
+    //TODO: Make sure object isn't colliding with anything (using new displacement)
+    Coord newDisplacement = newPosition;
+    CellIndex displaceCell = newDisplacement.getCell();
+
+    //Make sure object is still in this cell; if not, tell world and remove object
+    if (displaceCell.x != parentCellID.x || displaceCell.y != parentCellID.y)
+    {
+        Cell* cellAfterDisplace = parentCell->getNeighborCell(newDisplacement.getCell());
+        if (!cellAfterDisplace) //Cell does not exist
+        {
+            std::cout << "ERROR: moveObject() - displace: Cell [ " << displaceCell.x << " , " <<
+            displaceCell.y << " ] does not exist! Ignoring movement\n";
+            //removeObject(objectToMove);
+            return;
+        }
+        else if (cellAfterDisplace != parentCell) //Obj is no longer in this cell
+        {
+            //Get a object in the new cell
+            ObjectManager* newManager = cellAfterDisplace->getObjectManager();
+            Object* newObject = newManager->getNewRawObject(objectToMove->type,
+            newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
+            if (newObject == NULL)
+            {
+                std::cout << "ERROR: moveObject(): no new object returned from getNewRawObject(), removing obj\n";
+                removeObject(objectToMove);
+                return;
+            }
+            //Copy this object to the other cell object
+            *newObject = *objectToMove;
+            //Apply displacement to new object
+            newObject->position.setPosition(displaceCell,
+            newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
+            //Remove migrated object from this manager
+            removeObject(objectToMove);
+            return;
+        }
+    }
+
+    //Object still in this cell; remove it from quadtree, then apply the
+    //displacement and reinsert it into the quadtree
     //Remove the object pointer from the quadtree
     if (!indexQuadTree->remove(objectToMove, objectToMove->position.getCellOffsetX(), objectToMove->position.getCellOffsetY()))
     {
-        std::cout << "WARNING: QuadTree removal failed: object position does not match data position\n";
+        std::cout << "WARNING: moveObject(): QuadTree removal failed!\n";
     }
-
-    //Make sure object isn't colliding with anything
-    //TODO
-    Coord newDisplacement;
-    CellIndex cell = newPosition.getCell();
-    newDisplacement.setPosition(cell, newPosition.getCellOffsetX(), newPosition.getCellOffsetY());
-
     //Apply the displacement
-    CellIndex displaceCell = newDisplacement.getCell();
     objectToMove->position.setPosition(displaceCell,
     newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
-
-    //Make sure object is still in this cell; if not, tell world and remove object
-    //TODO
-    
     //Reinsert object into quadtree
     if (!indexQuadTree->insert(objectToMove, newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY()))
     {
@@ -254,9 +290,14 @@ void ObjectManager::updateObjects(Time* globalTime)
         pIt != it->second.pool.end(); ++pIt)
         {
             Object* currentObject = &(*pIt);
-            if (currentObject->type != -1)
+            if (currentObject->type != -1) //Skip over uninitialized objects
             {
-                processor->updateObject(currentObject, globalTime);
+                int status = processor->updateObject(currentObject, globalTime, this);
+                if (status == -1) //object should be destroyed
+                {
+                    processor->onDestroyObject(currentObject);
+                    removeObject(currentObject);
+                }
             }
         }
     }

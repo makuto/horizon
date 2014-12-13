@@ -15,7 +15,7 @@ class ObjectProcessor
     private:
         //The supertype/type of objects this processor handles
         int processorType;  //Set to -1 by default (error if left at -1)
-
+        
         sprite testSpr;
     public:
         ObjectProcessor();
@@ -33,7 +33,7 @@ class ObjectProcessor
         virtual bool initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager);
         //Do a routine update on the object; set obj->lastUpdate to globalTime
         //once finished (used to get the delta)
-        virtual int updateObject(Object* obj, Time* globalTime);
+        virtual int updateObject(Object* obj, Time* globalTime, ObjectManager* manager);
         //Render the object (it is in view). ViewX and Y are the window's top left corner coordinates
         //relative to the current cell.
         virtual void renderObject(Object* obj, float viewX, float viewY, window* win);
@@ -41,7 +41,7 @@ class ObjectProcessor
         virtual int activateObject(Object* obj, Agent* agent);
         //Agent collides with object
         virtual int touchObject(Object* obj, Agent* agent);
-        //Object is hit by something
+        //Object is hit by a used item (sword etc)
         //virtual int hitObject(Object* obj, Actor* actor, int inventoryIndex); //TODO
         //This function is called when an object is going to be destroyed
         //Use this function to do any cleanup if needed. The Object itself

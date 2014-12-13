@@ -5,6 +5,7 @@
 void Object::setPosition(Coord& newPosition, ObjectManager& manager)
 {
     manager.moveObject(this, newPosition);
+    bounds.setPosition(newPosition.getCellOffsetX(), newPosition.getCellOffsetY());
 }
 void Object::addVector(float dx, float dy, ObjectManager& manager)
 {

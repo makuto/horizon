@@ -20,7 +20,7 @@ NeedProcessor::~NeedProcessor()
 }
 int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime)
 {
-    std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
+    //std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
     //currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
     currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
     agent->worldPosition.addVector(0, 10);

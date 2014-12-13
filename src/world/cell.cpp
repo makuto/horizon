@@ -45,6 +45,10 @@ ObjectManager* Cell::getObjectManager()
 {
     return &objectManager;
 }
+Cell* Cell::getNeighborCell(CellIndex index)
+{
+    return world->getCell(index);
+}
 bool Cell::loadLayer(const std::string& filename, int layerNum, bool isMasterLayer)
 {
     std::ifstream in;

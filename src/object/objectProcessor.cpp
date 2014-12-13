@@ -36,12 +36,19 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     return true;
 }
 //Do a routine update on the object
-int ObjectProcessor::updateObject(Object* obj, Time* globalTime)
+int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* manager)
 {
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
-    obj->rotation += delta.getExactSeconds() * 200;
+    //obj->rotation += delta.getExactSeconds() * 200;
+    float speed = 100;
+    obj->addVector(speed * delta.getExactSeconds(), 0, *manager);
     obj->lastUpdate = *globalTime;
+    if (obj->getPosition().getCell().x > 0)
+    {
+        std::cout << obj << " reached 2 at " << globalTime->getExactSeconds() << " " << obj->type << "\n";
+        return -1;
+    }
     return 1;
 }
 //Render the object (it is in view of player)

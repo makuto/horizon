@@ -11,6 +11,7 @@
 #include "objectProcessor.hpp"
 #include "objectProcessorDir.hpp"
 #include "object.hpp"
+//#include "../world/world.hpp"
 /* --ObjectManager--
  * ObjectManagers control the creation, rendering, interaction, and deletion
  * of Objects. ObjectManagers don't care what type the objects are.

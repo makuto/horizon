@@ -25,6 +25,7 @@ int main()
     testDir.addObjProcessor(test2, 1);
     
     CellIndex testID;
+    /*
     testID.x = 1;
     testID.y = 1;
     ObjectManager testManager(NULL, &testDir, testID, NULL);
@@ -42,7 +43,7 @@ int main()
         (*it)->getPosition().print();
         std::cout << "\n";
     }
-    delete results;
+    delete results;*/
     //return 1;
     eptParser parser;
     if(!parser.load("data/files.ept")) return -1;
@@ -73,8 +74,8 @@ int main()
     Object* testObj = test.getNewInitializedObject(1, 1, 1, 1, 1);
     testObj->type=1;
     Coord newPos;
-    newPos.setPosition(index, 0, 10);
-    testObj->setPosition(newPos, test);
+    //newPos.setPosition(index, 0, 10);
+    //testObj->setPosition(newPos, test);
     
     eptGroup* filesToLoad = parser.getGroup("files.testScripts");
     //Parse all files in files.testScripts
@@ -110,7 +111,7 @@ int main()
     CellIndex agentCell;
     agentCell.x = 0;
     agentCell.y = 0;
-    testAgent->worldPosition.setPosition(agentCell, 100, 100);
+    //testAgent->worldPosition.setPosition(agentCell, 100, 100);
     Coord windowPosition;
     windowPosition.setPosition(agentCell, 0, 0);
     float defaultViewSpeed = 400;
@@ -120,16 +121,16 @@ int main()
     timer totalTime;
     totalTime.start();
     timing* avgFrameTiming = prof.getTiming("frame");
-
+    
     CellIndex cellToGet;
     cellToGet.x = 0;
     cellToGet.y = 0;
     Cell* originCell = newWorld.getCell(cellToGet);
     if (originCell==NULL) return -1;
     ObjectManager* originObjMan = originCell->getObjectManager();
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 2; ++i)
     {
-        srand(i);
+        srand(i + 1);
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
@@ -177,16 +178,17 @@ int main()
         //globalTime.addMilliseconds(frameTime.getTime());
         globalTime.reset();
         globalTime.addSeconds(worldTime.getTime());
+        std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
-        prof.startTiming("updateWorld");
-        newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
-        prof.stopTiming("updateWorld");
-        if (deltaTime.getExactSeconds()>=0.1)
+        if (deltaTime.getExactSeconds()>=0.016)
         {
             prof.startTiming("updateAgent");
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
+            prof.startTiming("updateWorld");
+        newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+        prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();
         }

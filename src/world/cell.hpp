@@ -40,6 +40,7 @@ class Cell
         Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
         ~Cell();
         ObjectManager* getObjectManager();
+        Cell* getNeighborCell(CellIndex index);
         //Loads everything a Cell needs. Returns false if
         //any cell files were not found
         bool load(int worldID);
