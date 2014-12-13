@@ -32,7 +32,7 @@ class ObjectProcessor
         //Return false if the object cannot be created
         virtual bool initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager);
         //Do a routine update on the object
-        virtual int updateObject(Object* obj);
+        virtual int updateObject(Object* obj, Time* globalTime);
         //Render the object (it is in view). ViewX and Y are the window's top left corner coordinates
         //relative to the current cell.
         virtual void renderObject(Object* obj, float viewX, float viewY, window* win);

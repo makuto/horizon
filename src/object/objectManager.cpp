@@ -239,4 +239,27 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
     //Debug render quadtree
     indexQuadTree->render(win, -viewX, -viewY);
 }
+void ObjectManager::updateObjects(Time* globalTime)
+{
+    ObjectProcessor* processor = NULL;
+    for (std::map<int, ObjectPool>::iterator it = objectPools.begin();
+    it != objectPools.end(); ++it)
+    {
+        int currentType = it->first;
+        //Find this pool's processor
+        processor = processorDir->getObjProcessor(currentType);
+        //Skip object if its processor wasn't found
+        if (processor==NULL) continue;
+        //TODO: Only update objects that need to be updated
+        for (std::vector<Object>::iterator pIt = it->second.pool.begin();
+        pIt != it->second.pool.end(); ++pIt)
+        {
+            Object* currentObject = &(*pIt);
+            if (currentObject->type != -1)
+            {
+                processor->updateObject(currentObject, globalTime);
+            }
+        }
+    }
+}
 #endif

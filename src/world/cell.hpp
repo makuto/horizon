@@ -57,6 +57,7 @@ class Cell
         //of getTrueX) UPDATE: That comment might not be right; see world.cpp
         //ViewX and Y are only used for renderObjects()
         void render(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win);
+        void update(Time* globalTime);
         
 };
 #endif

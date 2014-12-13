@@ -179,6 +179,9 @@ int main()
         globalTime.addSeconds(worldTime.getTime());
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
+        prof.startTiming("updateWorld");
+        newWorld.update(windowPosition, &globalTime);
+        prof.stopTiming("updateWorld");
         if (deltaTime.getExactSeconds()>=0.1)
         {
             prof.startTiming("updateAgent");

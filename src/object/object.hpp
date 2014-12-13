@@ -2,6 +2,7 @@
 #define OBJECT_HPP
 #include <base2.0/collision/collision.hpp>
 #include "../world/coord.hpp"
+#include "../world/time.hpp"
 //#include "objectManager.hpp"
 /* --Object--
  * Other than tiles and graphical effects, there are no other things in
@@ -26,6 +27,7 @@ class Object
         int type;       //General type of object, e.g. pickup, actor, usable
         int subType;    //Specific object of type, e.g. food pickup, human-species, bed
         int id;         //Universal ID for this instance
+        Time lastUpdate;//Last time this object was updated
         int state;      //Use this for whatever you want
         float rotation; //Graphical rotation for this object
         aabb bounds;    //Bounds for all external collisions (x and y ignored)

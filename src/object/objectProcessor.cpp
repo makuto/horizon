@@ -32,11 +32,13 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->subType = subType;
     newObj->setPosition(position, *manager);
     newObj->rotation = rotation;
+    newObj->lastUpdate.reset();
     return true;
 }
 //Do a routine update on the object
-int ObjectProcessor::updateObject(Object* obj)
+int ObjectProcessor::updateObject(Object* obj, Time* globalTime)
 {
+    obj->rotation++;
     return 1;
 }
 //Render the object (it is in view of player)

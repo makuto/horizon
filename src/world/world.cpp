@@ -5,6 +5,9 @@
 
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
+const unsigned int MAX_INTERSECTING_CELLS = 10;
+const int UPDATE_CLOSE_DISTANCE_X = 2048;
+const int UPDATE_CLOSE_DISTANCE_Y = 2048;
 
 World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir)
 {
@@ -15,9 +18,13 @@ World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, Object
     processorDir = newDir;
     //TODO
     worldID = newWorldID;
+    cellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS]; 
 }
 World::~World()
 {
+    std::cout << "deleting\n";
+    delete[] cellArrayCache;
+    std::cout << "done\n";
     //TODO: Delete all cells
 }
 bool World::loadCell(CellIndex cellToLoad)
@@ -52,11 +59,17 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
     Coord bottomR = topLeftCorner;
     bottomR.addVector(width, height);
     CellIndex bottomRCellIndex = bottomR.getCell();
-    
     int numCols = abs(topLeftCellIndex.x - bottomRCellIndex.x) + 1;
     int numRows = abs(topLeftCellIndex.y - bottomRCellIndex.y) + 1;
-    cellArray = new CellIndex[numCols * numRows];
+    //cellArray = new CellIndex[numCols * numRows];
+    cellArray = cellArrayCache;
     size = numCols * numRows;
+    if ((unsigned int) size > MAX_INTERSECTING_CELLS)
+    {
+        std::cout << "ERROR: Intersecting cache size too small (needed " << size << " cells)!\n";
+        size = 0;
+        return cellArray;
+    }
     int p = 0;
     for (int i = topLeftCellIndex.y; i < topLeftCellIndex.y + numRows; ++i)
     {
@@ -157,8 +170,24 @@ void World::render(Coord& viewPosition)
             cells[cellsToRender[i]] = newCell;
         }
     }
-    
-    delete[] cellsToRender;
+}
+void World::update(Coord viewPosition, Time* globalTime)
+{
+    //Make viewPosition the top left corner of the close cells
+    viewPosition.addVector(-UPDATE_CLOSE_DISTANCE_X, -UPDATE_CLOSE_DISTANCE_Y);
+    int size;
+    CellIndex* closeCells = getIntersectingCells(viewPosition,
+    UPDATE_CLOSE_DISTANCE_X + CELL_WIDTH_PIXELS,
+    UPDATE_CLOSE_DISTANCE_Y + CELL_HEIGHT_PIXELS, size);
+    for (int i = 0; i < size; ++i)
+    {
+        //std::cout << closeCells[i].x << " , " << closeCells[i].y << "\n";
+        Cell* currentCell = getCell(closeCells[i]);
+        if (currentCell)
+        {
+            currentCell->update(globalTime);
+        }
+    }
 }
 #endif
 

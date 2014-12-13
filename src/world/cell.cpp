@@ -275,6 +275,11 @@ void Cell::render(tileCamera& cam, float viewX, float viewY, multilayerMap* map,
         map->setLayer(i, oldLayers[i]);
     }
 }
+void Cell::update(Time* globalTime)
+{
+    objectManager.updateObjects(globalTime);
+    return;
+}
 #endif
 
 

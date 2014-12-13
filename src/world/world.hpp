@@ -19,6 +19,8 @@ class World
         window* win;
         ObjectProcessorDir* processorDir;
         tileCamera camera;
+        //Cache for GetIntersectingCells; set size via MAX_INTERSECTING_CELLS
+        CellIndex* cellArrayCache;
     public:
         //newMasterMap should be set up correctly already
         World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
@@ -26,12 +28,14 @@ class World
         //Returns NULL if cell is not in map
         Cell* getCell(CellIndex cell);
         //Returns an array of pointers to all unique cells the range contains
-        //Make sure to delete[] the array when you are done
+        //[UPDATE: Now using a cached array with size MAX_INTERSECTING_CELLS] Make
+        //sure to delete[] the array when you are done
         //There is no reliable ordering, so use indices if that is needed
         //Note that this returns a maximum of four cells; cells must be
         //larger than the view in order for this to display correctly
-        //TODO: Find better way to pass array, make sure returning only
-        //four is viable for other non-rendering uses
+        //TODO: Find better way to pass array, [FIXED; can now return
+        //MAX_INTERSECTING_CELLS] make sure returning only four is viable
+        //for other non-rendering uses
         CellIndex* getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size);
         //loadCell attempts to load the cell from the filesystem:
         //{WORLD_CELLS_PATH}/world{worldID}/cells/{cellToLoad.x}-{cellToLoad.y}/{cellToLoad.x}-{cellToLoad.y}.map
@@ -40,5 +44,8 @@ class World
         
         //Displays the map
         void render(Coord& viewPosition);
+        //Updates objects
+        //Objects nearest to viewPosition will be updated in real time
+        void update(Coord viewPosition, Time* globalTime);
 };
 #endif

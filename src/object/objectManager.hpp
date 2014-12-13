@@ -76,5 +76,7 @@ class ObjectManager
         void moveObject(Object* objectToMove, Coord& newPosition);
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
         void renderObjects(float viewX, float viewY, window* win);
+        //Updates all objects
+        void updateObjects(Time* globalTime);
 };
 #endif
