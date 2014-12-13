@@ -1,6 +1,7 @@
 #ifndef WORLD_CPP
 #define WORLD_CPP
 #include <iostream>
+#include <base2.0/timer/timer.hpp>
 #include "world.hpp"
 
 //Where world should search for itself and its files
@@ -8,6 +9,7 @@ const std::string WORLDS_PATH = "worlds/";
 const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
+const float MAX_WORLD_FAR_UPDATE = 0.01;
 
 World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir)
 {
@@ -18,14 +20,17 @@ World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, Object
     processorDir = newDir;
     //TODO
     worldID = newWorldID;
-    cellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS]; 
+    cellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS];
+    nextCellToUpdate =  cells.begin();
 }
 World::~World()
 {
-    std::cout << "deleting\n";
     delete[] cellArrayCache;
-    std::cout << "done\n";
-    //TODO: Delete all cells
+    for (std::map<CellIndex, Cell*, CellIndexComparer>::iterator it = cells.begin();
+    it != cells.end(); ++it)
+    {
+        delete it->second;
+    }
 }
 bool World::loadCell(CellIndex cellToLoad)
 {
@@ -49,7 +54,7 @@ Cell* World::getCell(CellIndex cell)
         return findIt->second;
     }
     //Cell wasn't found!
-    std::cout << "Cell [ " << cell.x << " , " << cell.y << " ] not found!\n";
+    //std::cout << "Cell [ " << cell.x << " , " << cell.y << " ] not found!\n";
     return NULL;
 }
 CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
@@ -171,8 +176,9 @@ void World::render(Coord& viewPosition)
         }
     }
 }
-void World::update(Coord viewPosition, Time* globalTime)
+void World::update(Coord viewPosition, Time* globalTime, float extraTime)
 {
+    //Update close cells
     //Make viewPosition the top left corner of the close cells
     viewPosition.addVector(-UPDATE_CLOSE_DISTANCE_X, -UPDATE_CLOSE_DISTANCE_Y);
     int size;
@@ -181,12 +187,24 @@ void World::update(Coord viewPosition, Time* globalTime)
     UPDATE_CLOSE_DISTANCE_Y + CELL_HEIGHT_PIXELS, size);
     for (int i = 0; i < size; ++i)
     {
-        //std::cout << closeCells[i].x << " , " << closeCells[i].y << "\n";
         Cell* currentCell = getCell(closeCells[i]);
         if (currentCell)
         {
             currentCell->update(globalTime);
         }
+    }
+    //Update other cells
+    timer currentTime;
+    currentTime.start();
+    if (nextCellToUpdate==cells.end())
+    {
+        nextCellToUpdate = cells.begin();
+    }
+    for (; nextCellToUpdate!=cells.end();
+    ++nextCellToUpdate)
+    {
+        if (currentTime.getTime() >= extraTime) break;
+        nextCellToUpdate->second->update(globalTime);
     }
 }
 #endif

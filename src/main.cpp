@@ -180,7 +180,7 @@ int main()
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
         prof.startTiming("updateWorld");
-        newWorld.update(windowPosition, &globalTime);
+        newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
         prof.stopTiming("updateWorld");
         if (deltaTime.getExactSeconds()>=0.1)
         {

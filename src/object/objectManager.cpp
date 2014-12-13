@@ -212,7 +212,6 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
     int resultCount = indexQuadTree->queryRange(view, visibleObjs);
     if (resultCount > 0)
     {
-        std::cout << resultCount << " objs to render\n";
         ObjectProcessor* processor = NULL;
         int lastType = -1;
         for (std::vector<Object*>::iterator it = visibleObjs.begin();

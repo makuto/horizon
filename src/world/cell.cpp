@@ -32,7 +32,14 @@ Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDi
 }
 Cell::~Cell()
 {
-    //TODO: Delete cell data
+    for (std::vector<std::vector<tile*> >::iterator it = tiles.begin();
+    it!=tiles.end(); ++it)
+    {
+        for (std::vector<tile*>::iterator tIt = (*it).begin(); tIt != (*it).end(); ++tIt)
+        {
+            delete (*tIt);
+        }
+    }
 }
 ObjectManager* Cell::getObjectManager()
 {

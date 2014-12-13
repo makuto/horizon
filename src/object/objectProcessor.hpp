@@ -31,7 +31,8 @@ class ObjectProcessor
         //objects are valid subtypes in valid positions.
         //Return false if the object cannot be created
         virtual bool initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager);
-        //Do a routine update on the object
+        //Do a routine update on the object; set obj->lastUpdate to globalTime
+        //once finished (used to get the delta)
         virtual int updateObject(Object* obj, Time* globalTime);
         //Render the object (it is in view). ViewX and Y are the window's top left corner coordinates
         //relative to the current cell.

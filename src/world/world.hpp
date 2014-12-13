@@ -10,6 +10,9 @@
  * object lists.
  * */
 extern const std::string WORLDS_PATH;
+//Cells not near to the view (UPDATE_CLOSE_DISTANCE) will be updated
+//after close cells for MAX_WORLD_FAR_UPDATE before breaking
+extern const float MAX_WORLD_FAR_UPDATE;
 class World
 {
     private:
@@ -21,6 +24,8 @@ class World
         tileCamera camera;
         //Cache for GetIntersectingCells; set size via MAX_INTERSECTING_CELLS
         CellIndex* cellArrayCache;
+        //Next cell to update in World.update
+        std::map<CellIndex, Cell*, CellIndexComparer>::iterator nextCellToUpdate;
     public:
         //newMasterMap should be set up correctly already
         World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
@@ -45,7 +50,9 @@ class World
         //Displays the map
         void render(Coord& viewPosition);
         //Updates objects
-        //Objects nearest to viewPosition will be updated in real time
-        void update(Coord viewPosition, Time* globalTime);
+        //Objects nearest to viewPosition will be updated in real time,
+        //then cells will be updated until extraTime is reached or the end of
+        //the cells map
+        void update(Coord viewPosition, Time* globalTime, float extraTime);
 };
 #endif

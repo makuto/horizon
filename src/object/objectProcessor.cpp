@@ -38,7 +38,10 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
 //Do a routine update on the object
 int ObjectProcessor::updateObject(Object* obj, Time* globalTime)
 {
-    obj->rotation++;
+    Time delta;
+    obj->lastUpdate.getDeltaTime(globalTime, delta);
+    obj->rotation += delta.getExactSeconds() * 200;
+    obj->lastUpdate = *globalTime;
     return 1;
 }
 //Render the object (it is in view of player)
