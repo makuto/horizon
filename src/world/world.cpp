@@ -32,16 +32,16 @@ World::~World()
         delete it->second;
     }
 }
-bool World::loadCell(CellIndex cellToLoad)
+Cell* World::loadCell(CellIndex cellToLoad)
 {
     Cell* newCell = new Cell(cellToLoad, this, processorDir);
     if (!newCell->load(worldID))
     {
         delete newCell;
-        return false;
+        return NULL;
     }
     cells[cellToLoad] = newCell;
-    return true;
+    return newCell;
 }
 Cell* World::getCell(CellIndex cell)
 {
@@ -53,9 +53,15 @@ Cell* World::getCell(CellIndex cell)
         //Return the found cell
         return findIt->second;
     }
-    //Cell wasn't found!
-    //std::cout << "Cell [ " << cell.x << " , " << cell.y << " ] not found!\n";
-    return NULL;
+    //Cell wasn't found! See if it is on the hard drive
+    Cell* newCell = loadCell(cell);
+    if (!newCell) //Cell isn't on hard drive; generate it now
+    {
+        newCell = new Cell(cell, this, processorDir);
+        newCell->generate(worldID, cell.x + cell.y + worldID, 1);
+        cells[cell] = newCell;
+    }
+    return newCell;
 }
 CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
 {
@@ -168,12 +174,12 @@ void World::render(Coord& viewPosition)
             currentCell->render(camera, newX, newY, masterMap, win);
         }
         //TODO: Move this generation code
-        else
+        /*else
         {
             Cell* newCell = new Cell(cellsToRender[i], this, processorDir);
             newCell->generate(worldID, cellsToRender[i].x + cellsToRender[i].y + worldID, 1);
             cells[cellsToRender[i]] = newCell;
-        }
+        }*/
     }
 }
 void World::update(Coord viewPosition, Time* globalTime, float extraTime)

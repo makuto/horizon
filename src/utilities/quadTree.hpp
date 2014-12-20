@@ -177,6 +177,27 @@ class QuadTree
             bounds.setPosition(newX, newY);
             bounds.resize(newWidth, newHeight);
         }
+        ~QuadTree()
+        {
+            if (tL)
+            {
+                delete tR;
+                delete tL;
+                delete bR;
+                delete bL;
+            }
+        }
+        //Checks if node and its children are empty
+        bool isEmpty()
+        {
+            if (data.size() != 0) return false;
+            if (!tL) return true;
+            if (tL->isEmpty() && tR->isEmpty() && bL->isEmpty() && bR->isEmpty())
+            {
+                return true;
+            }
+            return false;
+        }
         bool insert(T newData, float x, float y)
         {
             //std::cout << "["<< depth <<"] " << newData << " at " << x << " , " << y << " \n";
@@ -237,7 +258,7 @@ class QuadTree
         //data is used to make sure it is the point requested
         //NOTE: X and Y are not used when comparing the point, just for walking the tree,
         //so if you have two of the same data, it might not remove the one
-        //at the position specified (the system assumes you are using pointers
+        //at the position specified (the system assumes you are using pointers)
         bool remove(T searchData, float x, float y)
         {
             //Point will not be in this node's bounds
@@ -254,13 +275,24 @@ class QuadTree
                     return true;
                 }
             }
-            
             //Search children (if any)
             if (!tL) return false;
-            if (tL->remove(searchData, x, y)) return true;
-            if (tR->remove(searchData, x, y)) return true;
-            if (bL->remove(searchData, x, y)) return true;
-            if (bR->remove(searchData, x, y)) return true;
+            if (tL->remove(searchData, x, y) || tR->remove(searchData, x, y)
+            || bL->remove(searchData, x, y) || bR->remove(searchData, x, y))
+            {
+                //All children are empty; delete them
+                if (isEmpty())
+                {
+                    //TODO: Should this be a pool?
+                    delete tL;
+                    delete tR;
+                    delete bL;
+                    delete bR;
+                    tL = NULL;
+                }
+                return true;
+            }
+
             //Data point not in quadtree
             return false;
         }

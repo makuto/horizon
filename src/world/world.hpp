@@ -45,7 +45,8 @@ class World
         //loadCell attempts to load the cell from the filesystem:
         //{WORLD_CELLS_PATH}/world{worldID}/cells/{cellToLoad.x}-{cellToLoad.y}/{cellToLoad.x}-{cellToLoad.y}.map
         //Ex worlds/world1/cells/1-1/1-1.map
-        bool loadCell(CellIndex cellToLoad);
+        //Returns NULL if the cell cannot be loaded
+        Cell* loadCell(CellIndex cellToLoad);
         
         //Displays the map
         void render(Coord& viewPosition);

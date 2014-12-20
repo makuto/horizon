@@ -57,7 +57,7 @@ int main()
     defaultMap.setImage(&tileSet);
     int worldToLoad = 0;
     World newWorld(&win, &defaultMap, worldToLoad, &testDir);
-    CellIndex index;
+    /*CellIndex index;
     index.x = 0;
     index.y = 0;
     if (!newWorld.loadCell(index)) return -1;
@@ -69,7 +69,7 @@ int main()
     if (!newWorld.loadCell(index)) return -1;
     index.x = -1;
     index.y = 0;
-    if (!newWorld.loadCell(index)) return -1;
+    if (!newWorld.loadCell(index)) return -1;*/
     ObjectManager test(&newWorld, &testDir, testID, NULL);
     Object* testObj = test.getNewInitializedObject(1, 1, 1, 1, 1);
     testObj->type=1;
@@ -128,7 +128,7 @@ int main()
     Cell* originCell = newWorld.getCell(cellToGet);
     if (originCell==NULL) return -1;
     ObjectManager* originObjMan = originCell->getObjectManager();
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         srand(i + 1);
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);

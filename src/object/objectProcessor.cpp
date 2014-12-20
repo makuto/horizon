@@ -46,8 +46,8 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     obj->lastUpdate = *globalTime;
     if (obj->getPosition().getCell().x > 0)
     {
-        std::cout << obj << " reached 2 at " << globalTime->getExactSeconds() << " " << obj->type << "\n";
-        return -1;
+        //std::cout << obj << " reached 2 at " << globalTime->getExactSeconds() << " " << obj->type << "\n";
+        //return -1;
     }
     return 1;
 }
