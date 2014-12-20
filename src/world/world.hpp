@@ -19,6 +19,8 @@ class World
         int worldID;
         std::map<CellIndex, Cell*, CellIndexComparer> cells;
         multilayerMap* masterMap;
+        //Holds the original masterMap layers 
+        std::vector<std::vector<tile*>* > oldLayers;
         window* win;
         ObjectProcessorDir* processorDir;
         tileCamera camera;

@@ -6,7 +6,8 @@
 #include <base2.0/collision/collision.hpp>
 #include "../world/cell.hpp"
 
-const unsigned int MAX_NODE_CAPACITY = 2;
+//For quadtree
+const unsigned int MAX_NODE_CAPACITY = 3;
 const unsigned int POOL_SIZE = 100;
 //Should equal largest object sprite half width
 const float VIEW_TOLERANCE = 32;

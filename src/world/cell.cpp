@@ -257,9 +257,30 @@ void Cell::renderObjects(float viewX, float viewY, window* win)
 {
     objectManager.renderObjects(viewX, viewY, win);
 }
+void Cell::renderBottom(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+{
+    //Set new layers
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        map->setLayer(i, &tiles[i]);
+    }
+    //Render ground and onground
+    map->render(0, 1, cam.getX(), cam.getY(), win);
+}
+void Cell::renderMiddle(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+{
+    //Render Objects
+    renderObjects(viewX, viewY, win);
+}
+void Cell::renderTop(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+{
+    map->setLayer(2, &tiles[2]);
+    //Render aboveGround
+    map->render(2, 0, cam.getX(), cam.getY(), win);
+}
 void Cell::render(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
 {
-    //TODO: Make this less tedious
+    //TODO: Make this less tedious (maybe make multilayerMap layers a pointer)
     //Grab all layers already in the map
     std::vector<std::vector<tile*>* > oldLayers;
     for (unsigned int i = 0; i < map->getTotalLayers(); i++)

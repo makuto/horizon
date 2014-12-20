@@ -15,6 +15,11 @@ World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, Object
 {
     win = newWin;
     masterMap = newMasterMap;
+    //Copy masterMap original layers to temporary storage
+    for (unsigned int i = 0; i < masterMap->getTotalLayers(); i++)
+    {
+        oldLayers.push_back(masterMap->getLayer(i));
+    }
     camera.setMap(masterMap->getMasterMap());
     camera.setViewSize(win->getWidth(), win->getHeight());
     processorDir = newDir;
@@ -30,6 +35,11 @@ World::~World()
     it != cells.end(); ++it)
     {
         delete it->second;
+    }
+    //Reset masterMap layers
+    for (unsigned int i = 0; i < masterMap->getTotalLayers(); i++)
+    {
+        masterMap->setLayer(i, oldLayers[i]);
     }
 }
 Cell* World::loadCell(CellIndex cellToLoad)
@@ -151,7 +161,7 @@ void World::render(Coord& viewPosition)
     //Get an array of all cells the camera will see
     int size = 0;
     CellIndex* cellsToRender = getIntersectingCells(viewPosition, win->getWidth(), win->getHeight(), size);
-
+    //Render bottom layer
     for (int i = 0; i < size; ++i)
     {
         //Set camera for other cells
@@ -169,17 +179,59 @@ void World::render(Coord& viewPosition)
         Cell* currentCell = getCell(cellsToRender[i]);
         if (currentCell)
         {
-            //TODO: Separate so that all cell grounds & ongrounds render,
+            //[DONE] TODO: Separate so that all cell grounds & ongrounds render,
             //then all cell objects, then all cell abovegrounds.
-            currentCell->render(camera, newX, newY, masterMap, win);
+            currentCell->renderBottom(camera, newX, newY, masterMap, win);
         }
-        //TODO: Move this generation code
+        //[DONE] TODO: Move this generation code
         /*else
         {
             Cell* newCell = new Cell(cellsToRender[i], this, processorDir);
             newCell->generate(worldID, cellsToRender[i].x + cellsToRender[i].y + worldID, 1);
             cells[cellsToRender[i]] = newCell;
         }*/
+    }
+    //Render middle layer
+    for (int i = 0; i < size; ++i)
+    {
+        //Set camera for other cells
+        float newX = viewX;
+        float newY = viewY;
+        if (viewPosCell.x != cellsToRender[i].x)
+        {
+            newX = -bottomLCornerX;
+        }
+        if (viewPosCell.y != cellsToRender[i].y)
+        {
+            newY = -bottomLCornerY;
+        }
+        camera.setPosition(newX, newY);
+        Cell* currentCell = getCell(cellsToRender[i]);
+        if (currentCell)
+        {
+            currentCell->renderMiddle(camera, newX, newY, masterMap, win);
+        }
+    }
+    //Render top layer
+    for (int i = 0; i < size; ++i)
+    {
+        //Set camera for other cells
+        float newX = viewX;
+        float newY = viewY;
+        if (viewPosCell.x != cellsToRender[i].x)
+        {
+            newX = -bottomLCornerX;
+        }
+        if (viewPosCell.y != cellsToRender[i].y)
+        {
+            newY = -bottomLCornerY;
+        }
+        camera.setPosition(newX, newY);
+        Cell* currentCell = getCell(cellsToRender[i]);
+        if (currentCell)
+        {
+            currentCell->renderTop(camera, newX, newY, masterMap, win);
+        }
     }
 }
 void World::update(Coord viewPosition, Time* globalTime, float extraTime)

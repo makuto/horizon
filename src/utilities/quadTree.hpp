@@ -11,6 +11,8 @@
 #include <base2.0/collision/collision.hpp>
 #include <iostream>
 
+//TODO: Put into pool, remove std::vector data and replace with pool as well?
+
 const unsigned int MAX_TREE_DEPTH = 8;
 //If multiple objects are in the same place, tree will go to max depth,
 //then capacity will become MAX_DEPTH_CAPACITY to handle the leftovers

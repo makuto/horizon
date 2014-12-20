@@ -17,6 +17,7 @@ struct CellIndex
     int x;
     int y;
 };
+//TODO: fix small hitch at cell borders
 class Coord
 {
     protected:

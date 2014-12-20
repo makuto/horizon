@@ -53,7 +53,11 @@ class Cell
         //Algorithms: 1 = simple fill
         void generate(int worldID, int seed, int algorithm);
         //Renders objects relative to the provided coordinates
+        //Note that render() calls renderObjects automatically
         void renderObjects(float viewX, float viewY, window* win);
+        void renderBottom(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win);
+        void renderMiddle(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win);
+        void renderTop(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win);
         //Cam should be relative to the cell (use getCellOffsetX instead
         //of getTrueX) UPDATE: That comment might not be right; see world.cpp
         //ViewX and Y are only used for renderObjects()
