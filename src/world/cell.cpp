@@ -11,7 +11,7 @@
 #include "world.hpp"
 #include "cell.hpp"
 #include "../object/objectManager.hpp"
-
+#include "../utilities/simplexnoise.h"
 
 //Used with system to create cell dirs
 const std::string MAKE_DIR_COMMAND = "mkdir ";
@@ -108,6 +108,7 @@ bool Cell::load(int worldID)
 }
 void Cell::generate(int worldID, int seed, int algorithm)
 {
+    std::cout << seed;
     //TODO: Make this settable elsewhere
     unsigned char defaultTileX = 4;
     unsigned char defaultTileY = 12;
@@ -177,9 +178,48 @@ void Cell::generate(int worldID, int seed, int algorithm)
             }
             std::cout << "Done generating " << tiles.size() << " of " << NUM_LAYERS << " layers\n";
             break;
-        default:
-            std::cout << algorithm << "is not a valid algorithm (Cell.generate())\n";
+        //Simplex noise world
+        case 2:
+            std::vector<tile*> layer1;
+            std::vector<tile*> layer2;
+            std::vector<tile*> layer3;
+            layer1.resize(CELL_WIDTH * CELL_HEIGHT);
+            layer2.resize(CELL_WIDTH * CELL_HEIGHT);
+            layer3.resize(CELL_WIDTH * CELL_HEIGHT);
+            for (int y = 0; y < CELL_HEIGHT; ++y)
+            {
+                for (int x = 0; x < CELL_WIDTH; ++x)
+                {
+                    tile* newTile = new tile;
+                    //Different values based on layer
+                    //Water = 0, 12
+                    //ground = defaultTileX, Y
+                    float noiseX = x + (CELL_WIDTH * cellID.x);
+                    float noiseY = y + (CELL_HEIGHT * cellID.y);
+                    noiseX /= 2;
+                    noiseY /= 2;
+                    float value = scaled_octave_noise_3d(10, 0.55, 0.001, 0, 255, noiseX, noiseY, seed);
+                    newTile->x = value;
+                    newTile->y = 0;
+                    layer1[x + (y * CELL_WIDTH)] = newTile;
+                    tile* nullTile = new tile;
+                    nullTile->x = 255;
+                    nullTile->y = 255;
+                    layer2[x + (y * CELL_WIDTH)] = nullTile;
+                    nullTile = new tile;
+                    nullTile->x = 255;
+                    nullTile->y = 255;
+                    layer3[x + (y * CELL_WIDTH)] = nullTile;
+                }
+            }
+            tiles[0] = layer1;
+            tiles[1] = layer2;
+            tiles[2] = layer3;
+            std::cout << "Done generating " << tiles.size() << " of " << NUM_LAYERS << " layers\n";
             break;
+        //default:
+          //  std::cout << algorithm << "is not a valid algorithm (Cell.generate())\n";
+           // break;
     }
 }
 //Export a .maplayer (private and local b/c nothing else needs this)

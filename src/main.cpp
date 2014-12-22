@@ -17,6 +17,9 @@
 #include "object/objectManager.hpp"
 #include "object/objectProcessorDir.hpp"
 #include "object/objectProcessor.hpp"
+
+#include "utilities/simplexnoise.h"
+
 int main()
 {
     ObjectProcessorDir testDir;
@@ -135,6 +138,17 @@ int main()
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
 
+    ///////////////////
+    sprite tileSheet;
+    if (!tileSheet.load("src/utilities/terrainTest.png")) return -1;
+    multilayerMap map;
+    if (!map.load("src/utilities/terrainTest.map", 1)) return -1;
+    map.setImage(&tileSheet);
+    map.getMasterMap()->setViewSize(256, 256);
+    std::vector<tile*>* layer = map.getMasterMap()->getMap();
+    if (layer==NULL) return -1;
+    ///////////////////
+    
     //win.shouldClear(false);
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
@@ -147,7 +161,7 @@ int main()
         //float avgFrameTime = frameTime.getTime(); //Current frame time
         if (in.isPressed(inputCode::LShift))
         {
-            viewSpeed = defaultViewSpeed / 4;
+            viewSpeed = defaultViewSpeed * 10;
         }
         else viewSpeed = defaultViewSpeed;
         if (in.isPressed(inputCode::Up))
@@ -170,6 +184,33 @@ int main()
         testSprite.setPosition(testAgent->worldPosition.getScreenX(&windowPosition), testAgent->worldPosition.getScreenY(&windowPosition));
         prof.startTiming("render");
         newWorld.render(windowPosition);
+        ///////////////////////
+        if (in.isPressed(inputCode::Space))
+        {
+            for (int i = 0; i < 256; ++i)
+            {
+                for (int n = 0; n < 256; ++n)
+                {
+                    tile* currentTile = (*layer)[(i * 1024) + n];
+                    //currentTile->x = n % 255;
+                    float xdiv = 2;
+                    float ydiv = 2;
+                    float noiseX = n + ((windowPosition.getTrueX() - 4096) / 32);
+                    float noiseY = i + ((windowPosition.getTrueY() - 4096) / 32);
+                    noiseX /= xdiv;
+                    noiseY /= ydiv;
+                    float x = noiseX;
+                    float y = noiseY;
+                    float scale = 0.001;
+                    float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, 0);
+                    if (i % 64 == 0) value = 0;
+                    if (n % 64 == 0) value = 0;
+                    currentTile->x = value;
+                }
+            }
+            map.render(0, 0, 0, 0, &win);
+        }
+        ///////////////////////
         win.draw(&testSprite);
         frameTime.start();
         win.update();
@@ -178,7 +219,7 @@ int main()
         //globalTime.addMilliseconds(frameTime.getTime());
         globalTime.reset();
         globalTime.addSeconds(worldTime.getTime());
-        std::cout << worldTime.getTime() << "\n";
+        //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
         if (deltaTime.getExactSeconds()>=0.016)
@@ -187,8 +228,8 @@ int main()
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
-        newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
-        prof.stopTiming("updateWorld");
+            newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+            prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();
         }

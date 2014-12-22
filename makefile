@@ -3,15 +3,18 @@ EXECUTABLE_NAME= LOCAL_horizon
 OBJ_DIR= LOCAL_obj
 LINK= g++ -Wall -o "$(EXECUTABLE_NAME)" 
 LINKLIBS= -lbase2.0 -lsfml-graphics -lsfml-window -lsfml-system
-horizon: $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o  $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
+horizon: $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o  $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
 	@echo -----------Linking horizon-------------------------
 	mv *.o $(OBJ_DIR)
-	(cd $(OBJ_DIR) && $(LINK) quadTree.o coord.o time.o object.o objectProcessor.o objectProcessorDir.o objectManager.o cell.o world.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
+	(cd $(OBJ_DIR) && $(LINK) quadTree.o simplexnoise.o coord.o time.o object.o objectProcessor.o objectProcessorDir.o objectManager.o cell.o world.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
 
 $(OBJ_DIR)/quadTree.o: src/utilities/quadTree.hpp src/utilities/quadTree.cpp
 	$(FLAGS) src/utilities/quadTree.hpp
 	$(FLAGS) src/utilities/quadTree.cpp
+$(OBJ_DIR)/simplexnoise.o: src/utilities/simplexnoise.h src/utilities/simplexnoise.cpp
+	$(FLAGS) src/utilities/simplexnoise.h
+	$(FLAGS) src/utilities/simplexnoise.cpp
 $(OBJ_DIR)/coord.o: src/world/coord.hpp src/world/coord.cpp
 	$(FLAGS) src/world/coord.hpp
 	$(FLAGS) src/world/coord.cpp

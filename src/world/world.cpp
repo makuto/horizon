@@ -68,7 +68,7 @@ Cell* World::getCell(CellIndex cell)
     if (!newCell) //Cell isn't on hard drive; generate it now
     {
         newCell = new Cell(cell, this, processorDir);
-        newCell->generate(worldID, cell.x + cell.y + worldID, 1);
+        newCell->generate(worldID, worldID, 2); //Seed is simply worldID
         cells[cell] = newCell;
     }
     return newCell;

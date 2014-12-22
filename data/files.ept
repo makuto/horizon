@@ -5,5 +5,6 @@ testScripts:
     testNeed=data/testNeed.ept;
     testSpecies=data/testSpecies.ept;
 worldDefaults:
-    tileSet=data/images/castle.png;
+    //tileSet=data/images/castle.png;
+    tileSet=data/images/terrain.png;
     defaultMap=data/maps/default.map;
