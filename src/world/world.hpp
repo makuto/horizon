@@ -35,8 +35,7 @@ class World
         //Returns NULL if cell is not in map
         Cell* getCell(CellIndex cell);
         //Returns an array of pointers to all unique cells the range contains
-        //[UPDATE: Now using a cached array with size MAX_INTERSECTING_CELLS] Make
-        //sure to delete[] the array when you are done
+        //[UPDATE: Now using a cached array with size MAX_INTERSECTING_CELLS] 
         //There is no reliable ordering, so use indices if that is needed
         //Note that this returns a maximum of four cells; cells must be
         //larger than the view in order for this to display correctly

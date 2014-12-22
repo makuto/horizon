@@ -12,7 +12,7 @@
 #include "cell.hpp"
 #include "../object/objectManager.hpp"
 #include "../utilities/simplexnoise.h"
-
+#include <cmath>
 //Used with system to create cell dirs
 const std::string MAKE_DIR_COMMAND = "mkdir ";
 const int NUM_LAYERS = 3;
@@ -198,7 +198,23 @@ void Cell::generate(int worldID, int seed, int algorithm)
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
                     noiseX /= 2;
                     noiseY /= 2;
-                    float value = scaled_octave_noise_3d(10, 0.55, 0.001, 0, 255, noiseX, noiseY, seed);
+                    const float SCALE = 0.001;
+                    float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    //Winter bands
+                    if (value > 142)
+                    {
+                        //value += 100 / (((int)(y+1) % 100) + 1);
+                        //int yInt = (int) y;
+                        float factor = fabs(sin(noiseY * SCALE));
+                        const float SNOW_AMOUNT = 1.9;
+                        factor -= SNOW_AMOUNT - factor; //1.3
+                        if (factor < 0) factor = 0;
+                        const float SNOW_FALLOFF = 1000;
+                        value += SNOW_FALLOFF * factor; //Winter climates
+                        if (value > 254) value = 254;
+                        if (value < 142) value = 142;
+                    }
+                    
                     newTile->x = value;
                     newTile->y = 0;
                     layer1[x + (y * CELL_WIDTH)] = newTile;

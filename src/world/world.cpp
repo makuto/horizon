@@ -252,6 +252,7 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         }
     }
     //Update other cells
+    //TODO: Delete cells that are inactive for a long time
     timer currentTime;
     currentTime.start();
     if (nextCellToUpdate==cells.end())

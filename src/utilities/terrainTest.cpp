@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include <base2.0/graphics/graphics.hpp>
 #include <base2.0/input/input.hpp>
 #include <base2.0/tileMap/multilayerMap.hpp>
@@ -41,7 +42,7 @@ int main()
     float offsetX = 0;
     float offsetY = 0;
     float rate = 10;
-    float speed = 0.08;
+    float speed = 0.8;
     while (!win.shouldClose())
     {
         if (in.isPressed(inputCode::Escape)) break;
@@ -51,8 +52,8 @@ int main()
             else if (in.isPressed(inputCode::Down)) changingValue4 -= 1;
             if (in.isPressed(inputCode::Left)) changingValue2 += rate;
             else if (in.isPressed(inputCode::Right)) changingValue2 -= rate;
-            if (in.isPressed(inputCode::RControl)) changingValue3 +=0.01;
-            if (in.isPressed(inputCode::LControl)) changingValue3 -=0.01;
+            if (in.isPressed(inputCode::RControl)) changingValue3 +=0.1;
+            if (in.isPressed(inputCode::LControl)) changingValue3 -=0.1;
             if (in.isPressed(inputCode::W)) offsetY -= speed;
             if (in.isPressed(inputCode::S)) offsetY += speed;
             if (in.isPressed(inputCode::A)) offsetX -= speed;
@@ -72,8 +73,19 @@ int main()
                     //float div = changingValue;
                     float x = (n / xdiv) + offsetX;
                     float y = (i / ydiv) + offsetY;
-                    float scale = changingValue3;
+                    float scale = 1;
                     float value = scaled_octave_noise_2d(8, 0.55, scale, 0, 255, x, y);
+                    if (value > 142)
+                    {
+                        //value += 100 / (((int)(y+1) % 100) + 1);
+                        //int yInt = (int) y;
+                        float factor = fabs(sin(y * scale));
+                        factor -= changingValue3 - factor; //1.3
+                        std::cout << changingValue3;
+                        if (factor < 0) factor = 0;
+                        value += 200 * factor; //Winter climates
+                    }
+                    if (value > 254) value = 254;
                     if (value < changingValue) value = 0;
                     currentTile->x = value;
                 }

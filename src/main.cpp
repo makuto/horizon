@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include <base2.0/ept/eptParser.hpp>
 #include <base2.0/graphics/graphics.hpp>
 #include <base2.0/input/input.hpp>
@@ -161,7 +162,7 @@ int main()
         //float avgFrameTime = frameTime.getTime(); //Current frame time
         if (in.isPressed(inputCode::LShift))
         {
-            viewSpeed = defaultViewSpeed * 10;
+            viewSpeed = defaultViewSpeed * 40;
         }
         else viewSpeed = defaultViewSpeed;
         if (in.isPressed(inputCode::Up))
@@ -203,6 +204,21 @@ int main()
                     float y = noiseY;
                     float scale = 0.001;
                     float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, 0);
+                    //Winter bands
+                    if (value > 142)
+                    {
+                        //value += 100 / (((int)(y+1) % 100) + 1);
+                        //int yInt = (int) y;
+                        float factor = fabs(sin(y * scale));
+                        const float SNOW_AMOUNT = 1.9;
+                        factor -= SNOW_AMOUNT - factor; //1.3
+                        if (factor < 0) factor = 0;
+                        const float SNOW_FALLOFF = 1000;
+                        value += SNOW_FALLOFF * factor; //Winter climates
+                        if (value > 254) value = 254;
+                        if (value < 142) value = 142;
+                    }
+                    
                     if (i % 64 == 0) value = 0;
                     if (n % 64 == 0) value = 0;
                     currentTile->x = value;
@@ -228,7 +244,7 @@ int main()
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
-            newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+            //newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
             prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();

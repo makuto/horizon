@@ -23,6 +23,9 @@
  * the same as infinite difficulty). The agent then stores this process
  * chain as its current process chain, and marks the current process in
  * the chain.
+ *
+ * Processes should store all needed data other than data provided by the
+ * actor. Cyclic queues or something would work well for this
  * */
 struct Agent;
 class Process;
