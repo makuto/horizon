@@ -48,6 +48,9 @@ class ObjectManager
     public:
         ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir,
         CellIndex newParentCellID, Cell* newParent);
+        ObjectManager();
+        void init(World* newWorld, ObjectProcessorDir* newProcessorDir,
+        CellIndex newParentCellID, Cell* newParent);
         ~ObjectManager();
         
         //Returns a pointer to a vector with all objects in this

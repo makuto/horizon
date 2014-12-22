@@ -30,14 +30,29 @@ Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDi
     cellID = newCellID;
     tiles.resize(NUM_LAYERS);
 }
+Cell::Cell()
+{
+    tiles.resize(NUM_LAYERS);
+    for (std::vector<std::vector<tile> >::iterator it = tiles.begin();
+    it != tiles.end(); ++it)
+    {
+        (*it).resize(CELL_WIDTH * CELL_HEIGHT);
+    }
+}
+void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir)
+{
+    world = newWorld;
+    cellID = newCellID;
+    objectManager.init(newWorld, processorDir, newCellID, this);
+}
 Cell::~Cell()
 {
-    for (std::vector<std::vector<tile*> >::iterator it = tiles.begin();
+    for (std::vector<std::vector<tile> >::iterator it = tiles.begin();
     it!=tiles.end(); ++it)
     {
-        for (std::vector<tile*>::iterator tIt = (*it).begin(); tIt != (*it).end(); ++tIt)
+        for (std::vector<tile>::iterator tIt = (*it).begin(); tIt != (*it).end(); ++tIt)
         {
-            delete (*tIt);
+            //delete (*tIt);
         }
     }
 }
@@ -67,21 +82,21 @@ bool Cell::loadLayer(const std::string& filename, int layerNum, bool isMasterLay
         }
 
         //Get the binary tile data
-		tile* newTile;
+        unsigned int currentIndex = 0;
 		while (in.good() && !in.eof())
 		{
-			newTile=new tile;
 			in.get(current);
 			if (in.eof())
 			{
-				delete newTile;
+				//delete newTile;
 				break;
 			}
-			newTile->x=(unsigned char) current;
+            tile* currentTile = &tiles[layerNum][currentIndex];
+			currentTile->x=(unsigned char) current;
 			in.get(current);
-			newTile->y=(unsigned char) current;
-            //TODO: Might be faster to resize first
-			tiles[layerNum].push_back(newTile);
+			currentTile->y=(unsigned char) current;
+            //TODO: Might be faster to resize first [UPDATE: Resize in constructor now]
+            currentIndex++;
 		}
 	}
 	else return false;
@@ -120,55 +135,55 @@ void Cell::generate(int worldID, int seed, int algorithm)
             srand(seed);
             for (int i = 0; i < NUM_LAYERS; ++i)
             {
-                std::vector<tile*> layer;
+                std::vector<tile> layer;
                 layer.resize(CELL_WIDTH * CELL_HEIGHT);
                 for (int n = 0; n < CELL_WIDTH * CELL_HEIGHT; ++n)
                 {
-                    tile* newTile = new tile;
+                    tile newTile;
                     //Different values based on layer
                     switch(i)
                     {
                         case 0:
                             //Ground layer
-                            newTile->x = defaultTileX;
-                            newTile->y = defaultTileY;
+                            newTile.x = defaultTileX;
+                            newTile.y = defaultTileY;
                             break;
                         case 1:
                             //OnGround layer
                             switch(rand() % 1000)
                             {
                                 case 15:
-                                    newTile->x = 0;
-                                    newTile->y = 8;
+                                    newTile.x = 0;
+                                    newTile.y = 8;
                                     break;
                                 case 16:
-                                    newTile->x = 1;
-                                    newTile->y = 8;
+                                    newTile.x = 1;
+                                    newTile.y = 8;
                                     break;
                                 case 17:
-                                    newTile->x = 3;
-                                    newTile->y = 8;
+                                    newTile.x = 3;
+                                    newTile.y = 8;
                                     break;
                                 case 18:
-                                    newTile->x = 4;
-                                    newTile->y = 8;
+                                    newTile.x = 4;
+                                    newTile.y = 8;
                                     break;
                                 case 19:
-                                    newTile->x = 5;
-                                    newTile->y = 8;
+                                    newTile.x = 5;
+                                    newTile.y = 8;
                                     break;
                                 default:
-                                    newTile->x = 255;
-                                    newTile->y = 255;
+                                    newTile.x = 255;
+                                    newTile.y = 255;
                             }
                             break;
                         case 2:
-                            newTile->x = 255;
-                            newTile->y = 255;
+                            newTile.x = 255;
+                            newTile.y = 255;
                             break;
                         default:
-                            newTile->x = 255;
-                            newTile->y = 255;
+                            newTile.x = 255;
+                            newTile.y = 255;
                             break;
                     }
                     layer[n] = newTile;
@@ -180,9 +195,9 @@ void Cell::generate(int worldID, int seed, int algorithm)
             break;
         //Simplex noise world
         case 2:
-            std::vector<tile*> layer1;
-            std::vector<tile*> layer2;
-            std::vector<tile*> layer3;
+            std::vector<tile> layer1;
+            std::vector<tile> layer2;
+            std::vector<tile> layer3;
             layer1.resize(CELL_WIDTH * CELL_HEIGHT);
             layer2.resize(CELL_WIDTH * CELL_HEIGHT);
             layer3.resize(CELL_WIDTH * CELL_HEIGHT);
@@ -190,7 +205,7 @@ void Cell::generate(int worldID, int seed, int algorithm)
             {
                 for (int x = 0; x < CELL_WIDTH; ++x)
                 {
-                    tile* newTile = new tile;
+                    tile newTile;
                     //Different values based on layer
                     //Water = 0, 12
                     //ground = defaultTileX, Y
@@ -215,23 +230,20 @@ void Cell::generate(int worldID, int seed, int algorithm)
                         if (value < 142) value = 142;
                     }
                     
-                    newTile->x = value;
-                    newTile->y = 0;
+                    newTile.x = value;
+                    newTile.y = 0;
                     layer1[x + (y * CELL_WIDTH)] = newTile;
-                    tile* nullTile = new tile;
-                    nullTile->x = 255;
-                    nullTile->y = 255;
+                    tile nullTile;
+                    nullTile.x = 255;
+                    nullTile.y = 255;
                     layer2[x + (y * CELL_WIDTH)] = nullTile;
-                    nullTile = new tile;
-                    nullTile->x = 255;
-                    nullTile->y = 255;
                     layer3[x + (y * CELL_WIDTH)] = nullTile;
                 }
             }
             tiles[0] = layer1;
             tiles[1] = layer2;
             tiles[2] = layer3;
-            std::cout << "Done generating " << tiles.size() << " of " << NUM_LAYERS << " layers\n";
+            std::cout << "Done generating " << tiles.size() << " of " << NUM_LAYERS << " layers addr " << &tiles[0] << " \n";
             break;
         //default:
           //  std::cout << algorithm << "is not a valid algorithm (Cell.generate())\n";
@@ -239,7 +251,7 @@ void Cell::generate(int worldID, int seed, int algorithm)
     }
 }
 //Export a .maplayer (private and local b/c nothing else needs this)
-bool exportAsLayer(const std::string& filename, std::vector<tile*>* map, unsigned int layerIndex)
+bool exportAsLayer(const std::string& filename, std::vector<tile>* map, unsigned int layerIndex)
 {
 	std::ofstream out;
 	std::ostringstream s;
@@ -247,27 +259,27 @@ bool exportAsLayer(const std::string& filename, std::vector<tile*>* map, unsigne
 	out.open(s.str().c_str(), std::ios::binary | std::ios::trunc);
 	if (out.is_open())
 	{
-		for (std::vector<tile*>::iterator it=map->begin(); it!=map->end(); ++it)
+		for (std::vector<tile>::iterator it=map->begin(); it!=map->end(); ++it)
 		{
 			if (!out.good())
 			{
 				out.close();
 				return false;
 			};
-			out << (*it)->x;
-			out << (*it)->y;
+			out << (*it).x;
+			out << (*it).y;
 		}
 	}
 	else return false;
 	out.close();
 	return true;
 }
-bool Cell::save(int worldID, multilayerMap* map)
+bool Cell::save(int worldID, dynamicMultilayerMap* map)
 {
     //Get static map for exporting first layer
-    staticTileMap *staticMap = map->getMasterMap();
+    dynamicTileMap *staticMap = map->getMasterMap();
     //Reset once we are done
-    std::vector<tile*>* previousMap = staticMap->getMap();
+    std::vector<tile>* previousMap = staticMap->getMap();
 
     //Create file system folders
     std::ostringstream fileStructureCommand;
@@ -285,7 +297,8 @@ bool Cell::save(int worldID, multilayerMap* map)
     std::ostringstream masterFileName;
     masterFileName << WORLDS_PATH << "world" << worldID <<"/cells/" <<
     cellID.x << "-" << cellID.y << "/" << cellID.x << "-" << cellID.y << ".map";
-    if (!staticMap->dumpMapToFile(masterFileName.str().c_str()))
+    //if (!staticMap->dumpMapToFile(masterFileName.str().c_str()))
+    if (true)
     {
         std::cout << "Error dumping cell [ " << cellID.x << " , " <<
         cellID.y << " ] to " << masterFileName.str() << "\n";
@@ -298,7 +311,8 @@ bool Cell::save(int worldID, multilayerMap* map)
     //Dump all other layers
     for (int i = 1; i < NUM_LAYERS; ++i)
     {
-        if (!exportAsLayer(masterFileName.str(), &tiles[i], i))
+        //if (!exportAsLayer(masterFileName.str(), &tiles[i], i))
+        if (true)
         {
             std::cout << "Error dumping cell [ " << cellID.x << " , " <<
             cellID.y << " ] layer " << i << " to " << masterFileName.str() << "\n";
@@ -313,7 +327,7 @@ void Cell::renderObjects(float viewX, float viewY, window* win)
 {
     objectManager.renderObjects(viewX, viewY, win);
 }
-void Cell::renderBottom(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+void Cell::renderBottom(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win)
 {
     //Set new layers
     for (unsigned int i = 0; i < 2; i++)
@@ -323,18 +337,18 @@ void Cell::renderBottom(tileCamera& cam, float viewX, float viewY, multilayerMap
     //Render ground and onground
     map->render(0, 1, cam.getX(), cam.getY(), win);
 }
-void Cell::renderMiddle(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+void Cell::renderMiddle(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win)
 {
     //Render Objects
     renderObjects(viewX, viewY, win);
 }
-void Cell::renderTop(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+void Cell::renderTop(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win)
 {
     map->setLayer(2, &tiles[2]);
     //Render aboveGround
     map->render(2, 0, cam.getX(), cam.getY(), win);
 }
-void Cell::render(tileCamera& cam, float viewX, float viewY, multilayerMap* map, window* win)
+void Cell::render(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win)
 {
     /*//Set new layers
     for (unsigned int i = 0; i < NUM_LAYERS; i++)

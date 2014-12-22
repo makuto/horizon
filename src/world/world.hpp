@@ -5,6 +5,7 @@
 #include <base2.0/tileMap/tileCamera.hpp>
 #include "coord.hpp"
 #include "cell.hpp"
+#include "../utilities/pool.hpp"
 /* --World--
  * World manages all cells which compose the world as well as the
  * object lists.
@@ -17,20 +18,21 @@ class World
 {
     private:
         int worldID;
-        std::map<CellIndex, Cell*, CellIndexComparer> cells;
-        multilayerMap* masterMap;
+        std::map<CellIndex, PoolData<Cell>*, CellIndexComparer> cells;
+        Pool<Cell> cellPool;
+        dynamicMultilayerMap* masterMap;
         //Holds the original masterMap layers 
-        std::vector<std::vector<tile*>* > oldLayers;
+        std::vector<std::vector<tile>* > oldLayers;
         window* win;
         ObjectProcessorDir* processorDir;
         tileCamera camera;
         //Cache for GetIntersectingCells; set size via MAX_INTERSECTING_CELLS
         CellIndex* cellArrayCache;
         //Next cell to update in World.update
-        std::map<CellIndex, Cell*, CellIndexComparer>::iterator nextCellToUpdate;
+        std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator nextCellToUpdate;
     public:
         //newMasterMap should be set up correctly already
-        World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
+        World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
         ~World();
         //Returns NULL if cell is not in map
         Cell* getCell(CellIndex cell);

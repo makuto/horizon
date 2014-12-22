@@ -11,8 +11,60 @@ const unsigned int MAX_NODE_CAPACITY = 3;
 const unsigned int POOL_SIZE = 100;
 //Should equal largest object sprite half width
 const float VIEW_TOLERANCE = 32;
+//Use this in conjunction with NUM_DEFAULT_POOLS to pre-init object pools
+const int DEFAULT_POOLS[] = {1};
+const int NUM_DEFAULT_POOLS = 1;
+
 ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent)
 {
+    indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
+    world = newWorld;
+    parentCell = newParent;
+    parentCellID = newParentCellID;
+    processorDir = newProcessorDir;
+    for (int i = 0; i < NUM_DEFAULT_POOLS; ++i)
+    {
+        createPool(DEFAULT_POOLS[i], POOL_SIZE);
+    }
+    indexQuadTree = NULL;
+}
+ObjectManager::ObjectManager()
+{
+    for (int i = 0; i < NUM_DEFAULT_POOLS; ++i)
+    {
+        createPool(DEFAULT_POOLS[i], POOL_SIZE);
+    }
+    indexQuadTree = NULL;
+}
+void ObjectManager::init(World* newWorld, ObjectProcessorDir* newProcessorDir,
+CellIndex newParentCellID, Cell* newParent)
+{
+    //Wipe quadtree
+    if (indexQuadTree != NULL)
+    {
+        delete indexQuadTree;
+    }
+    //Wipe pools
+    for (std::map<int, ObjectPool>::iterator it = objectPools.begin();
+    it != objectPools.end(); ++it)
+    {
+        it->second.firstEmptyObj = &it->second.pool[0];
+        //Set all Object next indices to the next free object (next one over)
+        for (unsigned int i = 0; i < POOL_SIZE - 1; ++i)
+        {
+            Object* currentObject = &it->second.pool[i];
+            //Use type to store whether or not object is in use
+            currentObject->type = -1;
+            //Use store next
+            currentObject->_nextPoolObject = &it->second.pool[i + 1];
+        }
+        Object* lastObject = &it->second.pool[POOL_SIZE - 1];
+        //Use type to store whether or not object is in use
+        lastObject->type = -1;
+        //Last pool object
+        lastObject->_nextPoolObject = NULL;
+    }
+    
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
     world = newWorld;
     parentCell = newParent;
@@ -40,10 +92,14 @@ ObjectPool* ObjectManager::createPool(int type, unsigned int size)
     ObjectPool* newPool = getObjectPool(type);
     if (!newPool) return NULL;
     newPool->pool.resize(size);
+    //newPool->pool.reserve(size);
+    //std::cout << "pool size: " << newPool->pool.size() * sizeof(Object) << "\n";
     newPool->firstEmptyObj = &newPool->pool[0];
     //Set all Object next indices to the next free object (next one over)
     for (unsigned int i = 0; i < size - 1; ++i)
     {
+        Object newObject;
+        newPool->pool.push_back(newObject);
         Object* currentObject = &newPool->pool[i];
         //Use type to store whether or not object is in use
         currentObject->type = -1;

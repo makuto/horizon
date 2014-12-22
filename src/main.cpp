@@ -21,14 +21,56 @@
 
 #include "utilities/simplexnoise.h"
 
+void test()
+{
+    window win(1024, 600, "eest");
+    dynamicMultilayerMap testMap(10, 10, 2);
+    dynamicTileMap* masterMap = testMap.getMasterMap();
+    masterMap->setTileSize(32, 32);
+    masterMap->setViewSize(10, 10);
+    //masterMap->setMapSize(10, 10);
+    std::vector<tile> layer1;
+    layer1.resize(100);
+    for (int i = 0; i < 100; ++i)
+    {
+        layer1[i].x = 254;
+        layer1[i].y = 0;
+    }
+    std::vector<tile> layer2;
+    layer2.resize(100);
+    for (int i = 0; i < 100; ++i)
+    {
+        if (i % 3 == 0)
+        {
+            layer2[i].x = 100;
+            layer2[i].y = 0;
+        }
+        else
+        {
+            layer2[i].x = 255;
+            layer2[i].y = 255;
+        }
+    }
+    testMap.setLayer(0, &layer1);
+    testMap.setLayer(1, &layer2);
+    sprite tileSet;
+    if (!tileSet.load("data/images/terrain.png")) return;
+    testMap.setImage(&tileSet);
+    while(!win.shouldClose())
+    {
+        testMap.render(0, 1, 0, 0, &win);
+        win.update();
+    }
+}
 int main()
 {
+    //test();
     ObjectProcessorDir testDir;
     ObjectProcessor* test2 = new ObjectProcessor();
     //test2->initialize(
     testDir.addObjProcessor(test2, 1);
     
-    CellIndex testID;
+    //CellIndex testID;
     /*
     testID.x = 1;
     testID.y = 1;
@@ -54,13 +96,18 @@ int main()
     
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
-    multilayerMap defaultMap;
-    if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
+    //multilayerMap defaultMap;
+    //if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
     sprite tileSet;
     if (!tileSet.load(parser.getAttribute("files.worldDefaults.tileSet").c_str())) return -1;
-    defaultMap.setImage(&tileSet);
     int worldToLoad = 0;
-    World newWorld(&win, &defaultMap, worldToLoad, &testDir);
+    //World newWorld(&win, &defaultMap, worldToLoad, &testDir);
+    dynamicMultilayerMap dynamicMap(CELL_HEIGHT, CELL_WIDTH, NUM_LAYERS);
+    dynamicTileMap* dynamicMasterMap = dynamicMap.getMasterMap();
+    dynamicMasterMap->setTileSize(TILE_WIDTH, TILE_HEIGHT);
+    dynamicMasterMap->setViewSize(win.getHeight() / TILE_HEIGHT, win.getWidth() / TILE_WIDTH);
+    dynamicMasterMap->setImage(&tileSet);
+    World newWorld(&win, &dynamicMap, worldToLoad, &testDir);
     /*CellIndex index;
     index.x = 0;
     index.y = 0;
@@ -74,10 +121,10 @@ int main()
     index.x = -1;
     index.y = 0;
     if (!newWorld.loadCell(index)) return -1;*/
-    ObjectManager test(&newWorld, &testDir, testID, NULL);
-    Object* testObj = test.getNewInitializedObject(1, 1, 1, 1, 1);
-    testObj->type=1;
-    Coord newPos;
+    //ObjectManager test(&newWorld, &testDir, testID, NULL);
+    //Object* testObj = test.getNewInitializedObject(1, 1, 1, 1, 1);
+    //testObj->type=1;
+    //Coord newPos;
     //newPos.setPosition(index, 0, 10);
     //testObj->setPosition(newPos, test);
     

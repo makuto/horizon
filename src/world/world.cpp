@@ -10,8 +10,9 @@ const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
 const float MAX_WORLD_FAR_UPDATE = 0.01;
+const unsigned int CELL_POOL_SIZE = 1024;
 
-World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir)
+World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir):cellPool(CELL_POOL_SIZE)
 {
     win = newWin;
     masterMap = newMasterMap;
@@ -31,10 +32,10 @@ World::World(window* newWin, multilayerMap* newMasterMap, int newWorldID, Object
 World::~World()
 {
     delete[] cellArrayCache;
-    for (std::map<CellIndex, Cell*, CellIndexComparer>::iterator it = cells.begin();
+    for (std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator it = cells.begin();
     it != cells.end(); ++it)
     {
-        delete it->second;
+        //delete it->second;
     }
     //Reset masterMap layers
     for (unsigned int i = 0; i < masterMap->getTotalLayers(); i++)
@@ -44,32 +45,48 @@ World::~World()
 }
 Cell* World::loadCell(CellIndex cellToLoad)
 {
-    Cell* newCell = new Cell(cellToLoad, this, processorDir);
-    if (!newCell->load(worldID))
+    //Cell* newCell = new Cell(cellToLoad, this, processorDir);
+    PoolData<Cell>* newCell = cellPool.getNewData();
+    if (newCell==NULL)
     {
-        delete newCell;
+        std::cout << "ERROR: world.loadCell(): Pool returned null!\n";
+        return NULL;
+    }
+    newCell->data.init(cellToLoad, this, processorDir);
+    if (!newCell->data.load(worldID))
+    {
+        cellPool.removeData(newCell);
         return NULL;
     }
     cells[cellToLoad] = newCell;
-    return newCell;
+    return &newCell->data;
 }
 Cell* World::getCell(CellIndex cell)
 {
     //Find the cell
-    std::map<CellIndex, Cell*, CellIndexComparer>::iterator findIt =
+    std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator findIt =
     cells.find(cell);
     if (findIt != cells.end())
     {
         //Return the found cell
-        return findIt->second;
+        return &findIt->second->data;
     }
     //Cell wasn't found! See if it is on the hard drive
-    Cell* newCell = loadCell(cell);
+    Cell* newCell = NULL;
+    newCell = loadCell(cell);
     if (!newCell) //Cell isn't on hard drive; generate it now
     {
-        newCell = new Cell(cell, this, processorDir);
+        //Need to create the cell
+        PoolData<Cell>* newPoolCell = cellPool.getNewData();
+        if (newPoolCell==NULL)
+        {
+            std::cout << "ERROR: world.loadCell(): Pool returned null!\n";
+            return NULL;
+        }
+        newCell = &newPoolCell->data;
+        newCell->init(cell, this, processorDir);
         newCell->generate(worldID, worldID, 2); //Seed is simply worldID
-        cells[cell] = newCell;
+        cells[cell] = newPoolCell;
     }
     return newCell;
 }
@@ -263,7 +280,7 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
     ++nextCellToUpdate)
     {
         if (currentTime.getTime() >= extraTime) break;
-        nextCellToUpdate->second->update(globalTime);
+        nextCellToUpdate->second->data.update(globalTime);
     }
 }
 #endif
