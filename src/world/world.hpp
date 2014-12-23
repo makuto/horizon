@@ -52,7 +52,7 @@ class World
         Cell* loadCell(CellIndex cellToLoad);
         
         //Displays the map
-        void render(Coord& viewPosition);
+        void render(Coord& viewPosition, Time* globalTime);
         //Updates objects
         //Objects nearest to viewPosition will be updated in real time,
         //then cells will be updated until extraTime is reached or the end of

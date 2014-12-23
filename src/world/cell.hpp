@@ -6,6 +6,7 @@
 #include <base2.0/tileMap/tileCamera.hpp>
 #include "../object/objectManager.hpp"
 #include "../object/objectProcessorDir.hpp"
+#include "time.hpp"
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
@@ -37,6 +38,10 @@ class Cell
 
         World* world;
     public:
+        //If a cell is inactive for long periods of time, it can be unloaded.
+        //Touched stores the last time it was active
+        Time touched;
+        
         Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
         Cell();
         //Used to allow pooling

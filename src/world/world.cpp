@@ -9,8 +9,12 @@ const std::string WORLDS_PATH = "worlds/";
 const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
-const float MAX_WORLD_FAR_UPDATE = 0.01;
+const float MAX_WORLD_FAR_UPDATE = 0.001;
 const unsigned int CELL_POOL_SIZE = 1024;
+//Number of seconds a cell has been untouched before the cell is unloaded
+//Note that values larger than SECONDS_IN_DAY will be ignored because
+//cells older than 1 day will always be unloaded
+const float CELL_UNLOAD_DELAY = 60;
 
 World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir):cellPool(CELL_POOL_SIZE)
 {
@@ -165,7 +169,7 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
     }
     return cellArray;*/
 }
-void World::render(Coord& viewPosition)
+void World::render(Coord& viewPosition, Time* globalTime)
 {
     //Set the camera to the view relative to the cell it's in
     int viewX = viewPosition.getCellOffsetX();
@@ -249,6 +253,8 @@ void World::render(Coord& viewPosition)
         {
             currentCell->renderTop(camera, newX, newY, masterMap, win);
         }
+        //Set touched on cell (to keep in memory)
+        currentCell->touched = *globalTime;
     }
 }
 void World::update(Coord viewPosition, Time* globalTime, float extraTime)
@@ -266,6 +272,8 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         if (currentCell)
         {
             currentCell->update(globalTime);
+            //Nearby cells will be touched so that they won't be unloaded
+            currentCell->touched = *globalTime;
         }
     }
     //Update other cells
@@ -281,6 +289,16 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
     {
         if (currentTime.getTime() >= extraTime) break;
         nextCellToUpdate->second->data.update(globalTime);
+        //Check if touched delta is large; if so, remove the cell
+        Time delta;
+        globalTime->getDeltaTime(&nextCellToUpdate->second->data.touched, delta);
+        delta.invert();
+        if (delta.getExactSeconds() > CELL_UNLOAD_DELAY || delta.getDays() > 0)
+        {
+            //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << "\n";
+            cellPool.removeData(nextCellToUpdate->second);
+            cells.erase(nextCellToUpdate);
+        }
     }
 }
 #endif

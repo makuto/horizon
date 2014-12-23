@@ -81,6 +81,7 @@ class ObjectManager
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
         void renderObjects(float viewX, float viewY, window* win);
         //Updates all objects
-        void updateObjects(Time* globalTime);
+        //Returns false if there are no active objects
+        bool updateObjects(Time* globalTime);
 };
 #endif

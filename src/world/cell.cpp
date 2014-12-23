@@ -368,7 +368,10 @@ void Cell::render(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMa
 }
 void Cell::update(Time* globalTime)
 {
-    objectManager.updateObjects(globalTime);
+    if (objectManager.updateObjects(globalTime))
+    {
+        touched = *globalTime;
+    }
     return;
 }
 #endif

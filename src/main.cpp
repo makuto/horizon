@@ -231,7 +231,7 @@ int main()
         
         testSprite.setPosition(testAgent->worldPosition.getScreenX(&windowPosition), testAgent->worldPosition.getScreenY(&windowPosition));
         prof.startTiming("render");
-        newWorld.render(windowPosition);
+        newWorld.render(windowPosition, &globalTime);
         ///////////////////////
         if (in.isPressed(inputCode::Space))
         {
@@ -291,7 +291,7 @@ int main()
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
-            //newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+            newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
             prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();

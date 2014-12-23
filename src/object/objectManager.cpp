@@ -96,15 +96,16 @@ ObjectPool* ObjectManager::createPool(int type, unsigned int size)
     //std::cout << "pool size: " << newPool->pool.size() * sizeof(Object) << "\n";
     newPool->firstEmptyObj = &newPool->pool[0];
     //Set all Object next indices to the next free object (next one over)
+    int counter = 1;
     for (unsigned int i = 0; i < size - 1; ++i)
     {
-        Object newObject;
-        newPool->pool.push_back(newObject);
+        //newPool->pool.push_back(newObject);
         Object* currentObject = &newPool->pool[i];
         //Use type to store whether or not object is in use
         currentObject->type = -1;
         //Use store next
         currentObject->_nextPoolObject = &newPool->pool[i + 1];
+        counter++;
     }
     Object* lastObject = &newPool->pool[size - 1];
     //Use type to store whether or not object is in use
@@ -331,8 +332,9 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
     //Debug render quadtree
     indexQuadTree->render(win, -viewX, -viewY);
 }
-void ObjectManager::updateObjects(Time* globalTime)
+bool ObjectManager::updateObjects(Time* globalTime)
 {
+    bool hasObject = false;
     ObjectProcessor* processor = NULL;
     for (std::map<int, ObjectPool>::iterator it = objectPools.begin();
     it != objectPools.end(); ++it)
@@ -349,6 +351,7 @@ void ObjectManager::updateObjects(Time* globalTime)
             Object* currentObject = &(*pIt);
             if (currentObject->type != -1) //Skip over uninitialized objects
             {
+                hasObject = true;
                 int status = processor->updateObject(currentObject, globalTime, this);
                 if (status == -1) //object should be destroyed
                 {
@@ -358,5 +361,6 @@ void ObjectManager::updateObjects(Time* globalTime)
             }
         }
     }
+    return hasObject;
 }
 #endif
