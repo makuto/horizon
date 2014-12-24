@@ -3,6 +3,7 @@
 #include <iostream>
 #include <base2.0/timer/timer.hpp>
 #include "world.hpp"
+#include "../utilities/debugText.hpp"
 
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
@@ -10,10 +11,13 @@ const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
 const float MAX_WORLD_FAR_UPDATE = 0.001;
-const unsigned int CELL_POOL_SIZE = 1024;
+const unsigned int CELL_POOL_SIZE = 100;
 //Number of seconds a cell has been untouched before the cell is unloaded
 //Note that values larger than SECONDS_IN_DAY will be ignored because
 //cells older than 1 day will always be unloaded
+//Also note that CELL_UNLOAD_DELAY is not the final value. The final value is:
+//CELL_UNLOAD_DELAY * (1 - (active cells / CELL_POOL_SIZE))
+//The more active cells there are, the less the delay is
 const float CELL_UNLOAD_DELAY = 60;
 
 World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir):cellPool(CELL_POOL_SIZE)
@@ -84,7 +88,7 @@ Cell* World::getCell(CellIndex cell)
         PoolData<Cell>* newPoolCell = cellPool.getNewData();
         if (newPoolCell==NULL)
         {
-            std::cout << "ERROR: world.loadCell(): Pool returned null!\n";
+            std::cout << "ERROR: world.getCell(): Pool returned null! No space to generate...\n";
             return NULL;
         }
         newCell = &newPoolCell->data;
@@ -178,7 +182,6 @@ void World::render(Coord& viewPosition, Time* globalTime)
     int bottomLCornerY = CELL_HEIGHT_PIXELS - viewY;
     CellIndex viewPosCell = viewPosition.getCell();
     camera.setPosition(viewX, viewY);
-    
     //Get an array of all cells the camera will see
     int size = 0;
     CellIndex* cellsToRender = getIntersectingCells(viewPosition, win->getWidth(), win->getHeight(), size);
@@ -252,13 +255,16 @@ void World::render(Coord& viewPosition, Time* globalTime)
         if (currentCell)
         {
             currentCell->renderTop(camera, newX, newY, masterMap, win);
+            //Set touched on cell (to keep in memory) (only needs to be done once)
+            currentCell->setTouched(*globalTime);
         }
-        //Set touched on cell (to keep in memory)
-        currentCell->touched = *globalTime;
     }
 }
 void World::update(Coord viewPosition, Time* globalTime, float extraTime)
 {
+    DebugText::addEntry("Pool usage (%): ", ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100);
+    DebugText::addEntry("Unload delay (seconds): ", (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))));
+    //std::cout << "Pool usage: "  << cellPool.getTotalActiveData() << "/" << CELL_POOL_SIZE << " ( " << ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100 << "% ) \n";
     //Update close cells
     //Make viewPosition the top left corner of the close cells
     viewPosition.addVector(-UPDATE_CLOSE_DISTANCE_X, -UPDATE_CLOSE_DISTANCE_Y);
@@ -273,7 +279,7 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         {
             currentCell->update(globalTime);
             //Nearby cells will be touched so that they won't be unloaded
-            currentCell->touched = *globalTime;
+            currentCell->setTouched(*globalTime);
         }
     }
     //Update other cells
@@ -291,9 +297,12 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         nextCellToUpdate->second->data.update(globalTime);
         //Check if touched delta is large; if so, remove the cell
         Time delta;
-        globalTime->getDeltaTime(&nextCellToUpdate->second->data.touched, delta);
+        Time cellTouched = nextCellToUpdate->second->data.getTouched();
+        globalTime->getDeltaTime(&cellTouched, delta);
         delta.invert();
-        if (delta.getExactSeconds() > CELL_UNLOAD_DELAY || delta.getDays() > 0)
+        //cyprus checking
+        //90880 324377202
+        if (delta.getExactSeconds() > (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))) || delta.getDays() > 0)
         {
             //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << "\n";
             cellPool.removeData(nextCellToUpdate->second);

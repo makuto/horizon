@@ -56,6 +56,14 @@ Cell::~Cell()
         }
     }
 }
+void Cell::setTouched(Time newValue)
+{
+    touched = newValue;
+}
+Time Cell::getTouched()
+{
+    return touched;
+}
 ObjectManager* Cell::getObjectManager()
 {
     return &objectManager;
@@ -370,7 +378,7 @@ void Cell::update(Time* globalTime)
 {
     if (objectManager.updateObjects(globalTime))
     {
-        touched = *globalTime;
+        setTouched(*globalTime);
     }
     return;
 }

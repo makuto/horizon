@@ -37,10 +37,12 @@ class Cell
         bool loadLayer(const std::string& filename, int layerNum, bool isMasterLayer);
 
         World* world;
-    public:
         //If a cell is inactive for long periods of time, it can be unloaded.
         //Touched stores the last time it was active
         Time touched;
+    public:
+        void setTouched(Time newValue);
+        Time getTouched();
         
         Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
         Cell();

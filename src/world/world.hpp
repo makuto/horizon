@@ -56,7 +56,8 @@ class World
         //Updates objects
         //Objects nearest to viewPosition will be updated in real time,
         //then cells will be updated until extraTime is reached or the end of
-        //the cells map
+        //the cells map. Update also frees any cells that have a touched delta
+        //greater than CELL_UNLOAD_DELAY
         void update(Coord viewPosition, Time* globalTime, float extraTime);
 };
 #endif

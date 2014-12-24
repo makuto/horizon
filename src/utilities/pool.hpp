@@ -24,6 +24,7 @@ class Pool
         std::vector<PoolData<R> > pool;
         PoolData<R>* firstFreeData;
         unsigned int size;
+        unsigned int totalActiveData;
         void resetPool()
         {
             firstFreeData = &pool[0];
@@ -42,6 +43,7 @@ class Pool
         Pool(unsigned int newSize)
         {
             size = newSize;
+            totalActiveData = 0;
             pool.resize(size);
             resetPool();
         }
@@ -56,6 +58,7 @@ class Pool
                 PoolData<R>* freeData = firstFreeData;
                 firstFreeData = firstFreeData->nextFreeData;
                 freeData->isActive = true;
+                totalActiveData++;
                 return freeData;
             }
             return NULL; //Pool is full
@@ -64,6 +67,7 @@ class Pool
         {
             dataToRemove->nextFreeData = firstFreeData;
             firstFreeData = dataToRemove;
+            totalActiveData--;
             dataToRemove->isActive = false;
         }
         //Returns NULL if index isn't within range or data is not active
@@ -73,6 +77,10 @@ class Pool
             PoolData<R>* data = &pool[index];
             if (data->isActive) return data;
             else return NULL;
+        }
+        unsigned int getTotalActiveData()
+        {
+            return totalActiveData;
         }
 };
 #endif

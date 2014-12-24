@@ -21,6 +21,8 @@
 
 #include "utilities/simplexnoise.h"
 
+#include "utilities/debugText.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -196,6 +198,17 @@ int main()
     std::vector<tile*>* layer = map.getMasterMap()->getMap();
     if (layer==NULL) return -1;
     ///////////////////
+
+    //Used for debug text
+    text textToRender;
+    textToRender.setSize(20);
+    textToRender.setColor(255, 255, 255, 255);
+    if (!textToRender.loadFont("data/fonts/font1.ttf"))
+    {
+        std::cout << "err: cannot load debugText font\n";
+        return -1;
+    }
+    textToRender.setPosition(10, 10);
     
     //win.shouldClear(false);
     //Main loop
@@ -276,6 +289,8 @@ int main()
         ///////////////////////
         win.draw(&testSprite);
         frameTime.start();
+        DebugText::render(&win, &textToRender);
+        DebugText::clear();
         win.update();
         prof.stopTiming("render");
         
