@@ -209,8 +209,11 @@ int main()
         return -1;
     }
     textToRender.setPosition(10, 10);
+    int smoothAmount = 20;
+    float avgTimes[smoothAmount];
+    int index = 0;
     
-    //win.shouldClear(false);
+    win.shouldClear(false);
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
@@ -218,6 +221,21 @@ int main()
         //Move view
         //TODO: Why is it so choppy? :(
         float avgFrameTime = avgFrameTiming->average; //Average frame time (profiler)
+        avgTimes[index] = avgFrameTime;
+        index++;
+        if (index >= smoothAmount) index = 0;
+        float thisAvg = 0;
+        for (int i = 0; i < smoothAmount; ++i)
+        {
+            thisAvg+=avgTimes[i];
+        }
+        thisAvg /= smoothAmount;
+        if (thisAvg < 0) thisAvg = 0;
+        DebugText::addEntry("Avg Frame Time (seconds): ", avgFrameTime);
+        DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
+        avgFrameTime = thisAvg;
+        DebugText::addEntry("Avg Frame Time 10 (seconds): ", thisAvg);
+        DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
         //float avgFrameTime = 0.016; //http://gafferongames.com/game-physics/fix-your-timestep/ ?
         //float avgFrameTime = frameTime.getTime(); //Current frame time
         if (in.isPressed(inputCode::LShift))
@@ -295,12 +313,16 @@ int main()
         prof.stopTiming("render");
         
         //globalTime.addMilliseconds(frameTime.getTime());
-        globalTime.reset();
-        globalTime.addSeconds(worldTime.getTime());
+        //globalTime.reset();
+        //globalTime.addSeconds(worldTime.getTime());
+        globalTime.addSeconds(avgFrameTime);
+        DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
-        if (deltaTime.getExactSeconds()>=0.016)
+        //if (deltaTime.getExactSeconds()>=0.016)
+        //if (deltaTime.getExactSeconds()>=avgFrameTime)
+        if (deltaTime.getExactSeconds()>=0)
         {
             prof.startTiming("updateAgent");
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);

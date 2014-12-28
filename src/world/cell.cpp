@@ -131,7 +131,6 @@ bool Cell::load(int worldID)
 }
 void Cell::generate(int worldID, int seed, int algorithm)
 {
-    std::cout << seed;
     //TODO: Make this settable elsewhere
     unsigned char defaultTileX = 4;
     unsigned char defaultTileY = 12;
@@ -214,14 +213,12 @@ void Cell::generate(int worldID, int seed, int algorithm)
                 for (int x = 0; x < CELL_WIDTH; ++x)
                 {
                     tile newTile;
-                    //Different values based on layer
-                    //Water = 0, 12
-                    //ground = defaultTileX, Y
                     float noiseX = x + (CELL_WIDTH * cellID.x);
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
                     noiseX /= 2;
                     noiseY /= 2;
                     const float SCALE = 0.001;
+                    //TODO: Put all these values in a text file
                     float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
                     //Winter bands
                     if (value > 142)
@@ -237,15 +234,27 @@ void Cell::generate(int worldID, int seed, int algorithm)
                         if (value > 254) value = 254;
                         if (value < 142) value = 142;
                     }
-                    
-                    newTile.x = value;
-                    newTile.y = 0;
-                    layer1[x + (y * CELL_WIDTH)] = newTile;
-                    tile nullTile;
-                    nullTile.x = 255;
-                    nullTile.y = 255;
-                    layer2[x + (y * CELL_WIDTH)] = nullTile;
-                    layer3[x + (y * CELL_WIDTH)] = nullTile;
+
+                    if (value > 185) //Mountains are on multiple layers
+                    {
+                        newTile.x = 185; //Ground and onground are solid black
+                        newTile.y = 0;
+                        layer1[x + (y * CELL_WIDTH)] = newTile;
+                        layer2[x + (y * CELL_WIDTH)] = newTile;
+                        newTile.x = value; //Above ground is elevation //TODODOD TESTTHIS
+                        layer3[x + (y * CELL_WIDTH)] = newTile;
+                    }
+                    else
+                    {
+                        newTile.x = value;
+                        newTile.y = 0;
+                        layer1[x + (y * CELL_WIDTH)] = newTile;
+                        tile nullTile;
+                        nullTile.x = 255;
+                        nullTile.y = 255;
+                        layer2[x + (y * CELL_WIDTH)] = nullTile;
+                        layer3[x + (y * CELL_WIDTH)] = nullTile;
+                    }
                 }
             }
             tiles[0] = layer1;

@@ -46,7 +46,7 @@ int main()
     while (!win.shouldClose())
     {
         if (in.isPressed(inputCode::Escape)) break;
-        if (in.isPressed(inputCode::Up) || in.isPressed(inputCode::Down) || in.isPressed(inputCode::Left) || in.isPressed(inputCode::Right) || in.isPressed(inputCode::RControl) || in.isPressed(inputCode::LControl) || in.isPressed(inputCode::W) || in.isPressed(inputCode::S) || in.isPressed(inputCode::A) || in.isPressed(inputCode::D))
+        if (in.isPressed(inputCode::Up) || in.isPressed(inputCode::Down) || in.isPressed(inputCode::Left) || in.isPressed(inputCode::Right) || in.isPressed(inputCode::RControl) || in.isPressed(inputCode::LControl) || in.isPressed(inputCode::W) || in.isPressed(inputCode::S) || in.isPressed(inputCode::A) || in.isPressed(inputCode::D) || in.isPressed(inputCode::LShift))
         {
             if (in.isPressed(inputCode::Up)) changingValue4 += 1;
             else if (in.isPressed(inputCode::Down)) changingValue4 -= 1;
@@ -67,27 +67,58 @@ int main()
                 for (int n = 1; n < 256; ++n)
                 {
                     tile* currentTile = (*layer)[(i * 1024) + n];
+                    float tileY = 0;
                     //currentTile->x = n % 255;
                     float xdiv = changingValue2;
                     float ydiv = changingValue2;
                     //float div = changingValue;
                     float x = (n / xdiv) + offsetX;
                     float y = (i / ydiv) + offsetY;
-                    float scale = 1;
-                    float value = scaled_octave_noise_2d(8, 0.55, scale, 0, 255, x, y);
-                    if (value > 142)
+                    float scale = 5;
+                    float seed = 19923;
+                    //scale  += scaled_octave_noise_3d(8, 0.55, 0.00001, 0.1, 1, x, y, seed + 10000);
+                    float value = scaled_octave_noise_3d(4, 0.55, scale, 0, 255, x, y, seed);
+                    /*float scaleVal = scaled_octave_noise_3d(8, 0.55, 0.25, 1, 255, x, y, seed - 10000);
+                    if (scaleVal < 150) scaleVal = 0;
+                    //else scaleVal /= 3;
+                    //value += scaleVal;
+                    if (scaleVal != 0)
+                    {
+                        scaleVal-=150;
+                        scaleVal *= 140;
+                        scaleVal /= 155;
+                        scaleVal += 147;
+                        scaleVal = scaled_octave_noise_3d(8, 0.55, scale, 0, 90, x, y, seed - 10000);
+                        scaleVal+=136;
+                        value = scaleVal;
+                    }
+                    //if (value > 177) value = 167;
+                    if (in.isPressed(inputCode::RShift)) value = scaled_octave_noise_3d(8, 0.55, 1, 1, 155, x, y, seed - 10000);*/
+                    if (value < 0) value = 0;
+                    if (value > 254) value = 254;
+                    if (value > 142) //Winter
                     {
                         //value += 100 / (((int)(y+1) % 100) + 1);
                         //int yInt = (int) y;
                         float factor = fabs(sin(y * scale));
                         factor -= changingValue3 - factor; //1.3
-                        std::cout << changingValue3;
+                        //std::cout << changingValue3;
                         if (factor < 0) factor = 0;
                         value += 200 * factor; //Winter climates
                     }
                     if (value > 254) value = 254;
                     if (value < changingValue) value = 0;
+                    if (value > 144 && value < 177 && in.isPressed(inputCode::LShift)) //Biomes
+                    {
+                        float seed = 83434; 
+                        float biomeValue = scaled_octave_noise_3d(8, 0.55, scale, 0, 5, x, y, seed);
+                        biomeValue = truncf(biomeValue) * 32;
+                        value = biomeValue + ((value - 143) / 32);
+                        if (value > 176) value = 176;
+                        tileY = 1;
+                    }
                     currentTile->x = value;
+                    currentTile->y = tileY;
                 }
             }
             map.render(0, 0, 0, 0, &win);
