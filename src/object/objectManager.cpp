@@ -6,35 +6,53 @@
 #include <base2.0/collision/collision.hpp>
 #include "../world/cell.hpp"
 
+//TEMP
+#include <sstream>
 //For quadtree
 const unsigned int MAX_NODE_CAPACITY = 3;
-const unsigned int POOL_SIZE = 100;
-//Should equal largest object sprite half width
+const unsigned int POOL_SIZE = 10;
+//Should equal largest object sprite half width (used to figure out what
+//objects are in the view and should be rendered)
 const float VIEW_TOLERANCE = 32;
 //Use this in conjunction with NUM_DEFAULT_POOLS to pre-init object pools
 const int DEFAULT_POOLS[] = {1};
 const int NUM_DEFAULT_POOLS = 1;
+//When moving an object, add COLL_SEARCH_TOLERANCE to the range the moving
+//object could touch
+const float COLL_SEARCH_TOLERANCE = 128;
+//For getObjectsInRangeCache, this is the size of the results array
+const int MAX_QUERY_POINTS = 10;
 
-ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent)
+ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent):parentCellID(newParentCellID)
 {
     indexQuadTree = new QuadTree<Object*>(MAX_NODE_CAPACITY, 0, 0, CELL_WIDTH_PIXELS, CELL_HEIGHT_PIXELS);
     world = newWorld;
     parentCell = newParent;
-    parentCellID = newParentCellID;
+    //parentCellID = newParentCellID;
     processorDir = newProcessorDir;
     for (int i = 0; i < NUM_DEFAULT_POOLS; ++i)
     {
         createPool(DEFAULT_POOLS[i], POOL_SIZE);
     }
     indexQuadTree = NULL;
+    queryArray = new Object*[MAX_QUERY_POINTS];
+    numQueryPoints = 0;
 }
 ObjectManager::ObjectManager()
 {
+    world = NULL;
+    parentCell = NULL;
+    processorDir = NULL;
+    parentCellID.x = -1;
+    parentCellID.y = -1;
+    
     for (int i = 0; i < NUM_DEFAULT_POOLS; ++i)
     {
         createPool(DEFAULT_POOLS[i], POOL_SIZE);
     }
     indexQuadTree = NULL;
+    queryArray = new Object*[MAX_QUERY_POINTS];
+    numQueryPoints = 0;
 }
 void ObjectManager::init(World* newWorld, ObjectProcessorDir* newProcessorDir,
 CellIndex newParentCellID, Cell* newParent)
@@ -70,10 +88,13 @@ CellIndex newParentCellID, Cell* newParent)
     parentCell = newParent;
     parentCellID = newParentCellID;
     processorDir = newProcessorDir;
+
+    numQueryPoints = 0;
 }
 ObjectManager::~ObjectManager()
 {
     delete indexQuadTree;
+    delete[] queryArray;
 }
 ObjectPool* ObjectManager::getObjectPool(int type)
 {
@@ -133,9 +154,15 @@ std::vector<Object*>* ObjectManager::getObjectsOfType(int type)
 }
 std::vector<Object*>* ObjectManager::getObjectsInRange(aabb& range)
 {
+    //TODO: pool this array
     std::vector<Object*>* objectsInRange = new std::vector<Object*>;
     indexQuadTree->queryRange(range, *objectsInRange);
     return objectsInRange;
+}
+void ObjectManager::getObjectsInRangeCache(aabb& range)
+{
+    numQueryPoints = 0;
+    numQueryPoints = indexQuadTree->queryRange(range, queryArray, numQueryPoints, MAX_QUERY_POINTS);
 }
 //Returns a pointer to an uninitialized (nor constructed) object
 //or NULL if there are no free pool spaces. The object will be added
@@ -247,6 +274,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     CellIndex displaceCell = newDisplacement.getCell();
 
     //Make sure object is still in this cell; if not, tell world and remove object
+    //TODO: How will collision work if it will hit something in this cell before leaving?
     if (displaceCell.x != parentCellID.x || displaceCell.y != parentCellID.y)
     {
         Cell* cellAfterDisplace = parentCell->getNeighborCell(newDisplacement.getCell());
@@ -280,6 +308,246 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
         }
     }
 
+
+    //Check for any objects this object will collide with
+    aabb range;
+    //Prepare search range (box from old position to new position)
+    //TODO: Improve this
+    //TODO: Make sure 0 returns are handled well (return new position?)
+    if (newDisplacement.getCellOffsetX() < objectToMove->position.getCellOffsetX())
+    {
+        range.x = newDisplacement.getCellOffsetX() - COLL_SEARCH_TOLERANCE;
+        range.w = abs(newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX()) + objectToMove->boundOffsetX;
+    }
+    else
+    {
+        range.x = objectToMove->position.getCellOffsetX() - objectToMove->boundOffsetX + objectToMove->boundOffsetX;
+        range.w = abs(newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX()) + COLL_SEARCH_TOLERANCE;
+    }
+    if (newDisplacement.getCellOffsetY() < objectToMove->position.getCellOffsetY())
+    {
+        range.y = newDisplacement.getCellOffsetY() - COLL_SEARCH_TOLERANCE;
+        range.h = newDisplacement.getCellOffsetY() + COLL_SEARCH_TOLERANCE + objectToMove->boundOffsetY + objectToMove->boundOffsetY;
+    }
+    else
+    {
+        range.y = objectToMove->position.getCellOffsetY() - COLL_SEARCH_TOLERANCE - objectToMove->boundOffsetY;
+        range.h = newDisplacement.getCellOffsetY() + COLL_SEARCH_TOLERANCE;
+    }
+    /*range.x = objectToMove->position.getCellOffsetX();
+    range.y = objectToMove->position.getCellOffsetY();
+    range.w = newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX() + objectToMove->boundOffsetX;
+    range.h = newDisplacement.getCellOffsetY() - newPosition.getCellOffsetY() + objectToMove->boundOffsetY;*/
+    //Use quadtree to find objects in range
+    getObjectsInRangeCache(range);
+    //Prepare this object's bounds
+    aabb objToMoveBounds = objectToMove->bounds;
+    objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX;
+    objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY;
+    //Get the object processor
+    ObjectProcessor* movingObjProcessor = processorDir->getObjProcessor(objectToMove->type);
+    //Skip all obj collisions if the processor wasn't found
+    if (movingObjProcessor != NULL)
+    {
+        for (int i = 0; i < numQueryPoints; ++i)
+        {
+            Object* currentObj = queryArray[i];
+            if (currentObj == objectToMove) continue; //Don't trigger self collision
+            if (isColliding(&objToMoveBounds, &currentObj->bounds))
+            {
+                /*////////////////DEBUG COLLIDE
+                window win(600, 600, "Test collide");
+                text test;
+                while(!win.shouldClose())
+                {
+                    test.loadFont("data/fonts/font1.ttf");
+                    test.setSize(10);
+                    float viewX = 200;
+                    float viewY = 200;
+                    Object* obj = objectToMove;
+                    sf::RenderWindow* sfWin = win.getBase();
+                    sf::RectangleShape rectangle;
+                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+                    rectangle.setFillColor(sf::Color::Transparent);
+                    rectangle.setOutlineColor(sf::Color::Red);
+                    rectangle.setOutlineThickness(2);
+                    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    sfWin->draw(rectangle);
+                    std::stringstream ss;
+                    ss << obj->id;
+                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    test.setText(ss.str());
+                    win.draw(&test);
+                    
+                    obj = currentObj;
+                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+                    rectangle.setOutlineColor(sf::Color::Red);
+                    rectangle.setOutlineThickness(2);
+                    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    sfWin->draw(rectangle);
+                    ss.clear();
+                    ss.str("");
+                    ss << obj->id;
+                    test.setText(ss.str());
+                    win.draw(&test);
+                    
+                    rectangle.setSize(sf::Vector2f(range.w, range.h));
+                    rectangle.setOutlineColor(sf::Color::Green);
+                    rectangle.setOutlineThickness(1);
+                    rectangle.setPosition(range.x - viewX, range.y - viewY);
+                    sfWin->draw(rectangle);
+                    rectangle.setSize(sf::Vector2f(1, 1));
+                    rectangle.setOutlineColor(sf::Color::Green);
+                    rectangle.setPosition(newDisplacement.getTrueX() - viewX, newDisplacement.getTrueY() - viewY);
+                    sfWin->draw(rectangle);
+                    rectangle.setOutlineColor(sf::Color::White);
+                    rectangle.setPosition(objectToMove->position.getTrueX() - viewX, objectToMove->position.getTrueY() - viewY);
+                    sfWin->draw(rectangle);
+
+                    viewX = 0;
+                    viewY = 0;
+                    rectangle.setOutlineColor(sf::Color::Blue);
+                    obj = objectToMove;
+                    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
+                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+                    sfWin->draw(rectangle);
+                    ss.clear();
+                    ss.str("");
+                    ss << obj->id;
+                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    test.setText(ss.str());
+                    win.draw(&test);
+                    
+                    obj = currentObj;
+                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+                    rectangle.setFillColor(sf::Color::Transparent);
+                    rectangle.setOutlineColor(sf::Color::Blue);
+                    rectangle.setOutlineThickness(2);
+                    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
+                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+                    sfWin->draw(rectangle);
+                    ss.clear();
+                    ss.str("");
+                    ss << obj->id;
+                    test.setText(ss.str());
+                    win.draw(&test);
+                    win.update();
+                }
+                ////////////////DEBUG COLLIDE*/
+                
+                //Grab the object processors
+                ObjectProcessor* stationaryObjProcessor = processorDir->getObjProcessor(currentObj->type);
+                //Skip this object's collision if its processor wasn't found
+                if (stationaryObjProcessor==NULL) continue;
+                int movingReturn = movingObjProcessor->onCollideObj(objectToMove, newDisplacement, currentObj, true);
+                int stationaryReturn = stationaryObjProcessor->onCollideObj(currentObj, newDisplacement, objectToMove, false);
+                //Do different things based on the return codes
+                switch(movingReturn)
+                {
+                    case 0: //The ObjectProcessor handled it
+                        if (stationaryReturn==2) //stationaryObj might still want to be destroyed
+                        {
+                            stationaryObjProcessor->onDestroyObject(currentObj);
+                            removeObject(currentObj);
+                        }
+                        break;
+                    case 1: //Resolve the collision
+                        switch(stationaryReturn)
+                        {
+                            case 0: //StationaryObj handled it
+                                break;
+                            case 1: //Resolve the collision normally (keep stationary stationary)
+                                {
+                                    vec2 vec;
+                                    vec.x = newDisplacement.getCellOffsetX() - objectToMove->position.getCellOffsetX();
+                                    vec.y = newDisplacement.getCellOffsetY() - objectToMove->position.getCellOffsetY();
+                                    resolveCollision(&objToMoveBounds, &currentObj->bounds, &vec);
+                                    float newX = objToMoveBounds.x - objectToMove->boundOffsetX;
+                                    float newY = objToMoveBounds.y - objectToMove->boundOffsetY;
+                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
+                                    //objectToMove->position.setPosition(parentCellID, newX, newY);
+                                    newDisplacement.setPosition(parentCellID, newX, newY);
+                                }
+                                break;
+                            //if stationaryObj wants to be destroyed, then that's
+                            //all that has to be done to resolve the collision
+                            case 2:
+                                stationaryObjProcessor->onDestroyObject(currentObj);
+                                removeObject(currentObj);
+                                break;
+                            case 3: //Resolve the collision by moving stationaryObj
+                                //TODO: If pushing against a wall etc, could this
+                                //recurse forever and break everything?
+                                {
+                                    vec2 vec;
+                                    vec.x = objectToMove->position.getCellOffsetX() - newDisplacement.getCellOffsetX();
+                                    vec.y = objectToMove->position.getCellOffsetY() - newDisplacement.getCellOffsetY();
+                                    resolveCollision(&currentObj->bounds, &objToMoveBounds, &vec);
+                                    float newX = currentObj->bounds.x - currentObj->boundOffsetX;
+                                    float newY = currentObj->bounds.y - currentObj->boundOffsetY;
+                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
+                                    Coord newPosition;
+                                    newPosition.setPosition(parentCellID, newX, newY);
+                                    //Go through objMan to set position
+                                    std::cout << "objMan\n";
+                                    currentObj->setPosition(newPosition, *this);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 2: //Destroy the object
+                        movingObjProcessor->onDestroyObject(objectToMove);
+                        std::cout << "Removing obj id " << objectToMove->id << " hit id " << currentObj->id << "\n";
+                        objectToMove->position.print();
+                        removeObject(objectToMove);
+                        std::cout << "Done\n";
+                        return;
+                        break;
+                    case 3: //Move stationaryObj out of the way
+                        switch(stationaryReturn)
+                        {
+                            case 0: //StationaryObj handled it
+                                break;
+                            //if stationaryObj wants to be destroyed, then that's
+                            //all that has to be done to resolve the collision
+                            case 2:
+                                stationaryObjProcessor->onDestroyObject(currentObj);
+                                removeObject(currentObj);
+                                break;
+                            //Resolve the collision by moving stationaryObj
+                            //TODO: If pushing against a wall etc, could this
+                            //recurse forever and break everything?
+                            //Regardless of stationaryObj's return, moving takes
+                            //precedence
+                            default:
+                                {
+                                    vec2 vec;
+                                    vec.x = objectToMove->position.getCellOffsetX() - newDisplacement.getCellOffsetX();
+                                    vec.y = objectToMove->position.getCellOffsetY() - newDisplacement.getCellOffsetY();
+                                    resolveCollision(&currentObj->bounds, &objToMoveBounds, &vec);
+                                    float newX = currentObj->bounds.x - currentObj->boundOffsetX;
+                                    float newY = currentObj->bounds.y - currentObj->boundOffsetY;
+                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
+                                    Coord newPosition;
+                                    newPosition.setPosition(parentCellID, newX, newY);
+                                    //Go through objMan to set position
+                                    std::cout << "objMan\n";
+                                    currentObj->setPosition(newPosition, *this);
+                                }
+                                break;
+                        }
+                        break;
+                    default: //Unknown return code
+                        break;
+                }
+            }
+        }
+    }
+    
     //Object still in this cell; remove it from quadtree, then apply the
     //displacement and reinsert it into the quadtree
     //Remove the object pointer from the quadtree
@@ -287,6 +555,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     {
         std::cout << "WARNING: moveObject(): QuadTree removal failed!\n";
     }
+    
     //Apply the displacement
     objectToMove->position.setPosition(displaceCell,
     newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());

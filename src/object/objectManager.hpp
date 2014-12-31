@@ -45,6 +45,11 @@ class ObjectManager
         Cell* parentCell;
         CellIndex parentCellID;
         ObjectProcessorDir* processorDir;
+        //Holds query points returned from getObjectsInRangeCache
+        //numQueryPoints holds how many were returned
+        Object** queryArray;
+        int numQueryPoints;
+        void getObjectsInRangeCache(aabb& range);
     public:
         ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir,
         CellIndex newParentCellID, Cell* newParent);
@@ -57,6 +62,8 @@ class ObjectManager
         //manager of the requested type or NULL if there are no objects of
         //the requested type. All objects in the array are initialized (in use)
         //Delete the array once you are done.
+        //TODO: Add has any of type function
+        //TODO: Add cached version of this function, if necessary
         std::vector<Object*>* getObjectsOfType(int type);
         //Returns a pointer to a vector with all objects in the area in this
         //cell or NULL if there are no objects in the range.

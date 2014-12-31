@@ -24,14 +24,16 @@ bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& seco
     return first.y > second.y;
 }
 
-Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir):objectManager(newWorld, processorDir, newCellID, this)
+Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir):cellID(newCellID), objectManager(newWorld, processorDir, newCellID, this)
 {
     world = newWorld;
-    cellID = newCellID;
     tiles.resize(NUM_LAYERS);
 }
 Cell::Cell()
 {
+    cellID.x = 0;
+    cellID.y = 0;
+    world = NULL;
     tiles.resize(NUM_LAYERS);
     for (std::vector<std::vector<tile> >::iterator it = tiles.begin();
     it != tiles.end(); ++it)
@@ -302,8 +304,7 @@ bool Cell::save(int worldID, dynamicMultilayerMap* map)
     std::ostringstream fileStructureCommand;
     fileStructureCommand << MAKE_DIR_COMMAND << " " << WORLDS_PATH << "world" << worldID << "/cells";
     //TODO: remove system
-    int result = 0;
-    result = system(fileStructureCommand.str().c_str());
+    int result = system(fileStructureCommand.str().c_str());
     std::cout << fileStructureCommand.str() << " returned " << result << "\n";
     fileStructureCommand << "/" << cellID.x << "-" << cellID.y;
     result = system(fileStructureCommand.str().c_str());

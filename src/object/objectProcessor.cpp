@@ -33,6 +33,11 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->setPosition(position, *manager);
     newObj->rotation = rotation;
     newObj->lastUpdate.reset();
+    newObj->bounds.setPosition(position.getCellOffsetX(), position.getCellOffsetY());
+    newObj->bounds.w = 32;
+    newObj->bounds.h = 32;
+    newObj->boundOffsetX = -16;
+    newObj->boundOffsetY = -16;
     return true;
 }
 //Do a routine update on the object
@@ -42,7 +47,31 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     obj->lastUpdate.getDeltaTime(globalTime, delta);
     //obj->rotation += delta.getExactSeconds() * 200;
     float speed = 100;
-    obj->addVector(speed * delta.getExactSeconds(), 0, *manager);
+    //float vecX = obj->getPosition().getTrueX() + 512;
+    //float vecY = obj->getPosition().getTrueY() + 512;
+    float vecX = 0;
+    float vecY = 0;
+    if (obj->getPosition().getTrueX() !=512)
+    {
+        vecX = -obj->getPosition().getTrueX() + 512;
+    }
+    if (obj->getPosition().getTrueY() !=512)
+    {
+        vecY = -obj->getPosition().getTrueY() + 512;
+    }
+    
+    //Normalize
+    float dist = sqrt((vecX * vecX) + (vecY * vecY));
+    if (dist > 1)
+    {
+        vecX /= dist;
+        vecY /= dist;
+        vecX *= speed;
+        vecY *= speed;
+        vecX *= delta.getExactSeconds();
+        vecY *= delta.getExactSeconds();
+        obj->addVector(vecX, vecY, *manager);
+    }
     obj->lastUpdate = *globalTime;
     if (obj->getPosition().getCell().x > 0)
     {
@@ -58,6 +87,25 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     testSpr.setPosition(pos.getCellOffsetX() - viewX, pos.getCellOffsetY() - viewY);
     testSpr.setRotation(obj->rotation);
     win->draw(&testSpr);
+    //Debug bounds render
+    sf::RenderWindow* sfWin = win->getBase();
+    sf::RectangleShape rectangle;
+    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
+    rectangle.setFillColor(sf::Color::Transparent);
+    rectangle.setOutlineColor(sf::Color::Red);
+    rectangle.setOutlineThickness(2);
+    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
+    sfWin->draw(rectangle);
+    rectangle.setOutlineColor(sf::Color::Blue);
+    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
+    sfWin->draw(rectangle);
+    rectangle.setOutlineColor(sf::Color::Green);
+    rectangle.setSize(sf::Vector2f(2, 2));
+    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX, obj->getPosition().getCellOffsetY() - viewY);
+    sfWin->draw(rectangle);
+    rectangle.setOutlineColor(sf::Color::White);
+    rectangle.setPosition(obj->getPosition().getTrueX() - viewX, obj->getPosition().getTrueY() - viewY);
+    sfWin->draw(rectangle);
     return;
 }
 //Agent uses/activates object
@@ -65,11 +113,24 @@ int ObjectProcessor::activateObject(Object* obj, Agent* agent)
 {
     return 1;
 }
+
 //Agent collides with object
-int ObjectProcessor::touchObject(Object* obj, Agent* agent)
+int ObjectProcessor::touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving)
 {
     return 1;
 }
+//Object collides with tile
+int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement, tile& touchedTile, bool isMoving)
+{
+    return 1;
+}
+//Object collides with object
+int ObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplacement, Object* obj, bool isMoving)
+{
+    std::cout << "collide\n";
+    return 2;
+}
+
 //Object is hit by something
 //virtual int hitObject(Object* obj, Actor* actor, int inventoryIndex); //TODO
 //This function is called when an object is going to be destroyed

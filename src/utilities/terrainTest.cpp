@@ -76,8 +76,8 @@ int main()
                     float y = (i / ydiv) + offsetY;
                     float scale = 5;
                     float seed = 19923;
-                    //scale  += scaled_octave_noise_3d(8, 0.55, 0.00001, 0.1, 1, x, y, seed + 10000);
-                    float value = scaled_octave_noise_3d(4, 0.55, scale, 0, 255, x, y, seed);
+                    //scale  = scaled_octave_noise_3d(8, 0.55, 0.001, 0, 5, x, y, seed);
+                    float value = scaled_octave_noise_3d(8, 0.55, scale, 0, 255, x, y, seed);
                     /*float scaleVal = scaled_octave_noise_3d(8, 0.55, 0.25, 1, 255, x, y, seed - 10000);
                     if (scaleVal < 150) scaleVal = 0;
                     //else scaleVal /= 3;

@@ -61,9 +61,9 @@ ProcessDirectory::ProcessDirectory(eptParser* parser, eptFile* needFileListing, 
 }
 ProcessDirectory::~ProcessDirectory()
 {
-    for (std::map<int, std::vector<ProcessChain*>* >::iterator it=directory.begin(); it!=directory.end(); it++)
+    for (std::map<int, std::vector<ProcessChain*>* >::iterator it=directory.begin(); it!=directory.end(); ++it)
     { //Loop through map
-        for (std::vector<ProcessChain*>::iterator pIt = it->second->begin(); pIt != it->second->end(); pIt++)
+        for (std::vector<ProcessChain*>::iterator pIt = it->second->begin(); pIt != it->second->end(); ++pIt)
         { //Loop through vector
             //Delete ProcessChain
             delete (*pIt);
@@ -84,11 +84,11 @@ ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need
     int minimumDifficulty = MAX_DIFFICULTY;
     ProcessChain* currentBestChain = NULL;
     //Loop through all listings
-    for (std::vector<ProcessChain*>::iterator it = listing->begin(); it !=listing->end(); it++)
+    for (std::vector<ProcessChain*>::iterator it = listing->begin(); it !=listing->end(); ++it)
     {
         int totalDifficulty = 0;
         //Loop through each process in the chain and get its difficulty
-        for (ProcessChain::iterator pIt=(*it)->begin(); pIt!=(*it)->end(); pIt++)
+        for (ProcessChain::iterator pIt=(*it)->begin(); pIt!=(*it)->end(); ++pIt)
         {
             int currentDifficulty = (*pIt)->getDifficulty(agent, need);
             if (currentDifficulty == -1) //Impossible process

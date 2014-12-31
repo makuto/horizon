@@ -31,7 +31,7 @@ class Object
         int state;      //Use this for whatever you want
         float rotation; //Graphical rotation for this object
         aabb bounds;    //Bounds for all external collisions (x and y ignored)
-        float boundOffsetX; //Offsets for bounds
+        float boundOffsetX; //Offsets for bounds (added to position; for center, you would do negative)
         float boundOffsetY;
         //These functions make sure quadtree and collisions are handled
         void setPosition(Coord& newPosition, ObjectManager& manager);

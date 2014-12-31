@@ -201,8 +201,8 @@ int main()
 
     //Used for debug text
     text textToRender;
-    textToRender.setSize(20);
-    textToRender.setColor(255, 255, 255, 255);
+    textToRender.setSize(14);
+    textToRender.setColor(255, 38, 38, 255);
     if (!textToRender.loadFont("data/fonts/font1.ttf"))
     {
         std::cout << "err: cannot load debugText font\n";
@@ -212,8 +212,30 @@ int main()
     int smoothAmount = 20;
     float avgTimes[smoothAmount];
     int index = 0;
-    
+    for (int i = 0; i < smoothAmount; ++i)
+    {
+        avgTimes[i] = 0.016;
+    }
+
+    sprite dayNightSpr;
+    std::vector<tile> dayNightData;
+    dayNightData.resize(64 * 64);
+    if (dayNightSpr.load("data/images/day-night.png"))
+    {
+        for (int i = 0; i < 64 * 64; ++i)
+        {
+            //dayNightData[i].x = (unsigned char)truncf(((globalTime.getSeconds() * 10000) / SECONDS_IN_DAY) * 32);
+            dayNightData[i].x = 0;
+            dayNightData[i].y = 0;
+        }
+        
+    }
+    //dayNightSpr.getBase()->setScale(32, 32);
+    //dayNightSpr.getBase()->scale(32, 32);
+        
     win.shouldClear(false);
+    //win.getBase()->setVerticalSyncEnabled(false);
+    //win.getBase()->setFramerateLimit(60);
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
@@ -307,6 +329,21 @@ int main()
         ///////////////////////
         win.draw(&testSprite);
         frameTime.start();
+    
+        ////Day night
+        for (int i = 0; i < 64 * 64; ++i)
+        {
+            //dayNightData[i].x = (unsigned char)truncf(((globalTime.getSeconds() * 10000) / SECONDS_IN_DAY) * 32);
+            dayNightData[i].x = globalTime.getSeconds() / 2;
+            dayNightData[i].y = 0;
+        }
+        dynamicMap.setImage(&dayNightSpr);
+        dynamicMap.getMasterMap()->setViewOffset(0, 0);
+        dynamicMap.setLayer(0, &dayNightData);
+        dynamicMap.render(0, 0, 0, 0, &win);
+        dynamicMap.setImage(&tileSet);
+        ////Day night
+        
         DebugText::render(&win, &textToRender);
         DebugText::clear();
         win.update();
@@ -315,7 +352,8 @@ int main()
         //globalTime.addMilliseconds(frameTime.getTime());
         //globalTime.reset();
         //globalTime.addSeconds(worldTime.getTime());
-        globalTime.addSeconds(avgFrameTime);
+        //globalTime.addSeconds(avgFrameTime);
+        globalTime.addSeconds(0.016);
         DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);

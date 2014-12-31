@@ -192,7 +192,7 @@ class QuadTree
         //Checks if node and its children are empty
         bool isEmpty()
         {
-            if (data.size() != 0) return false;
+            if (data.empty()) return false;
             if (!tL) return true;
             if (tL->isEmpty() && tR->isEmpty() && bL->isEmpty() && bR->isEmpty())
             {
@@ -333,6 +333,58 @@ class QuadTree
             
             return totalResults;
         }
+        //Fills the provided array with resultant points (points
+        //contained in the specified range). Returns total results
+        //Pass in the maximum for the array as well as the index
+        //this function should start at (usually 0)
+        unsigned int queryRange(aabb& range, T* results, int& currentIndex, int maxPoints)
+        {
+            //std::cout << bounds.x << " , " << bounds.y << " w " << bounds.w << " h " << bounds.h << " \n";
+            unsigned int totalResults = 0;
+            //Make sure the array isn't full
+            if (currentIndex >= maxPoints)
+            {
+                std::cout << "WARNING: queryPoints(): Results array full! (Max points = "<< maxPoints<< ")\n";
+                return totalResults;
+            }
+            
+            //Make sure range is touching this node
+            if (!isColliding(&range, &bounds))
+            {
+                return 0;
+            }
+            
+            //Add points in this node to results if contained in range
+            for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
+            {
+                if (isPointInRange((*it).x, (*it).y, range))
+                {
+                    if (currentIndex < maxPoints)
+                    {
+                        results[currentIndex] = (*it).data;
+                        totalResults++;
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        std::cout << "WARNING: queryPoints(): Results array full! (Max points = "<< maxPoints<< ")\n";
+                        return totalResults;
+                    }
+                }
+            }
+
+            //Let all child nodes (if any) add points
+            if (!tL)
+            {
+                return totalResults;
+            }
+            totalResults += tL->queryRange(range, results, currentIndex, maxPoints);
+            totalResults += tR->queryRange(range, results, currentIndex, maxPoints);
+            totalResults += bL->queryRange(range, results, currentIndex, maxPoints);
+            totalResults += bR->queryRange(range, results, currentIndex, maxPoints);
+            
+            return totalResults;
+        }
 
         void render(window* win, float viewX, float viewY)
         {
@@ -340,7 +392,7 @@ class QuadTree
             sf::RectangleShape rectangle;
             rectangle.setSize(sf::Vector2f(bounds.w, bounds.h));
             rectangle.setFillColor(sf::Color::Transparent);
-            if (data.size() > 0)
+            if (!data.empty())
             {
                 rectangle.setOutlineColor(sf::Color::Blue);
             }

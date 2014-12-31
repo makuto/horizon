@@ -80,8 +80,7 @@ Cell* World::getCell(CellIndex cell)
         return &findIt->second->data;
     }
     //Cell wasn't found! See if it is on the hard drive
-    Cell* newCell = NULL;
-    newCell = loadCell(cell);
+    Cell* newCell = loadCell(cell);
     if (!newCell) //Cell isn't on hard drive; generate it now
     {
         //Need to create the cell
@@ -100,7 +99,6 @@ Cell* World::getCell(CellIndex cell)
 }
 CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
 {
-    CellIndex* cellArray = NULL;
     CellIndex topLeftCellIndex = topLeftCorner.getCell();
     Coord bottomR = topLeftCorner;
     bottomR.addVector(width, height);
@@ -108,7 +106,8 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
     int numCols = abs(topLeftCellIndex.x - bottomRCellIndex.x) + 1;
     int numRows = abs(topLeftCellIndex.y - bottomRCellIndex.y) + 1;
     //cellArray = new CellIndex[numCols * numRows];
-    cellArray = cellArrayCache;
+    CellIndex* cellArray = cellArrayCache;
+    
     size = numCols * numRows;
     if ((unsigned int) size > MAX_INTERSECTING_CELLS)
     {
@@ -259,6 +258,26 @@ void World::render(Coord& viewPosition, Time* globalTime)
             currentCell->setTouched(*globalTime);
         }
     }
+    //Render overlay
+    /*sprite dayNightSpr;
+    if (dayNightSpr.load("data/images/day-night.png"))
+    {
+        masterMap->setImage(&dayNightSpr);
+        std::vector<tile> dayNightData;
+        dayNightData.resize(64 * 64);
+        std::cout << "populating\n";
+        for (int i = 0; i < 64 * 64; ++i)
+        {
+            dayNightData[i].x = (globalTime->getSeconds() / SECONDS_IN_DAY) * 32;
+            dayNightData[i].y = 0;
+        }
+        std::cout << "done\n";
+        masterMap->setLayer(0, &dayNightData);
+        std::cout << "rendering\n";
+        masterMap->render(0, 0, 0, 0, win);
+        std::cout << "done\n";
+        
+    }*/
 }
 void World::update(Coord viewPosition, Time* globalTime, float extraTime)
 {

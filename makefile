@@ -9,6 +9,7 @@ horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DI
 	mv *.o $(OBJ_DIR)
 	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o coord.o time.o object.o objectProcessor.o objectProcessorDir.o objectManager.o cell.o world.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
+	cppcheck --enable=all --std=c++11 --template=gcc -q -v .
 
 $(OBJ_DIR)/debugText.o: src/utilities/debugText.hpp src/utilities/debugText.cpp
 	$(FLAGS) src/utilities/debugText.hpp

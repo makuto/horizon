@@ -4,7 +4,7 @@
 
 ProcessMap::~ProcessMap() //Free processes
 {
-    for (std::map<std::string, Process*>::iterator it = processMap.begin(); it!=processMap.end(); it++)
+    for (std::map<std::string, Process*>::iterator it = processMap.begin(); it!=processMap.end(); ++it)
     {
         delete it->second;
     }
