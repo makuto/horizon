@@ -126,7 +126,7 @@ bool Cell::load(int worldID)
         std::ostringstream layerFileName;
         layerFileName << cellFileName.str() << "layer" << i;
         if (!loadLayer(layerFileName.str(), i, false)) return false;
-        std::cout << "Successfully loaded " << layerFileName.str() << "\n";
+        //std::cout << "Successfully loaded " << layerFileName.str() << "\n";
     }
     std::cout << "Successfully loaded " << cellFileName.str() << "\n";
     return true;

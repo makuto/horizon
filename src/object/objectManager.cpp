@@ -10,7 +10,7 @@
 #include <sstream>
 //For quadtree
 const unsigned int MAX_NODE_CAPACITY = 3;
-const unsigned int POOL_SIZE = 10;
+const unsigned int POOL_SIZE = 100;
 //Should equal largest object sprite half width (used to figure out what
 //objects are in the view and should be rendered)
 const float VIEW_TOLERANCE = 32;
@@ -21,7 +21,7 @@ const int NUM_DEFAULT_POOLS = 1;
 //object could touch
 const float COLL_SEARCH_TOLERANCE = 128;
 //For getObjectsInRangeCache, this is the size of the results array
-const int MAX_QUERY_POINTS = 10;
+const int MAX_QUERY_POINTS = 50;
 
 ObjectManager::ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir, CellIndex newParentCellID, Cell* newParent):parentCellID(newParentCellID)
 {
@@ -314,7 +314,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     //Prepare search range (box from old position to new position)
     //TODO: Improve this
     //TODO: Make sure 0 returns are handled well (return new position?)
-    if (newDisplacement.getCellOffsetX() < objectToMove->position.getCellOffsetX())
+    /*if (newDisplacement.getCellOffsetX() < objectToMove->position.getCellOffsetX())
     {
         range.x = newDisplacement.getCellOffsetX() - COLL_SEARCH_TOLERANCE;
         range.w = abs(newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX()) + objectToMove->boundOffsetX;
@@ -333,6 +333,40 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     {
         range.y = objectToMove->position.getCellOffsetY() - COLL_SEARCH_TOLERANCE - objectToMove->boundOffsetY;
         range.h = newDisplacement.getCellOffsetY() + COLL_SEARCH_TOLERANCE;
+    }*/
+    float dispX = newDisplacement.getCellOffsetX();
+    float dispY = newDisplacement.getCellOffsetY();
+    float objX = objectToMove->position.getCellOffsetX();
+    float objY = objectToMove->position.getCellOffsetY();
+    if (dispX > objX)
+    {
+        range.x = objX;
+        range.w = (dispX - objX) + COLL_SEARCH_TOLERANCE;
+    }
+    else if (dispX < objX)
+    {
+        range.w = (objX - dispX) + COLL_SEARCH_TOLERANCE;
+        range.x = objX - range.w;
+    }
+    else
+    {
+        range.x = objX - COLL_SEARCH_TOLERANCE;
+        range.w = COLL_SEARCH_TOLERANCE + COLL_SEARCH_TOLERANCE;
+    }
+    if (dispY > objY)
+    {
+        range.y = objY;
+        range.h = (dispY - objY) + COLL_SEARCH_TOLERANCE;
+    }
+    else if (dispY < objY)
+    {
+        range.h = (objY - dispY) + COLL_SEARCH_TOLERANCE;
+        range.y = objY - range.h;
+    }
+    else
+    {
+        range.y = objY - COLL_SEARCH_TOLERANCE;
+        range.h = COLL_SEARCH_TOLERANCE + COLL_SEARCH_TOLERANCE;
     }
     /*range.x = objectToMove->position.getCellOffsetX();
     range.y = objectToMove->position.getCellOffsetY();
@@ -460,7 +494,9 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
                                 break;
                             case 1: //Resolve the collision normally (keep stationary stationary)
                                 {
-                                    vec2 vec;
+                                    //TODO: Replace with better algorithm
+                                    
+                                    /*vec2 vec;
                                     vec.x = newDisplacement.getCellOffsetX() - objectToMove->position.getCellOffsetX();
                                     vec.y = newDisplacement.getCellOffsetY() - objectToMove->position.getCellOffsetY();
                                     resolveCollision(&objToMoveBounds, &currentObj->bounds, &vec);
@@ -468,7 +504,10 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
                                     float newY = objToMoveBounds.y - objectToMove->boundOffsetY;
                                     //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
                                     //objectToMove->position.setPosition(parentCellID, newX, newY);
-                                    newDisplacement.setPosition(parentCellID, newX, newY);
+                                    newDisplacement.setPosition(parentCellID, newX, newY);*/
+                                    //Simply ignore the new displacement
+                                    newDisplacement.setPosition(parentCellID, objectToMove->position.getCellOffsetX(),
+                                    objectToMove->position.getCellOffsetY());
                                 }
                                 break;
                             //if stationaryObj wants to be destroyed, then that's
@@ -501,10 +540,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
                         break;
                     case 2: //Destroy the object
                         movingObjProcessor->onDestroyObject(objectToMove);
-                        std::cout << "Removing obj id " << objectToMove->id << " hit id " << currentObj->id << "\n";
-                        objectToMove->position.print();
                         removeObject(objectToMove);
-                        std::cout << "Done\n";
                         return;
                         break;
                     case 3: //Move stationaryObj out of the way
@@ -564,6 +600,9 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     {
         std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
     }
+    /*aabb range2(0, 0, 2048, 2048);
+    std::vector<Object*> vec;
+    std::cout << indexQuadTree->queryRange(range2, vec) << "\n";*/
 }
 void ObjectManager::renderObjects(float viewX, float viewY, window* win)
 {

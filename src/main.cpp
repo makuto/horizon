@@ -331,7 +331,7 @@ int main()
         frameTime.start();
     
         ////Day night
-        for (int i = 0; i < 64 * 64; ++i)
+        /*for (int i = 0; i < 64 * 64; ++i)
         {
             //dayNightData[i].x = (unsigned char)truncf(((globalTime.getSeconds() * 10000) / SECONDS_IN_DAY) * 32);
             dayNightData[i].x = globalTime.getSeconds() / 2;
@@ -341,7 +341,7 @@ int main()
         dynamicMap.getMasterMap()->setViewOffset(0, 0);
         dynamicMap.setLayer(0, &dayNightData);
         dynamicMap.render(0, 0, 0, 0, &win);
-        dynamicMap.setImage(&tileSet);
+        dynamicMap.setImage(&tileSet);*/
         ////Day night
         
         DebugText::render(&win, &textToRender);
@@ -352,8 +352,8 @@ int main()
         //globalTime.addMilliseconds(frameTime.getTime());
         //globalTime.reset();
         //globalTime.addSeconds(worldTime.getTime());
-        //globalTime.addSeconds(avgFrameTime);
-        globalTime.addSeconds(0.016);
+        globalTime.addSeconds(avgFrameTime);
+        //globalTime.addSeconds(0.016);
         DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);

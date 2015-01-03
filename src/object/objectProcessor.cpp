@@ -70,7 +70,10 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         vecY *= speed;
         vecX *= delta.getExactSeconds();
         vecY *= delta.getExactSeconds();
-        obj->addVector(vecX, vecY, *manager);
+        if (obj->state != 1)
+        {
+            obj->addVector(vecX, vecY, *manager);
+        }
     }
     obj->lastUpdate = *globalTime;
     if (obj->getPosition().getCell().x > 0)
@@ -95,9 +98,6 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     rectangle.setOutlineColor(sf::Color::Red);
     rectangle.setOutlineThickness(2);
     rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-    sfWin->draw(rectangle);
-    rectangle.setOutlineColor(sf::Color::Blue);
-    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
     sfWin->draw(rectangle);
     rectangle.setOutlineColor(sf::Color::Green);
     rectangle.setSize(sf::Vector2f(2, 2));
@@ -127,8 +127,12 @@ int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement,
 //Object collides with object
 int ObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplacement, Object* obj, bool isMoving)
 {
-    std::cout << "collide\n";
-    return 2;
+    if (collider->state != 1 && isMoving)
+    {
+        collider->state = 1;
+        return 1;
+    }
+    return 1;
 }
 
 //Object is hit by something

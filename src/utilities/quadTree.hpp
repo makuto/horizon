@@ -192,7 +192,7 @@ class QuadTree
         //Checks if node and its children are empty
         bool isEmpty()
         {
-            if (data.empty()) return false;
+            if (!data.empty()) return false;
             if (!tL) return true;
             if (tL->isEmpty() && tR->isEmpty() && bL->isEmpty() && bR->isEmpty())
             {
