@@ -84,6 +84,7 @@ class ObjectManager
         //Objects must call this function to change position if they are going
         //to work with collisions and quadtree. Pass the new desired position
         //and ObjectManager handles the rest. Do not try to set position yourself
+        //(FIXED; objects now require all positions to go through an obj man first)
         void moveObject(Object* objectToMove, Coord& newPosition);
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
         void renderObjects(float viewX, float viewY, window* win);

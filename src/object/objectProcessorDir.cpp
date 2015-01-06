@@ -10,9 +10,9 @@ ObjectProcessorDir::~ObjectProcessorDir()
         delete it->second;
     }
 }
-void ObjectProcessorDir::addObjProcessor(ObjectProcessor* newProcessor, int type)
+void ObjectProcessorDir::addObjProcessor(ObjectProcessor* newProcessor)
 {
-    processors[type] = newProcessor;
+    processors[newProcessor->getType()] = newProcessor;
 }
 //Returns NULL if the processor wasn't found
 ObjectProcessor* ObjectProcessorDir::getObjProcessor(int type)

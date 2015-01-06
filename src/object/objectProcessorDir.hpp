@@ -10,7 +10,7 @@ class ObjectProcessorDir
         std::map<int, ObjectProcessor*> processors;
     public:
         ~ObjectProcessorDir();
-        void addObjProcessor(ObjectProcessor* newProcessor, int type);
+        void addObjProcessor(ObjectProcessor* newProcessor);
         //Returns NULL if the processor wasn't found
         ObjectProcessor* getObjProcessor(int type);
 };

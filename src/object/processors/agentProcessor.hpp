@@ -1,29 +1,17 @@
-#ifndef OBJECTPROCESSOR_HPP
-#define OBJECTPROCESSOR_HPP
+#ifndef AGENTPROCESSOR_HPP
+#define AGENTPROCESSOR_HPP
+#include "../objectProcessor.hpp"
 #include <base2.0/ept/eptParser.hpp>
-#include <base2.0/graphics/graphics.hpp>
-#include <base2.0/tileMap/tileMap.hpp>
-#include "object.hpp"
-//#include "objectManager.hpp"
-#include "../agent/agent.hpp"
-/* --ObjectProcessor--
- * ObjectProcessors take Objects and perform actions on them. This class
- * is polymorphic so new object behaviors can be implemented easily.
- * */
-class ObjectManager;
-class ObjectProcessor
-{
-    private:
-        //The supertype/type of objects this processor handles
-        int processorType;  //Set to -1 by default (error if left at -1)
-        
-        sprite testSpr;
-    public:
-        ObjectProcessor();
-        virtual ~ObjectProcessor();
-        
-        int getType();
+#include "../object.hpp"
+#include "../../world/time.hpp"
+#include "../../world/coord.hpp"
+#include "../../agent/agent.hpp"
 
+class AgentProcessor:public ObjectProcessor
+{
+    public:
+        AgentProcessor();
+        virtual ~AgentProcessor();
         //Use this function to init your custom ObjectProcessor
         virtual void initialize(eptFile* spec);
         //--Overload functions for object dynamic behavior

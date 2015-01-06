@@ -67,10 +67,6 @@ void test()
 int main()
 {
     //test();
-    ObjectProcessorDir testDir;
-    ObjectProcessor* test2 = new ObjectProcessor();
-    //test2->initialize(
-    testDir.addObjProcessor(test2, 1);
     
     //CellIndex testID;
     /*
@@ -95,6 +91,25 @@ int main()
     //return 1;
     eptParser parser;
     if(!parser.load("data/files.ept")) return -1;
+    eptGroup* filesToLoad = parser.getGroup("files.scripts");
+    //Parse all files in files.testScripts
+    std::string attrName;
+    std::string currentFileName = filesToLoad->getAttributeFromIndex(0, attrName);
+    for (int i = 1; currentFileName!=""; ++i)
+    {
+        if (!parser.load(currentFileName.c_str()))
+        {
+            std::cout << "Failed to load script " << currentFileName << "!/n";
+            return -1;
+        }
+        std::cout << "Loaded script " << currentFileName << " successfully\n";
+        currentFileName = filesToLoad->getAttributeFromIndex(i, attrName);
+    }
+    //if(!parser.load("data/scripts/testObject.ept")) return -1;
+    ObjectProcessorDir testDir;
+    ObjectProcessor* test2 = new ObjectProcessor();
+    test2->initialize(parser.getFile("pickup"));
+    testDir.addObjProcessor(test2);
     
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
@@ -130,16 +145,6 @@ int main()
     //newPos.setPosition(index, 0, 10);
     //testObj->setPosition(newPos, test);
     
-    eptGroup* filesToLoad = parser.getGroup("files.testScripts");
-    //Parse all files in files.testScripts
-    std::string attrName;
-    std::string currentFileName = filesToLoad->getAttributeFromIndex(0, attrName);
-    for (int i = 1; currentFileName!=""; ++i)
-    {
-        if (!parser.load(currentFileName.c_str())) return -1;
-        currentFileName = filesToLoad->getAttributeFromIndex(i, attrName);
-    }
-    
     //TODO: Convert to class?
     NeedProcessorDir needProcessorDir;
     needProcessorDir[1] = new NeedProcessor(parser.getFile("1_spec"));
@@ -160,7 +165,7 @@ int main()
     Time deltaTime;
     
     sprite testSprite;
-    if (!testSprite.load("data/agent.png")) return -1;
+    if (!testSprite.load("data/images/agent.png")) return -1;
     CellIndex agentCell;
     agentCell.x = 0;
     agentCell.y = 0;

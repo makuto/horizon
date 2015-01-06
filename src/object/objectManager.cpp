@@ -8,18 +8,26 @@
 
 //TEMP
 #include <sstream>
+
 //For quadtree
 const unsigned int MAX_NODE_CAPACITY = 3;
+//The size of each object pool
 const unsigned int POOL_SIZE = 100;
 //Should equal largest object sprite half width (used to figure out what
-//objects are in the view and should be rendered)
+//objects are in the view and should be rendered); object centers not in
+//view size + VIEW_TOLERANCE will be culled
 const float VIEW_TOLERANCE = 32;
 //Use this in conjunction with NUM_DEFAULT_POOLS to pre-init object pools
+//The number is the type of object to pool
 const int DEFAULT_POOLS[] = {1};
 const int NUM_DEFAULT_POOLS = 1;
 //When moving an object, add COLL_SEARCH_TOLERANCE to the range the moving
 //object could touch
 const float COLL_SEARCH_TOLERANCE = 128;
+//In order to prevent overlap, COLL_SKIN_THICKNESS is added to the moving object's
+//AABB in moveObject. Adjust the graphics in order to hide any cracks
+//(apparently Box2D uses this and it is therefore a good idea)
+const float COLL_SKIN_THICKNESS = 3;
 //For getObjectsInRangeCache, this is the size of the results array
 const int MAX_QUERY_POINTS = 50;
 
@@ -376,8 +384,10 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     getObjectsInRangeCache(range);
     //Prepare this object's bounds
     aabb objToMoveBounds = objectToMove->bounds;
-    objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX;
-    objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY;
+    objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+    objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+    objToMoveBounds.w = objectToMove->bounds.w + (COLL_SKIN_THICKNESS * 2);
+    objToMoveBounds.h = objectToMove->bounds.h + (COLL_SKIN_THICKNESS * 2);
     //Get the object processor
     ObjectProcessor* movingObjProcessor = processorDir->getObjProcessor(objectToMove->type);
     //Skip all obj collisions if the processor wasn't found

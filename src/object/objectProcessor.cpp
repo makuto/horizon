@@ -5,8 +5,6 @@
 ObjectProcessor::ObjectProcessor()
 {
     processorType = -1;
-    testSpr.load("data/agent.png");
-    testSpr.setOrigin(16, 16);
 }
 ObjectProcessor::~ObjectProcessor()
 {
@@ -19,7 +17,10 @@ int ObjectProcessor::getType()
 void ObjectProcessor::initialize(eptFile* spec)
 {
     eptGroup* defaultsGroup = spec->getGroup("defaults");
-    processorType = attrToInt(defaultsGroup->getAttribute("id"));
+    eptGroup* renderGroup = spec->getGroup("renderSettings");
+    processorType = attrToInt(defaultsGroup->getAttribute("type"));
+    testSpr.load(renderGroup->getAttribute("image").c_str());
+    testSpr.setOrigin(16, 16);
     return;
 }
 //--Overload functions for object dynamic behavior

@@ -1,7 +1,7 @@
 <pickup.1>
 
 renderSettings:
-    image=data/agent.png;
+    image=data/images/agent.png;
     //Set subRect for this object in the specified image
     //This doesn't have to be present
     subRectX=0;

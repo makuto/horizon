@@ -1,9 +1,11 @@
 <files.1>
 
-testScripts:
-    needDirectory=data/needDirectory.ept;
-    testNeed=data/testNeed.ept;
-    testSpecies=data/testSpecies.ept;
+scripts:
+    needDirectory=data/scripts/needDirectory.ept;
+    testNeed=data/scripts/testNeed.ept;
+    testSpecies=data/scripts/testSpecies.ept;
+    testChain=data/scripts/testChain.ept;
+    testObject=data/scripts/testObject.ept;
 worldDefaults:
     //tileSet=data/images/castle.png;
     tileSet=data/images/terrain.png;
