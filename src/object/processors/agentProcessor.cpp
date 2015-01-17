@@ -14,7 +14,7 @@ AgentProcessor::~AgentProcessor()
 //Use this function to init your custom ObjectProcessor
 void AgentProcessor::initialize(eptFile* spec)
 {
-    
+    processorType = attrToInt(spec->getAttribute("defaults.type"));
 }
 //--Overload functions for object dynamic behavior
 //--Functions should return -1 if the object should be destroyed

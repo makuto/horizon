@@ -2,6 +2,7 @@
 #define OBJECTPROCESSOR_CPP
 #include "objectProcessor.hpp"
 #include "objectManager.hpp"
+#include <sstream>
 ObjectProcessor::ObjectProcessor()
 {
     processorType = -1;
@@ -9,17 +10,18 @@ ObjectProcessor::ObjectProcessor()
 ObjectProcessor::~ObjectProcessor()
 {
 }
-
+void ObjectProcessor::setup(inputManager* newIn)
+{
+    in = newIn;
+}
 int ObjectProcessor::getType()
 {
     return processorType;
 }
 void ObjectProcessor::initialize(eptFile* spec)
 {
-    eptGroup* defaultsGroup = spec->getGroup("defaults");
-    eptGroup* renderGroup = spec->getGroup("renderSettings");
-    processorType = attrToInt(defaultsGroup->getAttribute("type"));
-    testSpr.load(renderGroup->getAttribute("image").c_str());
+    processorType = attrToInt(spec->getAttribute("defaults.type"));
+    testSpr.load(spec->getAttribute("renderSettings.image").c_str());
     testSpr.setOrigin(16, 16);
     return;
 }
@@ -34,11 +36,11 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->setPosition(position, *manager);
     newObj->rotation = rotation;
     newObj->lastUpdate.reset();
-    newObj->bounds.setPosition(position.getCellOffsetX(), position.getCellOffsetY());
     newObj->bounds.w = 32;
     newObj->bounds.h = 32;
     newObj->boundOffsetX = -16;
     newObj->boundOffsetY = -16;
+    newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     return true;
 }
 //Do a routine update on the object
@@ -47,41 +49,48 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
     //obj->rotation += delta.getExactSeconds() * 200;
-    float speed = 100;
+    float speed = 100; //Why doesn't 25 work?
     //float vecX = obj->getPosition().getTrueX() + 512;
     //float vecY = obj->getPosition().getTrueY() + 512;
     float vecX = 0;
     float vecY = 0;
-    if (obj->getPosition().getTrueX() !=512)
+    if (obj->subType == 1)
     {
-        vecX = -obj->getPosition().getTrueX() + 512;
-    }
-    if (obj->getPosition().getTrueY() !=512)
-    {
-        vecY = -obj->getPosition().getTrueY() + 512;
-    }
-    
-    //Normalize
-    float dist = sqrt((vecX * vecX) + (vecY * vecY));
-    if (dist > 1)
-    {
-        vecX /= dist;
-        vecY /= dist;
-        vecX *= speed;
-        vecY *= speed;
-        vecX *= delta.getExactSeconds();
-        vecY *= delta.getExactSeconds();
-        if (obj->state != 1)
+        if (obj->getPosition().getTrueX() !=512)
         {
-            obj->addVector(vecX, vecY, *manager);
+            vecX = -obj->getPosition().getTrueX() + 512;
+        }
+        if (obj->getPosition().getTrueY() !=512)
+        {
+            vecY = -obj->getPosition().getTrueY() + 512;
+        }
+        
+        //Normalize
+        float dist = sqrtf((vecX * vecX) + (vecY * vecY));
+        if (dist > 1)
+        {
+            vecX /= dist;
+            vecY /= dist;
+            vecX *= speed;
+            vecY *= speed;
+            vecX *= delta.getExactSeconds();
+            vecY *= delta.getExactSeconds();
+            //if (obj->state != 1)
+            //{
+            if (obj->id == 53014) std::cout << vecX << " , " << vecY << " processor\n";
+                obj->addVector(vecX, vecY, *manager);
+            //}
         }
     }
-    obj->lastUpdate = *globalTime;
-    if (obj->getPosition().getCell().x > 0)
+    else if (obj->subType == 2)
     {
-        //std::cout << obj << " reached 2 at " << globalTime->getExactSeconds() << " " << obj->type << "\n";
-        //return -1;
+        if (in->isPressed(inputCode::W)) vecY -= 2;
+        if (in->isPressed(inputCode::S)) vecY += 2;
+        if (in->isPressed(inputCode::A)) vecX -= 2;
+        if (in->isPressed(inputCode::D)) vecX += 2;
+        obj->addVector(vecX, vecY, *manager);
     }
+    obj->lastUpdate = *globalTime;
     return 1;
 }
 //Render the object (it is in view of player)
@@ -96,7 +105,9 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     sf::RectangleShape rectangle;
     rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
     rectangle.setFillColor(sf::Color::Transparent);
-    rectangle.setOutlineColor(sf::Color::Red);
+    if (obj->state > 500) rectangle.setOutlineColor(sf::Color::Red);
+    else rectangle.setOutlineColor(sf::Color::Green);
+    obj->state--;
     rectangle.setOutlineThickness(2);
     rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
     sfWin->draw(rectangle);
@@ -107,6 +118,20 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     rectangle.setOutlineColor(sf::Color::White);
     rectangle.setPosition(obj->getPosition().getTrueX() - viewX, obj->getPosition().getTrueY() - viewY);
     sfWin->draw(rectangle);
+    
+    std::stringstream ss;
+    ss << obj->id;
+    text textToRender;
+    textToRender.setSize(14);
+    textToRender.setColor(255, 38, 38, 255);
+    if (!textToRender.loadFont("data/fonts/font1.ttf"))
+    {
+        std::cout << "err: cannot load debugText font\n";
+        return;
+    }
+    textToRender.setPosition(obj->getPosition().getTrueX() - viewX + 16, obj->getPosition().getTrueY() - viewY + 16);
+    textToRender.setText(ss.str());
+    win->draw(&textToRender);
     return;
 }
 //Agent uses/activates object
@@ -128,11 +153,13 @@ int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement,
 //Object collides with object
 int ObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplacement, Object* obj, bool isMoving)
 {
-    if (collider->state != 1 && isMoving)
+    //collider->state = 501;
+    /*if (collider->state != 1 && isMoving)
     {
         collider->state = 1;
         return 1;
-    }
+    }*/
+    collider->rotation++;
     return 1;
 }
 

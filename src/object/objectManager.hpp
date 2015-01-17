@@ -50,6 +50,7 @@ class ObjectManager
         Object** queryArray;
         int numQueryPoints;
         void getObjectsInRangeCache(aabb& range);
+
     public:
         ObjectManager(World* newWorld, ObjectProcessorDir* newProcessorDir,
         CellIndex newParentCellID, Cell* newParent);

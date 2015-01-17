@@ -2,6 +2,7 @@
 #define OBJECTPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
 #include <base2.0/graphics/graphics.hpp>
+#include <base2.0/input/input.hpp>
 #include <base2.0/tileMap/tileMap.hpp>
 #include "object.hpp"
 //#include "objectManager.hpp"
@@ -13,13 +14,15 @@
 class ObjectManager;
 class ObjectProcessor
 {
-    private:
+    protected:
         //The supertype/type of objects this processor handles
         int processorType;  //Set to -1 by default (error if left at -1)
         
         sprite testSpr;
+        inputManager* in;
     public:
         ObjectProcessor();
+        void setup(inputManager* newIn);
         virtual ~ObjectProcessor();
         
         int getType();

@@ -18,6 +18,7 @@
 #include "object/objectManager.hpp"
 #include "object/objectProcessorDir.hpp"
 #include "object/objectProcessor.hpp"
+#include "object/processors/agentProcessor.hpp"
 
 #include "utilities/simplexnoise.h"
 
@@ -106,13 +107,19 @@ int main()
         currentFileName = filesToLoad->getAttributeFromIndex(i, attrName);
     }
     //if(!parser.load("data/scripts/testObject.ept")) return -1;
-    ObjectProcessorDir testDir;
-    ObjectProcessor* test2 = new ObjectProcessor();
-    test2->initialize(parser.getFile("pickup"));
-    testDir.addObjProcessor(test2);
-    
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
+    inputManager in(&win);
+    
+    ObjectProcessorDir testDir;
+    ObjectProcessor* test2 = new ObjectProcessor();
+    test2->setup(&in);
+    test2->initialize(parser.getFile("pickupObj"));
+    AgentProcessor* agentObj = new AgentProcessor();
+    agentObj->initialize(parser.getFile("agentObj"));
+    testDir.addObjProcessor(test2);
+    testDir.addObjProcessor(agentObj);
+    
     //multilayerMap defaultMap;
     //if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
     sprite tileSet;
@@ -155,7 +162,6 @@ int main()
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     Agent* testAgent = testSpecies.createAgent();
 
-    inputManager in(&win);
     timer frameTime;
     frameTime.start();
     timer worldTime;
@@ -186,13 +192,13 @@ int main()
     Cell* originCell = newWorld.getCell(cellToGet);
     if (originCell==NULL) return -1;
     ObjectManager* originObjMan = originCell->getObjectManager();
-    for (int i = 0; i < 100; ++i)
+    srand(432432);
+    for (int i = 0; i < 50; ++i)
     {
-        srand(i + 1);
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
-
+    originObjMan->getNewInitializedObject(1, 2, 512, 512, 0);
     ///////////////////
     sprite tileSheet;
     if (!tileSheet.load("src/utilities/terrainTest.png")) return -1;
@@ -241,6 +247,9 @@ int main()
     win.shouldClear(false);
     //win.getBase()->setVerticalSyncEnabled(false);
     //win.getBase()->setFramerateLimit(60);
+    bool isTapped = false;
+    bool isPressed = false;
+    
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
@@ -357,21 +366,47 @@ int main()
         //globalTime.addMilliseconds(frameTime.getTime());
         //globalTime.reset();
         //globalTime.addSeconds(worldTime.getTime());
-        globalTime.addSeconds(avgFrameTime);
-        //globalTime.addSeconds(0.016);
+        //globalTime.addSeconds(avgFrameTime);
+        globalTime.addSeconds(0.016);
         DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
         //if (deltaTime.getExactSeconds()>=0.016)
         //if (deltaTime.getExactSeconds()>=avgFrameTime)
-        if (deltaTime.getExactSeconds()>=0)
+        if (deltaTime.getExactSeconds()>=0.014 || true)
         {
             prof.startTiming("updateAgent");
             testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
             newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+            /*if (isTapped)
+            {
+                newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+                isTapped = false;
+            }
+            else
+            {
+                if (!isPressed && in.isPressed(inputCode::U))
+                {
+                    isTapped = true;
+                    isPressed = true;
+                }
+                else
+                {
+                    isTapped = false;
+                }
+                if (!in.isPressed(inputCode::U))
+                {
+                    isPressed = false;
+                }
+            }*/
+            /*for (int i = 0; i < 2; ++i)
+            {
+                newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
+                globalTime.addSeconds(0.008);
+            }*/
             prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();

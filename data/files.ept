@@ -6,6 +6,7 @@ scripts:
     testSpecies=data/scripts/testSpecies.ept;
     testChain=data/scripts/testChain.ept;
     testObject=data/scripts/testObject.ept;
+    testObjectAgent=data/scripts/testObjectAgent.ept;
 worldDefaults:
     //tileSet=data/images/castle.png;
     tileSet=data/images/terrain.png;

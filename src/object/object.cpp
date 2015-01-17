@@ -9,6 +9,8 @@ void Object::setPosition(Coord& newPosition, ObjectManager& manager)
 }
 void Object::addVector(float dx, float dy, ObjectManager& manager)
 {
+    if (fabs(dx) == 0 && fabs(dy) == 0) return; //Ignore zero movement
+    if (id==53014) std::cout << dx << " , " << dy << " id " << id << "\n";
     Coord newPosition = position;
     newPosition.addVector(dx, dy);
     manager.moveObject(this, newPosition);
