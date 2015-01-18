@@ -4,11 +4,11 @@
 #include <vector>
 #include <iostream>
 #include <base2.0/collision/collision.hpp>
+#include <base2.0/math/math.hpp>
 #include "../world/cell.hpp"
 
 //TEMP
 #include <sstream>
-#include <Box2D/Box2D.h>
 
 
 
@@ -26,7 +26,7 @@ const int DEFAULT_POOLS[] = {1};
 const int NUM_DEFAULT_POOLS = 1;
 //When moving an object, add COLL_SEARCH_TOLERANCE to the range the moving
 //object could touch
-const float COLL_SEARCH_TOLERANCE = 128; //128
+const float COLL_SEARCH_TOLERANCE = 96; //128
 //In order to prevent overlap, COLL_SKIN_THICKNESS is added to the moving object's
 //AABB in moveObject. Adjust the graphics in order to hide any cracks
 //(apparently Box2D uses this and it is therefore a good idea)
@@ -329,70 +329,13 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
         }
     }
 
+    float objX = objectToMove->position.getCellOffsetX();
+    float objY = objectToMove->position.getCellOffsetY();
 
     //Check for any objects this object will collide with
     aabb range;
     //Prepare search range (box from old position to new position)
     //TODO: Improve this
-    //TODO: Make sure 0 returns are handled well (return new position?)
-    /*if (newDisplacement.getCellOffsetX() < objectToMove->position.getCellOffsetX())
-    {
-        range.x = newDisplacement.getCellOffsetX() - COLL_SEARCH_TOLERANCE;
-        range.w = abs(newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX()) + objectToMove->boundOffsetX;
-    }
-    else
-    {
-        range.x = objectToMove->position.getCellOffsetX() - objectToMove->boundOffsetX + objectToMove->boundOffsetX;
-        range.w = abs(newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX()) + COLL_SEARCH_TOLERANCE;
-    }
-    if (newDisplacement.getCellOffsetY() < objectToMove->position.getCellOffsetY())
-    {
-        range.y = newDisplacement.getCellOffsetY() - COLL_SEARCH_TOLERANCE;
-        range.h = newDisplacement.getCellOffsetY() + COLL_SEARCH_TOLERANCE + objectToMove->boundOffsetY + objectToMove->boundOffsetY;
-    }
-    else
-    {
-        range.y = objectToMove->position.getCellOffsetY() - COLL_SEARCH_TOLERANCE - objectToMove->boundOffsetY;
-        range.h = newDisplacement.getCellOffsetY() + COLL_SEARCH_TOLERANCE;
-    }*/
-    float dispX = newDisplacement.getCellOffsetX();
-    float dispY = newDisplacement.getCellOffsetY();
-    float objX = objectToMove->position.getCellOffsetX();
-    float objY = objectToMove->position.getCellOffsetY();
-    if (dispX > objX)
-    {
-        range.x = objX;
-        range.w = (dispX - objX) + COLL_SEARCH_TOLERANCE;
-    }
-    else if (dispX < objX)
-    {
-        range.w = (objX - dispX) + COLL_SEARCH_TOLERANCE;
-        range.x = objX - range.w;
-    }
-    else
-    {
-        range.x = objX - COLL_SEARCH_TOLERANCE;
-        range.w = COLL_SEARCH_TOLERANCE + COLL_SEARCH_TOLERANCE;
-    }
-    if (dispY > objY)
-    {
-        range.y = objY;
-        range.h = (dispY - objY) + COLL_SEARCH_TOLERANCE;
-    }
-    else if (dispY < objY)
-    {
-        range.h = (objY - dispY) + COLL_SEARCH_TOLERANCE;
-        range.y = objY - range.h;
-    }
-    else
-    {
-        range.y = objY - COLL_SEARCH_TOLERANCE;
-        range.h = COLL_SEARCH_TOLERANCE + COLL_SEARCH_TOLERANCE;
-    }
-    /*range.x = objectToMove->position.getCellOffsetX();
-    range.y = objectToMove->position.getCellOffsetY();
-    range.w = newDisplacement.getCellOffsetX() - newPosition.getCellOffsetX() + objectToMove->boundOffsetX;
-    range.h = newDisplacement.getCellOffsetY() - newPosition.getCellOffsetY() + objectToMove->boundOffsetY;*/
     //Use quadtree to find objects in range
     range.x = objX - COLL_SEARCH_TOLERANCE;
     range.y = objY - COLL_SEARCH_TOLERANCE;
@@ -405,28 +348,18 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
     objToMoveBounds.w = objectToMove->bounds.w + (COLL_SKIN_THICKNESS * 2);
     objToMoveBounds.h = objectToMove->bounds.h + (COLL_SKIN_THICKNESS * 2);
+    
     //Get the object processor
     ObjectProcessor* movingObjProcessor = processorDir->getObjProcessor(objectToMove->type);
-    if (objectToMove->id == 51164)
-    {
-        std::cout << "----Collrange----\n";
-        for (int i = 0; i < numQueryPoints; ++i)
-        {
-            std::cout << queryArray[i]->id << "\n";
-        }
-        std::cout << "-----------------\n";
-    }
     //Skip all obj collisions if the processor wasn't found
     if (movingObjProcessor != NULL)
     {
-        float minimumTOI = 1.0;
         //Loop through all objects in range
         for (int i = 0; i < numQueryPoints; ++i)
         {
             Object* currentObj = queryArray[i];
             if (currentObj == objectToMove)
             {
-                if (objectToMove->id == 51164) std::cout << "continue b/c self collision\n";
                 continue; //Don't trigger self collision
             }
             
@@ -438,374 +371,57 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
             float velX = (dispXa - objXa);
             float velY = (dispYa - objYa);
 
-            if (velX == 0 && velY == 0)
-            {
-                if (objectToMove->id == 51164) std::cout << "break because no velocity\n";
-                
-            }
+            //Don't test for collisions if the velocity is 0
             if (velX == 0 && velY == 0) break;
-            
-            float aX = objToMoveBounds.x;
-            float awX = aX + objToMoveBounds.w;
-            float bX = currentObj->position.getCellOffsetX();
-            float bwX = bX + currentObj->bounds.w;
-            
-            float aY = objToMoveBounds.y;
-            float ahY = aY + objToMoveBounds.h;
-            float bY = currentObj->position.getCellOffsetY();
-            float bhY = bY + currentObj->bounds.h;
 
-            //std::cout << objectToMove->id << " move " << currentObj->id << " hit\n";
+            //Grab the current object's processor
+            ObjectProcessor* stationaryObjProcessor = processorDir->getObjProcessor(currentObj->type);
+            //Skip this object's collision if its processor wasn't found
+            if (stationaryObjProcessor==NULL) continue;
+
+            //Check if the object is on a collision course; notify objects
+            int movingReturn = 1;
+            int stationaryReturn = 1;
+            if (manhattanTo(objX, objY, currentObj->position.getCellOffsetX(), currentObj->position.getCellOffsetY()) <= objectToMove->manhattanRadius + currentObj->manhattanRadius)
+            {
+                movingReturn = movingObjProcessor->onCollideObj(objectToMove, newDisplacement, currentObj, true);
+                stationaryReturn = stationaryObjProcessor->onCollideObj(currentObj, newDisplacement, objectToMove, false);
+            }
+            //Object said it would handle it (by changing newDisplacement)
+            if (movingReturn==0 || stationaryReturn==0) continue;
+            //Object wants to be destroyed (resolving the collision)
+            if (movingReturn==-1)
+            {
+                movingObjProcessor->onDestroyObject(objectToMove);
+                removeObject(objectToMove);
+                return; //If the moving object is destroyed, no more detection is necessary
+            }
+            //Stationary wants to be destroyed (resolving the collision)
+            if (stationaryReturn==-1)
+            {
+                stationaryObjProcessor->onDestroyObject(currentObj);
+                removeObject(currentObj);
+                continue;
+            }
+            //Return codes are 1; prevent the collision
+            
+            //Get a new velocity if the object is on a collision course
             float newVX = 0;
             float newVY = 0;
-            if (objectToMove->id == 51164)// || true)
-            {
-                std::cout << objectToMove->id << " move " << currentObj->id << " hit\n";
-                preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, true);
-                std::cout << "final vX: " << newVX << " final vY: " << newVY << "\n";
-            }
-            else preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
-            //std::cout << "final vX: " << newVX << " final vY: " << newVY << "\n";
+            preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
+            
             float newpX = newVX + objectToMove->position.getCellOffsetX();
             float newpY = newVY + objectToMove->position.getCellOffsetY();
             newDisplacement.setPosition(parentCellID, newpX, newpY);
+            //NEW ADDITION
+            objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+            objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+            //NEW ADDITION (end)
             if (newVX == 0 && newVY == 0)
             {
-                if (objectToMove->id == 51164) std::cout << "break because no velocity after\n";
-                break; //No more movement
-            }
-            if (objectToMove->id == 51164)std::cout << "looped\n";
-            continue;
-            float timeXCollision = 10000;
-            float timeYCollision = 10000;
-            if (velX != 0)
-            {
-                //timeXCollision = (objToMoveBounds.x - (currentObj->bounds.x + currentObj->bounds.w)) / velX;
-                if (aX > bwX)
-                {
-                    //TODO: Switch aX and bwX?
-                    timeXCollision = (aX - bwX) / -velX;
-                }
-                else if (awX < bX)
-                {
-                    timeXCollision = (bX - awX) / velX;
-                }
-                else
-                {
-                    timeXCollision = 0;
-                }
-                
-            }
-            if (velY != 0)
-            {
-                //timeYCollision = (objToMoveBounds.y - (currentObj->bounds.y + currentObj->bounds.h)) / velY;
-                if (aY > bhY)
-                {
-                    //TODO: Switch aY and bhY?
-                    timeYCollision = (aY - bhY) / -velY;
-                }
-                else if (ahY < bY)
-                {
-                    timeYCollision = (bY - ahY) / velY;
-                }
-                else
-                {
-                    timeYCollision = 0;
-                }
-                
-            }
-            std::cout << timeXCollision << " tox " << timeYCollision << " toy " << objectToMove->id << " move " << currentObj->id << " hit\n";
-            float leastTOI = 10000;
-            if (timeXCollision < timeYCollision) leastTOI = timeXCollision;
-            else leastTOI = timeYCollision;
-            /*if (leastTOI < 1)
-            {
-                float newXa = objXa + (velX * leastTOI);
-                float newYa = objYa + (velY * leastTOI);
-                newDisplacement.setPosition(parentCellID, newXa, newYa);
-            }*/
-            if (leastTOI < minimumTOI) minimumTOI = leastTOI;
-
-            /*//Object still in this cell; remove it from quadtree, then apply the
-            //displacement and reinsert it into the quadtree
-            //Remove the object pointer from the quadtree
-            if (!indexQuadTree->remove(objectToMove, objectToMove->position.getCellOffsetX(), objectToMove->position.getCellOffsetY()))
-            {
-                std::cout << "WARNING: moveObject(): QuadTree removal failed!\n";
-            }
-            
-            //Apply the displacement+9
-            objectToMove->position.setPosition(displaceCell,
-            newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
-            //Reinsert object into quadtree
-            if (!indexQuadTree->insert(objectToMove, newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY()))
-            {
-                std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
-            }*/
-            //return;
-            continue;
-
-
-
-            
-            //Construct collision shapes
-            b2PolygonShape polyA;
-            //Divide by two because bounds stores wh, Box2D takes halfwidths and heights
-            polyA.SetAsBox(((objectToMove->bounds.w + COLL_SKIN_THICKNESS) / 2) / BOX2D_SCALE, ((objectToMove->bounds.h + COLL_SKIN_THICKNESS) / 2) / BOX2D_SCALE);
-            b2PolygonShape polyB;
-            polyB.SetAsBox((currentObj->bounds.w / 2) / BOX2D_SCALE, (currentObj->bounds.h / 2) / BOX2D_SCALE);
-            b2DistanceProxy proxyA;
-            proxyA.Set(&polyA, 0);
-            b2DistanceProxy proxyB;
-            proxyB.Set(&polyB, 0);
-
-            //Construct movements
-            float moveX = objectToMove->position.getCellOffsetX();// - objectToMove->boundOffsetX;
-            float moveY = objectToMove->position.getCellOffsetY();// - objectToMove->boundOffsetY;
-            float newX = newDisplacement.getCellOffsetX();// - objectToMove->boundOffsetX;
-            float newY = newDisplacement.getCellOffsetY();// - objectToMove->boundOffsetY;
-            float stationaryX = currentObj->position.getCellOffsetX();// - currentObj->boundOffsetX;
-            float stationaryY = currentObj->position.getCellOffsetY();// - currentObj->boundOffsetY;
-            b2Sweep sweepA;
-            sweepA.c0 = b2Vec2(moveX / BOX2D_SCALE, moveY / BOX2D_SCALE);
-            sweepA.c = b2Vec2(newX / BOX2D_SCALE, newY / BOX2D_SCALE);
-            sweepA.a0 = 0;
-            sweepA.a = 0;
-            b2Sweep sweepB;
-            sweepB.c0 = b2Vec2(stationaryX / BOX2D_SCALE, stationaryY / BOX2D_SCALE);
-            sweepB.c = sweepB.c0; //Other objects are considered stationary
-            sweepB.a0 = 0;
-            sweepB.a = 0;
-            
-            //Fill TOI input
-            b2TOIInput in;
-            in.proxyA = proxyA;
-            in.proxyB = proxyB;
-            in.sweepA = sweepA;
-            in.sweepB = sweepB;
-            in.tMax = 1;
-            b2TOIOutput out;
-            //Get TOI
-            b2TimeOfImpact(&out, &in);
-            float timeOfImpact = out.t;
-            //if (isColliding(&objToMoveBounds, &currentObj->bounds))
-            if (timeOfImpact < 1)
-            {
-                if (timeOfImpact < minimumTOI)
-                {
-                    minimumTOI = timeOfImpact;
-                }
-                /*////////////////DEBUG COLLIDE
-                window win(600, 600, "Test collide");
-                text test;
-                while(!win.shouldClose())
-                {
-                    test.loadFont("data/fonts/font1.ttf");
-                    test.setSize(10);
-                    float viewX = 200;
-                    float viewY = 200;
-                    Object* obj = objectToMove;
-                    sf::RenderWindow* sfWin = win.getBase();
-                    sf::RectangleShape rectangle;
-                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
-                    rectangle.setFillColor(sf::Color::Transparent);
-                    rectangle.setOutlineColor(sf::Color::Red);
-                    rectangle.setOutlineThickness(2);
-                    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    sfWin->draw(rectangle);
-                    std::stringstream ss;
-                    ss << obj->id;
-                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    test.setText(ss.str());
-                    win.draw(&test);
-                    
-                    obj = currentObj;
-                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
-                    rectangle.setOutlineColor(sf::Color::Red);
-                    rectangle.setOutlineThickness(2);
-                    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    sfWin->draw(rectangle);
-                    ss.clear();
-                    ss.str("");
-                    ss << obj->id;
-                    test.setText(ss.str());
-                    win.draw(&test);
-                    
-                    rectangle.setSize(sf::Vector2f(range.w, range.h));
-                    rectangle.setOutlineColor(sf::Color::Green);
-                    rectangle.setOutlineThickness(1);
-                    rectangle.setPosition(range.x - viewX, range.y - viewY);
-                    sfWin->draw(rectangle);
-                    rectangle.setSize(sf::Vector2f(1, 1));
-                    rectangle.setOutlineColor(sf::Color::Green);
-                    rectangle.setPosition(newDisplacement.getTrueX() - viewX, newDisplacement.getTrueY() - viewY);
-                    sfWin->draw(rectangle);
-                    rectangle.setOutlineColor(sf::Color::White);
-                    rectangle.setPosition(objectToMove->position.getTrueX() - viewX, objectToMove->position.getTrueY() - viewY);
-                    sfWin->draw(rectangle);
-
-                    viewX = 0;
-                    viewY = 0;
-                    rectangle.setOutlineColor(sf::Color::Blue);
-                    obj = objectToMove;
-                    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
-                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
-                    sfWin->draw(rectangle);
-                    ss.clear();
-                    ss.str("");
-                    ss << obj->id;
-                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    test.setText(ss.str());
-                    win.draw(&test);
-                    
-                    obj = currentObj;
-                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
-                    rectangle.setFillColor(sf::Color::Transparent);
-                    rectangle.setOutlineColor(sf::Color::Blue);
-                    rectangle.setOutlineThickness(2);
-                    rectangle.setPosition(obj->bounds.x - viewX + obj->boundOffsetX, obj->bounds.y - viewY + obj->boundOffsetY);
-                    rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
-                    test.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
-                    sfWin->draw(rectangle);
-                    ss.clear();
-                    ss.str("");
-                    ss << obj->id;
-                    test.setText(ss.str());
-                    win.draw(&test);
-                    win.update();
-                }
-                ////////////////DEBUG COLLIDE*/
-                
-                //Grab the object processors
-                ObjectProcessor* stationaryObjProcessor = processorDir->getObjProcessor(currentObj->type);
-                //Skip this object's collision if its processor wasn't found
-                if (stationaryObjProcessor==NULL) continue;
-                int movingReturn = movingObjProcessor->onCollideObj(objectToMove, newDisplacement, currentObj, true);
-                int stationaryReturn = stationaryObjProcessor->onCollideObj(currentObj, newDisplacement, objectToMove, false);
-                //Do different things based on the return codes
-                switch(movingReturn)
-                {
-                    case 0: //The ObjectProcessor handled it
-                        if (stationaryReturn==2) //stationaryObj might still want to be destroyed
-                        {
-                            stationaryObjProcessor->onDestroyObject(currentObj);
-                            removeObject(currentObj);
-                        }
-                        break;
-                    case 1: //Resolve the collision
-                        switch(stationaryReturn)
-                        {
-                            case 0: //StationaryObj handled it
-                                break;
-                            case 1: //Resolve the collision normally (keep stationary stationary)
-                                {
-                                    //TODO: Replace with better algorithm
-                                    
-                                    /*vec2 vec;
-                                    vec.x = newDisplacement.getCellOffsetX() - objectToMove->position.getCellOffsetX();
-                                    vec.y = newDisplacement.getCellOffsetY() - objectToMove->position.getCellOffsetY();
-                                    resolveCollision(&objToMoveBounds, &currentObj->bounds, &vec);
-                                    float newX = objToMoveBounds.x - objectToMove->boundOffsetX;
-                                    float newY = objToMoveBounds.y - objectToMove->boundOffsetY;
-                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
-                                    //objectToMove->position.setPosition(parentCellID, newX, newY);
-                                    newDisplacement.setPosition(parentCellID, newX, newY);*/
-                                    
-                                    //Simply ignore the new displacement
-                                    //newDisplacement.setPosition(parentCellID, objectToMove->position.getCellOffsetX(),
-                                    //objectToMove->position.getCellOffsetY());
-
-                                    //Use time of impact to modify resultant position
-                                    //timeOfImpact = 0;
-                                    /*float newVelX = (newDisplacement.getCellOffsetX() - objectToMove->position.getCellOffsetX()) * timeOfImpact;
-                                    float newVelY = (newDisplacement.getCellOffsetY() - objectToMove->position.getCellOffsetY()) * timeOfImpact;
-                                    std::cout << "velX " << newVelX << " velY " << newVelY << "\n";
-                                    float newX = newVelX + objectToMove->position.getCellOffsetX();
-                                    float newY = newVelY + objectToMove->position.getCellOffsetY();
-                                    newDisplacement.setPosition(parentCellID, newX, newY);*/
-                                }
-                                break;
-                            //if stationaryObj wants to be destroyed, then that's
-                            //all that has to be done to resolve the collision
-                            case 2:
-                                stationaryObjProcessor->onDestroyObject(currentObj);
-                                removeObject(currentObj);
-                                break;
-                            case 3: //Resolve the collision by moving stationaryObj
-                                //TODO: If pushing against a wall etc, could this
-                                //recurse forever and break everything?
-                                {
-                                    vec2 vec;
-                                    vec.x = objectToMove->position.getCellOffsetX() - newDisplacement.getCellOffsetX();
-                                    vec.y = objectToMove->position.getCellOffsetY() - newDisplacement.getCellOffsetY();
-                                    resolveCollision(&currentObj->bounds, &objToMoveBounds, &vec);
-                                    float newX = currentObj->bounds.x - currentObj->boundOffsetX;
-                                    float newY = currentObj->bounds.y - currentObj->boundOffsetY;
-                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
-                                    Coord newPosition;
-                                    newPosition.setPosition(parentCellID, newX, newY);
-                                    //Go through objMan to set position
-                                    std::cout << "objMan\n";
-                                    currentObj->setPosition(newPosition, *this);
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    case 2: //Destroy the object
-                        movingObjProcessor->onDestroyObject(objectToMove);
-                        removeObject(objectToMove);
-                        return;
-                        break;
-                    case 3: //Move stationaryObj out of the way
-                        switch(stationaryReturn)
-                        {
-                            case 0: //StationaryObj handled it
-                                break;
-                            //if stationaryObj wants to be destroyed, then that's
-                            //all that has to be done to resolve the collision
-                            case 2:
-                                stationaryObjProcessor->onDestroyObject(currentObj);
-                                removeObject(currentObj);
-                                break;
-                            //Resolve the collision by moving stationaryObj
-                            //TODO: If pushing against a wall etc, could this
-                            //recurse forever and break everything?
-                            //Regardless of stationaryObj's return, moving takes
-                            //precedence
-                            default:
-                                {
-                                    vec2 vec;
-                                    vec.x = objectToMove->position.getCellOffsetX() - newDisplacement.getCellOffsetX();
-                                    vec.y = objectToMove->position.getCellOffsetY() - newDisplacement.getCellOffsetY();
-                                    resolveCollision(&currentObj->bounds, &objToMoveBounds, &vec);
-                                    float newX = currentObj->bounds.x - currentObj->boundOffsetX;
-                                    float newY = currentObj->bounds.y - currentObj->boundOffsetY;
-                                    //TODO: Is it OK to have parentCellID like that? What if it leaves cell?
-                                    Coord newPosition;
-                                    newPosition.setPosition(parentCellID, newX, newY);
-                                    //Go through objMan to set position
-                                    std::cout << "objMan\n";
-                                    currentObj->setPosition(newPosition, *this);
-                                }
-                                break;
-                        }
-                        break;
-                    default: //Unknown return code
-                        break;
-                }
+                break; //No more movement, so no more collisions need testing
             }
         }
-        //if (minimumTOI < 1) minimumTOI = 0;
-        /*if (minimumTOI > 1) minimumTOI = 1;
-        float newVelX = (newDisplacement.getCellOffsetX() - objectToMove->position.getCellOffsetX()) * minimumTOI;
-        float newVelY = (newDisplacement.getCellOffsetY() - objectToMove->position.getCellOffsetY()) * minimumTOI;
-        //std::cout << "velX " << newVelX << " velY " << newVelY << "\n";
-        float newX = newVelX + objectToMove->position.getCellOffsetX();
-        float newY = newVelY + objectToMove->position.getCellOffsetY();
-        newDisplacement.setPosition(parentCellID, newX, newY);*/
     }
     
     //Object still in this cell; remove it from quadtree, then apply the
@@ -824,10 +440,6 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     {
         std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
     }
-    /*aabb range2(0, 0, 2048, 2048);
-    std::vector<Object*> vec;
-    std::cout << indexQuadTree->queryRange(range2, vec) << "\n";*/
-    if (objectToMove->id == 53014) std::cout << "collcheck####\n";
 }
 void ObjectManager::renderObjects(float viewX, float viewY, window* win)
 {
@@ -863,7 +475,7 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
         }
     }
     //Debug render quadtree
-    indexQuadTree->render(win, -viewX, -viewY);
+    //indexQuadTree->render(win, -viewX, -viewY);
 }
 bool ObjectManager::updateObjects(Time* globalTime)
 {

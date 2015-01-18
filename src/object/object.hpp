@@ -33,6 +33,8 @@ class Object
         aabb bounds;    //Bounds for all external collisions (x and y ignored)
         float boundOffsetX; //Offsets for bounds (added to position; for center, you would do negative)
         float boundOffsetY;
+        float manhattanRadius;  //The radius of this object as a manhattan value (squared radius)
+                                //Used to determine if objects are "colliding" (they may not actually)
         //These functions make sure quadtree and collisions are handled
         void setPosition(Coord& newPosition, ObjectManager& manager);
         void addVector(float dx, float dy, ObjectManager& manager);

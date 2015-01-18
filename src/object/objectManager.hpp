@@ -86,6 +86,11 @@ class ObjectManager
         //to work with collisions and quadtree. Pass the new desired position
         //and ObjectManager handles the rest. Do not try to set position yourself
         //(FIXED; objects now require all positions to go through an obj man first)
+        //Collisions can only be prevented; overlapping objects will stay that
+        //way until one object or the other resolves/moves away.
+        //Collisions are determined by manhattan distances (set in obj.manhattanRadius);
+        //this means bounds might detect collisions differently (this is because
+        //preventCollision() does not provide information on if the bounds are colliding
         void moveObject(Object* objectToMove, Coord& newPosition);
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
         void renderObjects(float viewX, float viewY, window* win);

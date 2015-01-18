@@ -40,6 +40,7 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->bounds.h = 32;
     newObj->boundOffsetX = -16;
     newObj->boundOffsetY = -16;
+    newObj->manhattanRadius = 1000;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     return true;
 }
@@ -158,6 +159,12 @@ int ObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplacement, 
     {
         collider->state = 1;
         return 1;
+    }*/
+    /*if (obj->subType==2 && !isMoving)
+    {
+        CellIndex currentCell = collideDisplacement.getCell();
+        collideDisplacement.setPosition(currentCell, 32, 32);
+        return 0;
     }*/
     collider->rotation++;
     return 1;

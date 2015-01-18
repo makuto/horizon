@@ -22,6 +22,7 @@ class ObjectProcessor
         inputManager* in;
     public:
         ObjectProcessor();
+        //Make your own setup functions for custom data
         void setup(inputManager* newIn);
         virtual ~ObjectProcessor();
         
@@ -56,15 +57,13 @@ class ObjectProcessor
         //(note that isMoving true objects take precedence)
         //0 - The ObjectManager should not try to resolve the collision
         //    (the collision is assumed to be resolved in the object's own
-        //    collision functions)
-        //1 - The ObjectManager should try to resolve the collision. if
+        //    collision functions). Simply set collideDisplacement to the desired
+        //    position. Note that ObjectManager will assume that you have done
+        //    this correctly.
+        //1 - The ObjectManager should try to resolve/prevent the collision. if
         //    isMoving is false, this means the stationary object will stay still
         //    and the moving object will be changed
-        //2 - The ObjectManager should destroy the object
-        //3 - The ObjectManager should move the object to the colliding
-        //    coordinate and move everything else in the way (obviously, this
-        //    doesn't work with tiles). If isMoving is false, this means
-        //    the stationary (nonmoving) object will be moved by the moving object
+        //-1 - The ObjectManager should destroy the object
         //Agent collides with object
         virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
         //Object collides with tile
