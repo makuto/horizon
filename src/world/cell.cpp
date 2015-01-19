@@ -204,17 +204,10 @@ void Cell::generate(int worldID, int seed, int algorithm)
             break;
         //Simplex noise world
         case 2:
-            std::vector<tile> layer1;
-            std::vector<tile> layer2;
-            std::vector<tile> layer3;
-            layer1.resize(CELL_WIDTH * CELL_HEIGHT);
-            layer2.resize(CELL_WIDTH * CELL_HEIGHT);
-            layer3.resize(CELL_WIDTH * CELL_HEIGHT);
             for (int y = 0; y < CELL_HEIGHT; ++y)
             {
                 for (int x = 0; x < CELL_WIDTH; ++x)
                 {
-                    tile newTile;
                     float noiseX = x + (CELL_WIDTH * cellID.x);
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
                     noiseX /= 2;
@@ -239,29 +232,27 @@ void Cell::generate(int worldID, int seed, int algorithm)
 
                     if (value > 185) //Mountains are on multiple layers
                     {
-                        newTile.x = 185; //Ground and onground are solid black
-                        newTile.y = 0;
-                        layer1[x + (y * CELL_WIDTH)] = newTile;
-                        layer2[x + (y * CELL_WIDTH)] = newTile;
-                        newTile.x = value; //Above ground is elevation //TODODOD TESTTHIS
-                        layer3[x + (y * CELL_WIDTH)] = newTile;
+                        //Ground and onground are solid black
+                        tiles[0][x + (y * CELL_WIDTH)].x = 185;
+                        tiles[0][x + (y * CELL_WIDTH)].y = 0;
+                        tiles[1][x + (y * CELL_WIDTH)].x = 185;
+                        tiles[1][x + (y * CELL_WIDTH)].y = 0;
+                        //Above ground is elevation
+                        tiles[2][x + (y * CELL_WIDTH)].x = value;
+                        tiles[2][x + (y * CELL_WIDTH)].y = 0;
                     }
                     else
                     {
-                        newTile.x = value;
-                        newTile.y = 0;
-                        layer1[x + (y * CELL_WIDTH)] = newTile;
-                        tile nullTile;
-                        nullTile.x = 255;
-                        nullTile.y = 255;
-                        layer2[x + (y * CELL_WIDTH)] = nullTile;
-                        layer3[x + (y * CELL_WIDTH)] = nullTile;
+                        tiles[0][x + (y * CELL_WIDTH)].x = value;
+                        tiles[0][x + (y * CELL_WIDTH)].y = 0;
+
+                        tiles[1][x + (y * CELL_WIDTH)].x = 255;
+                        tiles[1][x + (y * CELL_WIDTH)].y = 255;
+                        tiles[2][x + (y * CELL_WIDTH)].x = 255;
+                        tiles[2][x + (y * CELL_WIDTH)].y = 255;
                     }
                 }
             }
-            tiles[0] = layer1;
-            tiles[1] = layer2;
-            tiles[2] = layer3;
             std::cout << "Done generating " << tiles.size() << " of " << NUM_LAYERS << " layers addr " << &tiles[0] << " \n";
             break;
         //default:
