@@ -46,6 +46,14 @@ float Coord::getScreenY(Coord* viewPosition)
     int newViewY = (viewPosition->cell.y * CELL_HEIGHT_PIXELS) + viewPosition->y;
     return newY - newViewY;
 }
+float Coord::getRelativeCellX(CellIndex& index)
+{
+    return (CELL_WIDTH_PIXELS * (cell.x - index.x)) + x;
+}
+float Coord::getRelativeCellY(CellIndex& index)
+{
+    return (CELL_HEIGHT_PIXELS * (cell.y - index.y)) + y;
+}
 void Coord::print()
 {
     std::cout << "  [ " << cell.x << " , " << cell.y << " ] ( " << x << " , " << y << " )\n";

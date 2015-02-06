@@ -74,6 +74,10 @@ Cell* Cell::getNeighborCell(CellIndex index)
 {
     return world->getCell(index);
 }
+CellIndex* Cell::getWorldIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
+{
+    return world->getIntersectingCells(topLeftCorner, width, height, size);
+}
 bool Cell::loadLayer(const std::string& filename, int layerNum, bool isMasterLayer)
 {
     std::ifstream in;
@@ -210,7 +214,7 @@ void Cell::generate(int worldID, int seed, int algorithm)
                 {
                     float noiseX = x + (CELL_WIDTH * cellID.x);
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
-                    noiseX /= 2;
+                    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
                     noiseY /= 2;
                     const float SCALE = 0.001;
                     //TODO: Put all these values in a text file

@@ -70,6 +70,7 @@ class ObjectManager
         //cell or NULL if there are no objects in the range.
         //Delete the array once you are done.
         std::vector<Object*>* getObjectsInRange(aabb& range);
+        
         //Returns a pointer to an uninitialized (nor constructed) object
         //or NULL if there are no free pool spaces. The object will be added
         //to the quadtree at the specified position. position will be set to
@@ -81,7 +82,14 @@ class ObjectManager
         //Type comes from object, so don't wipe the memory
         //Bad things will happen if you try to remove an object from the wrong manager
         //(malformed uninitialized object)
+        //Note that removeObject removes the object from the quadtree for you,
+        //so its position should match its quadtree point
         void removeObject(Object* objectToRemove);
+        
+        //Used in conjuction with moveObject; prevent Object collisions with
+        //objects in this object manager by returning a newDisplacement that
+        //will prevent collisions (depending on what the object requests)
+        Coord preventObjectCollisions(Object* objectToMove, Coord& newPosition);
         //Objects must call this function to change position if they are going
         //to work with collisions and quadtree. Pass the new desired position
         //and ObjectManager handles the rest. Do not try to set position yourself
@@ -90,8 +98,9 @@ class ObjectManager
         //way until one object or the other resolves/moves away.
         //Collisions are determined by manhattan distances (set in obj.manhattanRadius);
         //this means bounds might detect collisions differently (this is because
-        //preventCollision() does not provide information on if the bounds are colliding
+        //preventCollision() does not provide information on if the bounds are colliding)
         void moveObject(Object* objectToMove, Coord& newPosition);
+        
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
         void renderObjects(float viewX, float viewY, window* win);
         //Updates all objects

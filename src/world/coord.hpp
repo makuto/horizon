@@ -33,6 +33,10 @@ class Coord
         //Returns screen space coordinate relative to the view
         float getScreenX(Coord* viewPosition);
         float getScreenY(Coord* viewPosition);
+        //Return the position relative to the passed in index
+        float getRelativeCellX(CellIndex& index);
+        float getRelativeCellY(CellIndex& index);
+
         void print();
         //Add the desired delta (in floating pixels);
         //overrun will be applied to CellIndex automatically

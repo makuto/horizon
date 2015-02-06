@@ -5,6 +5,7 @@
 #include <sstream>
 ObjectProcessor::ObjectProcessor()
 {
+    in = NULL;
     processorType = -1;
 }
 ObjectProcessor::~ObjectProcessor()
@@ -57,13 +58,13 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     float vecY = 0;
     if (obj->subType == 1)
     {
-        if (obj->getPosition().getTrueX() !=512)
+        if (obj->getPosition().getTrueX() !=0)
         {
-            vecX = -obj->getPosition().getTrueX() + 512;
+            vecX = -obj->getPosition().getTrueX() + 0;
         }
-        if (obj->getPosition().getTrueY() !=512)
+        if (obj->getPosition().getTrueY() !=0)
         {
-            vecY = -obj->getPosition().getTrueY() + 512;
+            vecY = -obj->getPosition().getTrueY() + 0;
         }
         
         //Normalize
@@ -76,11 +77,10 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
             vecY *= speed;
             vecX *= delta.getExactSeconds();
             vecY *= delta.getExactSeconds();
-            //if (obj->state != 1)
-            //{
-            if (obj->id == 53014) std::cout << vecX << " , " << vecY << " processor\n";
+            if (globalTime->getExactSeconds() < 30)
+            {
                 obj->addVector(vecX, vecY, *manager);
-            //}
+            }
         }
     }
     else if (obj->subType == 2)
@@ -121,7 +121,8 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     sfWin->draw(rectangle);
     
     std::stringstream ss;
-    ss << obj->id;
+    ss << obj->id << "\n[ " << pos.getCell().x << " , " << pos.getCell().y << " ]"
+    << "\n( " << pos.getTrueX() << " , " << pos.getTrueY() << " )" ;
     text textToRender;
     textToRender.setSize(14);
     textToRender.setColor(255, 38, 38, 255);
@@ -130,7 +131,7 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
         std::cout << "err: cannot load debugText font\n";
         return;
     }
-    textToRender.setPosition(obj->getPosition().getTrueX() - viewX + 16, obj->getPosition().getTrueY() - viewY + 16);
+    textToRender.setPosition(obj->getPosition().getCellOffsetX() - viewX + 16, obj->getPosition().getCellOffsetY() - viewY + 16);
     textToRender.setText(ss.str());
     win->draw(&textToRender);
     return;

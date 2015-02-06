@@ -50,7 +50,11 @@ class Cell
         void init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
         ~Cell();
         ObjectManager* getObjectManager();
+        
+        //Used by ObjectManager because accessing world causes circular reference stuff :(
         Cell* getNeighborCell(CellIndex index);
+        CellIndex* getWorldIntersectingCells(Coord& topLeftCorner, float width, float height, int& size);
+        
         //Loads everything a Cell needs. Returns false if
         //any cell files were not found
         bool load(int worldID);

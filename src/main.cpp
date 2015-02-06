@@ -193,12 +193,23 @@ int main()
     if (originCell==NULL) return -1;
     ObjectManager* originObjMan = originCell->getObjectManager();
     srand(432432);
-    for (int i = 0; i < 50; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
-    originObjMan->getNewInitializedObject(1, 2, 512, 512, 0);
+    cellToGet.x = -1;
+    cellToGet.y = -1;
+    originCell = newWorld.getCell(cellToGet);
+    if (originCell==NULL) return -1;
+    originObjMan = originCell->getObjectManager();
+    srand(4387324);
+    for (int i = 0; i < 4; ++i)
+    {
+        //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
+        originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
+    }
+
     ///////////////////
     sprite tileSheet;
     if (!tileSheet.load("src/utilities/terrainTest.png")) return -1;

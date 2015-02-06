@@ -285,55 +285,16 @@ void ObjectManager::removeObject(Object* objectToRemove)
 }
 
 
-
-
-void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
+//TODO: [FIXED via getRelativeCell] Is getTrueX and Y safe? It is
+//possible to convert to a local offset in this case?
+Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPosition)
 {
-    if (objectToMove->id == 51164) std::cout << "#### collcheck\n";
-    //TODO: Make sure object isn't colliding with anything (using new displacement)
     Coord newDisplacement = newPosition;
-    CellIndex displaceCell = newDisplacement.getCell();
-
-    //Make sure object is still in this cell; if not, tell world and remove object
-    //TODO: How will collision work if it will hit something in this cell before leaving?
-    if (displaceCell.x != parentCellID.x || displaceCell.y != parentCellID.y)
-    {
-        Cell* cellAfterDisplace = parentCell->getNeighborCell(newDisplacement.getCell());
-        if (!cellAfterDisplace) //Cell does not exist
-        {
-            std::cout << "ERROR: moveObject() - displace: Cell [ " << displaceCell.x << " , " <<
-            displaceCell.y << " ] does not exist! Ignoring movement\n";
-            //removeObject(objectToMove);
-            return;
-        }
-        else if (cellAfterDisplace != parentCell) //Obj is no longer in this cell
-        {
-            //Get a object in the new cell
-            ObjectManager* newManager = cellAfterDisplace->getObjectManager();
-            Object* newObject = newManager->getNewRawObject(objectToMove->type,
-            newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
-            if (newObject == NULL)
-            {
-                std::cout << "ERROR: moveObject(): no new object returned from getNewRawObject(), removing obj\n";
-                removeObject(objectToMove);
-                return;
-            }
-            //Copy this object to the other cell object
-            *newObject = *objectToMove;
-            //Apply displacement to new object
-            newObject->position.setPosition(displaceCell,
-            newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
-            //Remove migrated object from this manager
-            removeObject(objectToMove);
-            return;
-        }
-    }
-
-    float objX = objectToMove->position.getCellOffsetX();
-    float objY = objectToMove->position.getCellOffsetY();
 
     //Check for any objects this object will collide with
     aabb range;
+    float objX = objectToMove->position.getRelativeCellX(parentCellID);
+    float objY = objectToMove->position.getRelativeCellY(parentCellID);
     //Prepare search range (box from old position to new position)
     //TODO: Improve this
     //Use quadtree to find objects in range
@@ -342,10 +303,11 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     range.w = COLL_SEARCH_TOLERANCE * 2;
     range.h = COLL_SEARCH_TOLERANCE * 2;
     getObjectsInRangeCache(range);
+    
     //Prepare this object's bounds
     aabb objToMoveBounds = objectToMove->bounds;
-    objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
-    objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+    objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+    objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
     objToMoveBounds.w = objectToMove->bounds.w + (COLL_SKIN_THICKNESS * 2);
     objToMoveBounds.h = objectToMove->bounds.h + (COLL_SKIN_THICKNESS * 2);
     
@@ -363,26 +325,32 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
                 continue; //Don't trigger self collision
             }
             
-            float dispXa = newDisplacement.getCellOffsetX();
-            float dispYa = newDisplacement.getCellOffsetY();
-            float objXa = objectToMove->position.getCellOffsetX();
-            float objYa = objectToMove->position.getCellOffsetY();
+            float dispXa = newDisplacement.getRelativeCellX(parentCellID);
+            float dispYa = newDisplacement.getRelativeCellY(parentCellID);
+            float objXa = objectToMove->position.getRelativeCellX(parentCellID);
+            float objYa = objectToMove->position.getRelativeCellY(parentCellID);
             
             float velX = (dispXa - objXa);
             float velY = (dispYa - objYa);
 
             //Don't test for collisions if the velocity is 0
-            if (velX == 0 && velY == 0) break;
+            if (velX == 0 && velY == 0)
+            {
+                break;
+            }
 
             //Grab the current object's processor
             ObjectProcessor* stationaryObjProcessor = processorDir->getObjProcessor(currentObj->type);
             //Skip this object's collision if its processor wasn't found
-            if (stationaryObjProcessor==NULL) continue;
+            if (stationaryObjProcessor==NULL)
+            {
+                continue;
+            }
 
             //Check if the object is on a collision course; notify objects
             int movingReturn = 1;
             int stationaryReturn = 1;
-            if (manhattanTo(objX, objY, currentObj->position.getCellOffsetX(), currentObj->position.getCellOffsetY()) <= objectToMove->manhattanRadius + currentObj->manhattanRadius)
+            if (manhattanTo(objXa, objYa, currentObj->position.getRelativeCellX(parentCellID), currentObj->position.getRelativeCellY(parentCellID)) <= objectToMove->manhattanRadius + currentObj->manhattanRadius)
             {
                 movingReturn = movingObjProcessor->onCollideObj(objectToMove, newDisplacement, currentObj, true);
                 stationaryReturn = stationaryObjProcessor->onCollideObj(currentObj, newDisplacement, objectToMove, false);
@@ -394,7 +362,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
             {
                 movingObjProcessor->onDestroyObject(objectToMove);
                 removeObject(objectToMove);
-                return; //If the moving object is destroyed, no more detection is necessary
+                return newDisplacement; //If the moving object is destroyed, no more detection is necessary
             }
             //Stationary wants to be destroyed (resolving the collision)
             if (stationaryReturn==-1)
@@ -410,12 +378,11 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
             float newVY = 0;
             preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
             
-            float newpX = newVX + objectToMove->position.getCellOffsetX();
-            float newpY = newVY + objectToMove->position.getCellOffsetY();
-            newDisplacement.setPosition(parentCellID, newpX, newpY);
+            newDisplacement = objectToMove->position;
+            newDisplacement.addVector(newVX, newVY);
             //NEW ADDITION
-            objToMoveBounds.x = newDisplacement.getCellOffsetX() + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
-            objToMoveBounds.y = newDisplacement.getCellOffsetY() + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+            objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+            objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
             //NEW ADDITION (end)
             if (newVX == 0 && newVY == 0)
             {
@@ -423,7 +390,70 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
             }
         }
     }
+
+    //Return the final adjusted displacement
+    return newDisplacement;
+}
+void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
+{
+    Coord newDisplacement = newPosition;
     
+    //Check if the object will collide with any other objects and adjust displacement
+    newDisplacement = preventObjectCollisions(objectToMove, newDisplacement);
+    //For all cells in COLL_SEARCH_TOLERANCE, prevent collisions with
+    //tiles or objects (make sure neighbor cells are being accounted for)
+    int cellsReturned = 0;
+    Coord topLeftRange = objectToMove->position;
+    topLeftRange.addVector(-COLL_SEARCH_TOLERANCE, -COLL_SEARCH_TOLERANCE);
+    CellIndex* intersectingCells = parentCell->getWorldIntersectingCells(topLeftRange,
+    COLL_SEARCH_TOLERANCE * 2, COLL_SEARCH_TOLERANCE * 2, cellsReturned);
+    for (int i = 0; i < cellsReturned; ++i)
+    {
+        if (intersectingCells[i].x == parentCellID.x && intersectingCells[i].y == parentCellID.y) continue;
+        Cell* currentCell = parentCell->getNeighborCell(intersectingCells[i]);
+        if (!currentCell)
+        {
+            std::cout << "WARNING: moveObject() - nearby collision: Cell [ " << intersectingCells[i].x << " , " <<
+            intersectingCells[i].y << " ] does not exist! Ignoring movement\n";
+            continue;
+        }
+        //Check if the object will collide with any other objects and adjust displacement
+        newDisplacement = currentCell->getObjectManager()->preventObjectCollisions(objectToMove, newDisplacement);
+    }
+    
+    //TODO: [FIXED] How will collision work if it will hit something in this cell before leaving?
+    //Make sure object is still in this cell; if not, tell world and remove object
+    CellIndex displaceCell = newDisplacement.getCell();
+    if (displaceCell.x != parentCellID.x || displaceCell.y != parentCellID.y)
+    {
+        Cell* cellAfterDisplace = parentCell->getNeighborCell(displaceCell);
+        if (!cellAfterDisplace) //Cell does not exist
+        {
+            std::cout << "ERROR: moveObject() - displace: Cell [ " << displaceCell.x << " , " <<
+            displaceCell.y << " ] does not exist! Ignoring movement\n";
+            //removeObject(objectToMove);
+            return;
+        }
+        //Get a object in the new cell that the migrating object will become
+        ObjectManager* newManager = cellAfterDisplace->getObjectManager();
+        Object* newObject = newManager->getNewRawObject(objectToMove->type,
+        newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
+        if (newObject == NULL)
+        {
+            std::cout << "ERROR: moveObject(): no new object returned from getNewRawObject(), removing obj\n";
+            removeObject(objectToMove);
+            return;
+        }
+        //Copy this object to the other cell object
+        *newObject = *objectToMove; //TODO: This is a big operation!!!
+        //Apply displacement to new object
+        newObject->position.setPosition(displaceCell,
+        newDisplacement.getCellOffsetX(), newDisplacement.getCellOffsetY());
+        //Remove migrated object from this manager
+        removeObject(objectToMove);
+        return;
+    }
+
     //Object still in this cell; remove it from quadtree, then apply the
     //displacement and reinsert it into the quadtree
     //Remove the object pointer from the quadtree
