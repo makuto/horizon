@@ -10,7 +10,7 @@
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
-
+extern const int ONGROUND_LAYER;
 //Used to be able to use CellIndex as a key in a std::map. See 
 //http://stackoverflow.com/questions/6973406/c-stl-map-container-with-class-key-and-class-value
 struct CellIndexComparer
@@ -66,6 +66,14 @@ class Cell
         //Generates a new cell with the specified algorithm
         //Algorithms: 1 = simple fill
         void generate(int worldID, int seed, int algorithm);
+
+        //Returns the tile at the x and y and layer; returns NULL if
+        //the provided values are out of range or the tile doesn't exist
+        tile* getTileAt(int tileX, int tileY,  int layer);
+        //Takes a value and converts it to the tile value (value % TILE_WIDTH
+        //or TILE_HEIGHT, depending on bool isX)
+        unsigned int pointToTileValue(float value, bool isX);
+        
         //Renders objects relative to the provided coordinates
         //Note that render() calls renderObjects automatically
         void renderObjects(float viewX, float viewY, window* win);

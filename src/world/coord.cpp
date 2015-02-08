@@ -7,6 +7,8 @@ const int CELL_WIDTH = 64;
 const int CELL_HEIGHT = 64;
 const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
+//The radius used to tell if objects are colliding with tiles
+const int TILE_MANHATTAN_RADIUS = 1000;
 //Note that you want this value to always be larger than screen size
 //UPDATE: No longer required to be larger than screen
 const int CELL_WIDTH_PIXELS = CELL_WIDTH * TILE_WIDTH;

@@ -66,8 +66,9 @@ class ObjectProcessor
         //-1 - The ObjectManager should destroy the object
         //Agent collides with object
         virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
-        //Object collides with tile
-        virtual int onCollideTile(Object* collider, Coord& collideDisplacement, tile& touchedTile, bool isMoving);
+        //Object collides with tile (same return codes used)
+        //TODO: Should I pass the pointer to the tile or not?
+        virtual int onCollideTile(Object* collider, Coord& collideDisplacement, tile* touchedTile);
         //Object collides with object
         virtual int onCollideObj(Object* collider, Coord& collideDisplacement, Object* obj, bool isMoving);
         

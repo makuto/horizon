@@ -90,6 +90,8 @@ class ObjectManager
         //objects in this object manager by returning a newDisplacement that
         //will prevent collisions (depending on what the object requests)
         Coord preventObjectCollisions(Object* objectToMove, Coord& newPosition);
+        //Prevent collisions with tiles in this cell
+        Coord preventTileCollisions(Object* objectToMove, Coord& newPosition);
         //Objects must call this function to change position if they are going
         //to work with collisions and quadtree. Pass the new desired position
         //and ObjectManager handles the rest. Do not try to set position yourself

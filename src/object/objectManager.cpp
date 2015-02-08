@@ -24,8 +24,9 @@ const float VIEW_TOLERANCE = 32;
 //The number is the type of object to pool
 const int DEFAULT_POOLS[] = {1};
 const int NUM_DEFAULT_POOLS = 1;
-//When moving an object, add COLL_SEARCH_TOLERANCE to the range the moving
-//object could touch
+//When moving an object, COLL_SEARCH_TOLERANCE is added to the range the moving
+//object could touch; this variable is also used for querying nearby cells
+//for neighborhood collision detection
 const float COLL_SEARCH_TOLERANCE = 96; //128
 //In order to prevent overlap, COLL_SKIN_THICKNESS is added to the moving object's
 //AABB in moveObject. Adjust the graphics in order to hide any cracks
@@ -295,7 +296,7 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
     aabb range;
     float objX = objectToMove->position.getRelativeCellX(parentCellID);
     float objY = objectToMove->position.getRelativeCellY(parentCellID);
-    //Prepare search range (box from old position to new position)
+    //Prepare search range (box around position with COLL_SEARCH_TOLERANCE as halfwidth)
     //TODO: Improve this
     //Use quadtree to find objects in range
     range.x = objX - COLL_SEARCH_TOLERANCE;
@@ -394,12 +395,122 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
     //Return the final adjusted displacement
     return newDisplacement;
 }
+Coord ObjectManager::preventTileCollisions(Object* objectToMove, Coord& newPosition)
+{
+    Coord newDisplacement = newPosition;
+
+    //Check for any objects this object will collide with
+    float objX = objectToMove->position.getRelativeCellX(parentCellID);
+    float objY = objectToMove->position.getRelativeCellY(parentCellID);
+    
+    //Prepare tile search range (box around position with COLL_SEARCH_TOLERANCE as halfwidth)
+    int topX = parentCell->pointToTileValue(objX - COLL_SEARCH_TOLERANCE, true);
+    int topY = parentCell->pointToTileValue(objY - COLL_SEARCH_TOLERANCE, false);
+    int tileTolerance = parentCell->pointToTileValue(COLL_SEARCH_TOLERANCE, true);
+    int bottomX = topX + (tileTolerance * 2);
+    int bottomY = topY + (tileTolerance * 2);
+    //Range checking
+    if (bottomX > CELL_WIDTH) bottomX = CELL_WIDTH;
+    if (bottomX < 0) bottomX = 0;
+    if (bottomY > CELL_HEIGHT) bottomY = CELL_HEIGHT;
+    if (bottomY < 0) bottomY = 0;
+    /*if (objectToMove->id == 49941)
+    {
+        std::cout << "obj tile pos " << parentCell->pointToTileValue(objX, true) << " , " << parentCell->pointToTileValue(objY, false) << " search: " << topX << " , " << topY <<
+        " to " << bottomX << " , " << bottomY << "\n";
+    }*/
+    if (topX > CELL_WIDTH) topX = CELL_WIDTH;
+    if (topX < 0) topX = 0;
+    if (topY > CELL_HEIGHT) topY = CELL_HEIGHT;
+    if (topY < 0) topY = 0;
+    
+    //Prepare this object's bounds
+    aabb objToMoveBounds = objectToMove->bounds;
+    //Note that there is no skin for tile collisions
+    objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX;
+    objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY;
+    objToMoveBounds.w = objectToMove->bounds.w;
+    objToMoveBounds.h = objectToMove->bounds.h;
+    
+    //Get the object processor
+    ObjectProcessor* movingObjProcessor = processorDir->getObjProcessor(objectToMove->type);
+    //Skip all obj collisions if the processor wasn't found
+    if (movingObjProcessor != NULL)
+    {
+        //Loop through all onground tiles in range
+        for (int i = topY; i < bottomY; ++i)
+        {
+            for (int n = topX; n < bottomX; ++n)
+            {
+                tile* currentTile = parentCell->getTileAt(n, i, ONGROUND_LAYER);
+                if (!currentTile) continue; //For some reason, the tile is NULL
+                //Empty ground
+                if (currentTile->x == 255 && currentTile->y == 255) continue;
+                
+                float dispXa = newDisplacement.getRelativeCellX(parentCellID);
+                float dispYa = newDisplacement.getRelativeCellY(parentCellID);
+                float objXa = objectToMove->position.getRelativeCellX(parentCellID);
+                float objYa = objectToMove->position.getRelativeCellY(parentCellID);
+                float tileX = n * TILE_WIDTH;
+                float tileY = i * TILE_HEIGHT;
+                
+                float velX = (dispXa - objXa);
+                float velY = (dispYa - objYa);
+    
+                //Don't test for collisions if the velocity is 0
+                if (velX == 0 && velY == 0)
+                {
+                    break;
+                }
+    
+                //Check if the object is on a collision course; notify objects
+                int movingReturn = 1;
+                if (manhattanTo(objXa, objYa, tileX + (TILE_WIDTH / 2), tileY + (TILE_HEIGHT / 2)) <= objectToMove->manhattanRadius + TILE_MANHATTAN_RADIUS)
+                {
+                    movingReturn = movingObjProcessor->onCollideTile(objectToMove, newDisplacement, currentTile);
+                }
+                //Object said it would handle it (by changing newDisplacement)
+                if (movingReturn==0) continue;
+                //Object wants to be destroyed (resolving the collision)
+                if (movingReturn==-1)
+                {
+                    movingObjProcessor->onDestroyObject(objectToMove);
+                    removeObject(objectToMove);
+                    return newDisplacement; //If the moving object is destroyed, no more detection is necessary
+                }
+                
+                //Return codes are 1; prevent the collision
+                //Prepare the tile's bounds
+                aabb tileBounds(tileX, tileY, TILE_WIDTH, TILE_HEIGHT);
+                //Get a new velocity if the object is on a collision course
+                float newVX = 0;
+                float newVY = 0;
+                preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, false);
+                
+                newDisplacement = objectToMove->position;
+                newDisplacement.addVector(newVX, newVY);
+                //NEW ADDITION
+                objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX;
+                objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY;
+                //NEW ADDITION (end)
+                if (newVX == 0 && newVY == 0)
+                {
+                    break; //No more movement, so no more collisions need testing
+                }
+            }
+        }
+    }
+
+    //Return the final adjusted displacement
+    return newDisplacement;
+}
 void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
 {
     Coord newDisplacement = newPosition;
     
     //Check if the object will collide with any other objects and adjust displacement
     newDisplacement = preventObjectCollisions(objectToMove, newDisplacement);
+    newDisplacement = preventTileCollisions(objectToMove, newDisplacement);
     //For all cells in COLL_SEARCH_TOLERANCE, prevent collisions with
     //tiles or objects (make sure neighbor cells are being accounted for)
     int cellsReturned = 0;
@@ -409,7 +520,9 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
     COLL_SEARCH_TOLERANCE * 2, COLL_SEARCH_TOLERANCE * 2, cellsReturned);
     for (int i = 0; i < cellsReturned; ++i)
     {
+        //Skip the cell this object is in
         if (intersectingCells[i].x == parentCellID.x && intersectingCells[i].y == parentCellID.y) continue;
+        //Get the cell
         Cell* currentCell = parentCell->getNeighborCell(intersectingCells[i]);
         if (!currentCell)
         {
@@ -417,8 +530,9 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
             intersectingCells[i].y << " ] does not exist! Ignoring movement\n";
             continue;
         }
-        //Check if the object will collide with any other objects and adjust displacement
+        //Check if the object will collide with any other objects or tiles and adjust displacement
         newDisplacement = currentCell->getObjectManager()->preventObjectCollisions(objectToMove, newDisplacement);
+        newDisplacement = currentCell->getObjectManager()->preventTileCollisions(objectToMove, newDisplacement);
     }
     
     //TODO: [FIXED] How will collision work if it will hit something in this cell before leaving?

@@ -198,6 +198,7 @@ int main()
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
+    originObjMan->getNewInitializedObject(1, 2, 128, 128, 0);
     cellToGet.x = -1;
     cellToGet.y = -1;
     originCell = newWorld.getCell(cellToGet);

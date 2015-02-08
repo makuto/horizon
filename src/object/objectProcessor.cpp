@@ -37,10 +37,10 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->setPosition(position, *manager);
     newObj->rotation = rotation;
     newObj->lastUpdate.reset();
-    newObj->bounds.w = 32;
-    newObj->bounds.h = 32;
-    newObj->boundOffsetX = -16;
-    newObj->boundOffsetY = -16;
+    newObj->bounds.w = 30;
+    newObj->bounds.h = 30;
+    newObj->boundOffsetX = -15;
+    newObj->boundOffsetY = -15;
     newObj->manhattanRadius = 1000;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     return true;
@@ -148,7 +148,7 @@ int ObjectProcessor::touchObject(Object* collider, Coord& collideDisplacement, A
     return 1;
 }
 //Object collides with tile
-int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement, tile& touchedTile, bool isMoving)
+int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement, tile* touchedTile)
 {
     return 1;
 }

@@ -16,6 +16,7 @@
 //Used with system to create cell dirs
 const std::string MAKE_DIR_COMMAND = "mkdir ";
 const int NUM_LAYERS = 3;
+const int ONGROUND_LAYER = 1;
 
 bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& second) const
 {
@@ -263,6 +264,22 @@ void Cell::generate(int worldID, int seed, int algorithm)
           //  std::cout << algorithm << "is not a valid algorithm (Cell.generate())\n";
            // break;
     }
+}
+//Returns the tile at the x and y and layer
+tile* Cell::getTileAt(int tileX, int tileY,  int layer)
+{
+    if (layer < NUM_LAYERS && tileX < CELL_WIDTH && tileY < CELL_HEIGHT)
+    {
+        return &tiles[layer][(tileY * CELL_WIDTH) + tileX];
+    }
+    else return NULL;
+}
+//Takes a value and converts it to the tile value (value % TILE_WIDTH
+//or TILE_HEIGHT, depending on bool isX)
+unsigned int Cell::pointToTileValue(float value, bool isX)
+{
+    if (isX) return value / TILE_WIDTH;
+    return value / TILE_HEIGHT;
 }
 //Export a .maplayer (private and local b/c nothing else needs this)
 bool exportAsLayer(const std::string& filename, std::vector<tile>* map, unsigned int layerIndex)
