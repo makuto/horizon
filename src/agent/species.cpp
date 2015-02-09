@@ -3,8 +3,10 @@
 #include <iostream>
 #include "species.hpp"
 
+const unsigned int AGENT_POOL_SIZE = 255;
 //TODO: Replace needProcessorDir with a class?
-Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir)
+Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir,
+                unsigned int newNextID):agentPool(AGENT_POOL_SIZE)
 {
     eptGroup* vitalNeedsGroup = spec->getGroup("vitalNeeds");
     eptGroup* nonvitalNeedsGroup = spec->getGroup("nonvitalNeeds");
@@ -14,7 +16,7 @@ Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir)
     numNonvitalNeeds = nonvitalNeedsGroup->getTotalAttributes();
     //Get the species ID
     speciesID = attrToInt(spec->getGroup("vars")->getAttribute("id"));
-    
+
     //Get the vital need processors as specified in the spec
     //TODO: Make this take needIDs instead of processor names?
     for (int i = 0; i < numVitalNeeds; i++)
@@ -28,6 +30,8 @@ Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir)
         std::string attrName;
         nonvitalNeedProcessors.push_back((*needProcessorDir)[attrToInt(nonvitalNeedsGroup->getAttributeFromIndex(i, attrName))]);
     }
+    nextNewID = newNextID;
+    if (newNextID == 0) nextNewID = 1;
 }
 Species::~Species()
 {
@@ -43,7 +47,7 @@ Species::~Species()
         delete (*it);
     }*/ //NeedProcessors are taken from a directory, so they don't need deletion here
 }
-int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, ProcessDirectory* processDir)
+int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager, Time* globalTime, Time* deltaTime, ProcessDirectory* processDir)
 {
     //Find the lowest need and process that one
     unsigned char minVitalValue = 255;
@@ -61,7 +65,7 @@ int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, Proces
         if (delta.isGreaterThan(&agent->vitalNeeds[i].updateRate))
         {
             //Update need
-            vitalNeedProcessors[i]->updateNeed(agent, &agent->vitalNeeds[i], &delta);
+            vitalNeedProcessors[i]->updateNeed(agent, obj, objectManager, &agent->vitalNeeds[i], &delta);
             agent->vitalNeeds[i].lastUpdateGlobal = *globalTime;
         }
         //Check if need is the lowest
@@ -83,7 +87,7 @@ int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, Proces
         if (delta.isGreaterThan(&agent->nonvitalNeeds[i].updateRate))
         {
             //Update need
-            nonvitalNeedProcessors[i]->updateNeed(agent, &agent->nonvitalNeeds[i], &delta);
+            nonvitalNeedProcessors[i]->updateNeed(agent, obj, objectManager, &agent->nonvitalNeeds[i], &delta);
             agent->nonvitalNeeds[i].lastUpdateGlobal = *globalTime;
         }
         //Check if need is the lowest
@@ -153,7 +157,7 @@ int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, Proces
             needToProcess = &agent->vitalNeeds[agent->processChainVitalNeedID];
             //std::cout << "Processing vital need; val: " << (int)needToProcess->currentValue << " threshold: " << (int)needToProcess->fulfilledThreshold << "\n";
         }
-        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, needToProcess, deltaTime);
+        int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, obj, objectManager, needToProcess, deltaTime);
         if (result==1) agent->currentProcessIndex++; //Move to next process in chain
         if (result==-1 || (unsigned int) agent->currentProcessIndex >= agent->currentProcessChain->size()) //Process chain finished
         {
@@ -167,12 +171,27 @@ int Species::updateAgent(Agent* agent, Time* globalTime, Time* deltaTime, Proces
     
     return 1;
 }
-Agent* Species::createAgent()
+Agent* Species::createAgent(unsigned int id)
 {
-    Agent* newAgent = new Agent;
-    //TODO
-    newAgent->id = 12;
-    newAgent->mutationSeed = 123213;
+    PoolData<Agent>* newAgentData = agentPool.getNewData();
+    if (!newAgentData)
+    {
+        std::cout << "ERROR: createAgent(): Agent pool full!\n";
+        return NULL;
+    } 
+    Agent* newAgent = &newAgentData->data;
+    //Set the new agent's ID
+    if (id == 0)
+    {
+        //Caller specified Species can set the ID
+        newAgent->id = nextNewID;
+        nextNewID++;
+    }
+    else newAgent->id = id; //Caller wants specific ID
+    //Add agent to map with its new ID as the key
+    agentMap[newAgent->id] = newAgentData;
+    
+    newAgent->mutationSeed = 1;
     newAgent->species = speciesID;
     //Set defaults for processes
     newAgent->processChainNonvitalNeedID = -1;
@@ -195,5 +214,29 @@ Agent* Species::createAgent()
         nonvitalNeedProcessors[i]->initNeed(&newAgent->nonvitalNeeds[i]);
     }
     return newAgent;
+}
+//Returns NULL if the agent does not exist
+Agent* Species::getAgent(unsigned int id)
+{
+    std::map<unsigned int, PoolData<Agent>* >::iterator findIt =
+    agentMap.find(id);
+    if (findIt==agentMap.end())
+    {
+        return NULL;
+    }
+    return &findIt->second->data;
+}
+//Remove an agent from the map and pool
+void Species::removeAgent(unsigned int id)
+{
+    std::map<unsigned int, PoolData<Agent>* >::iterator findIt =
+    agentMap.find(id);
+    if (findIt==agentMap.end())
+    {
+        std::cout << "WARNING: removeAgent(): Attempted to remove nonexistant agent with id " << id << "\n";
+        return;
+    }
+    agentPool.removeData(findIt->second);
+    agentMap.erase(findIt);
 }
 #endif

@@ -249,14 +249,19 @@ Object* ObjectManager::getNewInitializedObject(int type, int subType, float x, f
         ObjectProcessor* processor = processorDir->getObjProcessor(type);
         if (!processor)
         {
-            removeObject(newObj);
             std::cout << "ERROR: getNewInitializedObject(): Obj Processor for type " << type << " not found!\n";
+            removeObject(newObj);
             return NULL;
         }
         Coord newPosition;
         newPosition.setPosition(parentCellID, x, y);
         //processor->initObject(newObj, subType, newObj->position, rotation, this);
-        processor->initObject(newObj, subType, newPosition, rotation, this);
+        if (!processor->initObject(newObj, subType, newPosition, rotation, this))
+        {
+            std::cout << "WARNING: getNewInitiallizedObject(): Object of type " << type << " returned failed initialization.\n";
+            removeObject(newObj);
+            return NULL;
+        }
         return newObj;
     }
     return NULL;

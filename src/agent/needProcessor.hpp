@@ -5,6 +5,9 @@
 #include "agent.hpp"
 #include "need.hpp"
 #include "../world/time.hpp"
+
+#include "../object/objectManager.hpp"
+#include "../object/object.hpp"
 /* --NeedProcessor--
  * NeedProcessors perform all the logic for a type of need.
  * For example, a simple Hunger NeedProcessor would subtract 10 from the need
@@ -23,7 +26,7 @@ class NeedProcessor
         NeedProcessor(eptFile* spec);
         virtual ~NeedProcessor();
         //deltaTime should be the time since this need was last updated
-        virtual int updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime);
+        virtual int updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime);
         //Sets the passed need's fields to defaults (specified by defaultNeed)
         virtual void initNeed(Need* currentNeed);
 };

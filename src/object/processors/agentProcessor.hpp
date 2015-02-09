@@ -6,14 +6,21 @@
 #include "../../world/time.hpp"
 #include "../../world/coord.hpp"
 #include "../../agent/agent.hpp"
+#include "../../agent/processDirectory.hpp"
+#include "../../agent/species.hpp"
 
 class AgentProcessor:public ObjectProcessor
 {
+    private:
+        ProcessDirectory* processDir;
+        Species* species;
+
+        sprite testSpr;
     public:
-        AgentProcessor();
+        AgentProcessor(Species* newSpecies, ProcessDirectory* newProcessDir);
         virtual ~AgentProcessor();
         //Use this function to init your custom ObjectProcessor
-        virtual void initialize(eptFile* spec);
+        virtual bool initialize(eptFile* spec);
         //--Overload functions for object dynamic behavior
         //--Functions should return -1 if the object should be destroyed
         //Called to initialize a new-ed object - use this function to make sure
@@ -27,7 +34,7 @@ class AgentProcessor:public ObjectProcessor
         //relative to the current cell.
         virtual void renderObject(Object* obj, float viewX, float viewY, window* win);
         //Agent uses/activates object
-        virtual int activateObject(Object* obj, Agent* agent);
+        //virtual int activateObject(Object* obj, Agent* agent);
         //Object is hit by a used item (sword etc)
         //virtual int hitObject(Object* obj, Actor* actor, int inventoryIndex); //TODO
 
@@ -51,7 +58,7 @@ class AgentProcessor:public ObjectProcessor
         //    doesn't work with tiles). If isMoving is false, this means
         //    the stationary (nonmoving) object will be moved by the moving object
         //Agent collides with object
-        virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
+        //virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
         //Object collides with tile
         virtual int onCollideTile(Object* collider, Coord& collideDisplacement, tile& touchedTile, bool isMoving);
         //Object collides with object

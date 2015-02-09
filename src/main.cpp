@@ -110,12 +110,21 @@ int main()
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
     inputManager in(&win);
+
+    //TODO: Convert to class?
+    NeedProcessorDir needProcessorDir;
+    needProcessorDir[1] = new NeedProcessor(parser.getFile("1_spec"));
+    Species testSpecies(parser.getFile("testSpecies"), &needProcessorDir, 1);
+
+    ProcessMap processMap;
+    processMap.addProcess("useItem", new Process);
+    ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
     ObjectProcessorDir testDir;
     ObjectProcessor* test2 = new ObjectProcessor();
     test2->setup(&in);
     test2->initialize(parser.getFile("pickupObj"));
-    AgentProcessor* agentObj = new AgentProcessor();
+    AgentProcessor* agentObj = new AgentProcessor(&testSpecies, &processDir);
     agentObj->initialize(parser.getFile("agentObj"));
     testDir.addObjProcessor(test2);
     testDir.addObjProcessor(agentObj);
@@ -152,15 +161,8 @@ int main()
     //newPos.setPosition(index, 0, 10);
     //testObj->setPosition(newPos, test);
     
-    //TODO: Convert to class?
-    NeedProcessorDir needProcessorDir;
-    needProcessorDir[1] = new NeedProcessor(parser.getFile("1_spec"));
-    Species testSpecies(parser.getFile("testSpecies"), &needProcessorDir);
-
-    ProcessMap processMap;
-    processMap.addProcess("useItem", new Process);
-    ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
-    Agent* testAgent = testSpecies.createAgent();
+    
+    //Agent* testAgent = testSpecies.createAgent(0);
 
     timer frameTime;
     frameTime.start();
@@ -198,7 +200,12 @@ int main()
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
-    originObjMan->getNewInitializedObject(1, 2, 128, 128, 0);
+    originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
+    //Agent object
+    Agent* pooledAgent = testSpecies.createAgent(0);
+    if (!pooledAgent) return -1;
+    Object* testAgentObj = originObjMan->getNewInitializedObject(2, pooledAgent->id, 64, 64, 0);
+    if (!testAgentObj) return -1;
     cellToGet.x = -1;
     cellToGet.y = -1;
     originCell = newWorld.getCell(cellToGet);
@@ -308,10 +315,10 @@ int main()
             windowPosition.addVector(viewSpeed * avgFrameTime, 0);
         }
         
-        testSprite.setPosition(testAgent->worldPosition.getScreenX(&windowPosition), testAgent->worldPosition.getScreenY(&windowPosition));
+        //testSprite.setPosition(testAgent->worldPosition.getScreenX(&windowPosition), testAgent->worldPosition.getScreenY(&windowPosition));
         prof.startTiming("render");
         newWorld.render(windowPosition, &globalTime);
-        ///////////////////////
+        ///////////////////////MINIMAP
         if (in.isPressed(inputCode::Space))
         {
             for (int i = 0; i < 256; ++i)
@@ -389,7 +396,7 @@ int main()
         if (deltaTime.getExactSeconds()>=0.014 || true)
         {
             prof.startTiming("updateAgent");
-            testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
+            //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
             newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
@@ -425,8 +432,8 @@ int main()
         }
         prof.stopTiming("frame");
     }
-    //Remember to do this!
-    delete testAgent;
+    //Remember to do this! UPDATE: Not any more - agents are pooled
+    //delete testAgent;
     prof.outputAllResults();
     prof.outputAllResultsPercentages(totalTime.getTime());
     

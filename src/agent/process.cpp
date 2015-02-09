@@ -19,13 +19,14 @@ unsigned char Process::getValue(Agent* agent, Need* need)
 //Update should return 0 if process didn't complete (run next frame)
 //1 if process is ready to go to the next process in chain
 //-1 if process chain should end immediately
-int Process::update(Agent* agent, Need* need, Time* deltaTime)
+int Process::update(Agent* agent, Object* obj, ObjectManager* objectManager, Need* need, Time* deltaTime)
 {
     //std::cout << "Updated Process; index: "<< agent->currentProcessIndex <<"\n";
     if (agent->currentProcessIndex==0)
     {
         need->currentValue=addNoOverflow(need->currentValue, 60);
-        agent->worldPosition.addVector(0, -60);
+        //agent->worldPosition.addVector(0, -60);
+        obj->addVector(0, -60, *objectManager);
         //TODO: REPLACE NEEDPROCESSOR UPDATE WITH SIMPLE GENERIC DECAY?
         //TODO: Probably need to use floats or two chars due to very low update times (need.currentValue)
         return 1;

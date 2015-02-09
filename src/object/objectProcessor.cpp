@@ -19,12 +19,12 @@ int ObjectProcessor::getType()
 {
     return processorType;
 }
-void ObjectProcessor::initialize(eptFile* spec)
+bool ObjectProcessor::initialize(eptFile* spec)
 {
     processorType = attrToInt(spec->getAttribute("defaults.type"));
-    testSpr.load(spec->getAttribute("renderSettings.image").c_str());
+    if (!testSpr.load(spec->getAttribute("renderSettings.image").c_str())) return false;
     testSpr.setOrigin(16, 16);
-    return;
+    return true;
 }
 //--Overload functions for object dynamic behavior
 //--Functions should return -1 if the object should be destroyed
@@ -136,7 +136,7 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     win->draw(&textToRender);
     return;
 }
-//Agent uses/activates object
+/*//Agent uses/activates object
 int ObjectProcessor::activateObject(Object* obj, Agent* agent)
 {
     return 1;
@@ -146,7 +146,7 @@ int ObjectProcessor::activateObject(Object* obj, Agent* agent)
 int ObjectProcessor::touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving)
 {
     return 1;
-}
+}*/
 //Object collides with tile
 int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement, tile* touchedTile)
 {

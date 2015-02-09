@@ -27,7 +27,8 @@ class Object
         int type;       //General type of object, e.g. pickup, actor, usable
         int subType;    //Specific object of type, e.g. food pickup, human-species, bed
         int id;         //Universal ID for this instance
-        Time lastUpdate;//Last time this object was updated
+        Time lastUpdate;//Last time this object was updated (you have control over this!
+                        //It's not changed automatically - updateObject should handle that)
         int state;      //Use this for whatever you want
         float rotation; //Graphical rotation for this object
         aabb bounds;    //Bounds for all external collisions (x and y ignored)
@@ -35,7 +36,9 @@ class Object
         float boundOffsetY;
         float manhattanRadius;  //The radius of this object as a manhattan value (squared radius)
                                 //Used to determine if objects are "colliding" (they may not actually)
+        //Use these functions to manipulate the object's position. 
         //These functions make sure quadtree and collisions are handled
+        //(which is why ObjectManager is passed in)
         void setPosition(Coord& newPosition, ObjectManager& manager);
         void addVector(float dx, float dy, ObjectManager& manager);
         Coord getPosition();

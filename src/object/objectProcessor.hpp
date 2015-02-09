@@ -6,7 +6,7 @@
 #include <base2.0/tileMap/tileMap.hpp>
 #include "object.hpp"
 //#include "objectManager.hpp"
-#include "../agent/agent.hpp"
+//#include "../agent/agent.hpp"
 /* --ObjectProcessor--
  * ObjectProcessors take Objects and perform actions on them. This class
  * is polymorphic so new object behaviors can be implemented easily.
@@ -28,13 +28,19 @@ class ObjectProcessor
         
         int getType();
 
-        //Use this function to init your custom ObjectProcessor
-        virtual void initialize(eptFile* spec);
+        //Use this function to init your custom ObjectProcessor (get images,
+        //set default object starting values (hint: hold a object in your
+        //processor with the values, then copy them over), etc.)
+        //You should set processorType here
+        //(you must call this - it initializes the master processor, not individual objects)
+        virtual bool initialize(eptFile* spec);
         //--Overload functions for object dynamic behavior
         //--Functions should return -1 if the object should be destroyed
         //Called to initialize a new-ed object - use this function to make sure
         //objects are valid subtypes in valid positions.
         //Return false if the object cannot be created
+        //You should initialize all of the parameter values in newObj as well as
+        //Fields like bounds
         virtual bool initObject(Object* newObj, int subType, Coord& position, float rotation, ObjectManager* manager);
         //Do a routine update on the object; set obj->lastUpdate to globalTime
         //once finished (used to get the delta)
@@ -43,7 +49,7 @@ class ObjectProcessor
         //relative to the current cell.
         virtual void renderObject(Object* obj, float viewX, float viewY, window* win);
         //Agent uses/activates object
-        virtual int activateObject(Object* obj, Agent* agent);
+        //virtual int activateObject(Object* obj, Agent* agent);
         //Object is hit by a used item (sword etc)
         //virtual int hitObject(Object* obj, Actor* actor, int inventoryIndex); //TODO
 
@@ -65,7 +71,7 @@ class ObjectProcessor
         //    and the moving object will be changed
         //-1 - The ObjectManager should destroy the object
         //Agent collides with object
-        virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
+        //virtual int touchObject(Object* collider, Coord& collideDisplacement, Agent* agent, bool isMoving);
         //Object collides with tile (same return codes used)
         //TODO: Should I pass the pointer to the tile or not?
         virtual int onCollideTile(Object* collider, Coord& collideDisplacement, tile* touchedTile);

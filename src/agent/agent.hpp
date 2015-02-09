@@ -10,12 +10,13 @@ struct Agent
     int species;
     Need* vitalNeeds;
     Need* nonvitalNeeds;
-    //Add a "careerNeeds" array for individual career needs
+    //TODO: Add a "careerNeeds" array for individual career needs
     ProcessChain* currentProcessChain;
-    int currentProcessIndex; //-1 if there is no current process or chain
-    int processChainVitalNeedID; //Tells us which need we are trying to fulfill
-    int processChainNonvitalNeedID; //-1 if Vital need is being fulfilled
-    Coord worldPosition;
+    int currentProcessIndex;   //-1 if there is no current process or chain
+    int processChainVitalNeedID;    //Tells us which need we are trying to fulfill
+    int processChainNonvitalNeedID;    //-1 if Vital need is being fulfilled
+    //Coord worldPosition;  //Agents are now going to be tied to Objects, so
+                            //position is redundant
     
 };
 

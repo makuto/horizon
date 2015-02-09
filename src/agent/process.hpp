@@ -5,6 +5,9 @@
 //#include "agent.hpp" //Forward declared
 #include "need.hpp"
 
+#include "../object/objectManager.hpp"
+#include "../object/object.hpp"
+
 /* --Process--
  * A Process is an action an agent can do that moves them towards a goal.
  * These are designed to be overloaded.
@@ -43,6 +46,6 @@ class Process
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately
-        virtual int update(Agent* agent, Need* need, Time* deltaTime);
+        virtual int update(Agent* agent, Object* obj, ObjectManager* objectManager, Need* need, Time* deltaTime);
 };
 #endif

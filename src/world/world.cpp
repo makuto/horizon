@@ -302,7 +302,7 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         }
     }
     //Update other cells
-    //TODO: Delete cells that are inactive for a long time
+    //TODO: [DONE] Delete cells that are inactive for a long time
     timer currentTime;
     currentTime.start();
     if (nextCellToUpdate==cells.end())
@@ -319,8 +319,6 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         Time cellTouched = nextCellToUpdate->second->data.getTouched();
         globalTime->getDeltaTime(&cellTouched, delta);
         delta.invert();
-        //cyprus checking
-        //90880 324377202
         if (delta.getExactSeconds() > (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))) || delta.getDays() > 0)
         {
             //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << "\n";

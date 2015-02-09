@@ -18,12 +18,13 @@ NeedProcessor::NeedProcessor(eptFile* spec)
 NeedProcessor::~NeedProcessor()
 {
 }
-int NeedProcessor::updateNeed(Agent* agent, Need* currentNeed, Time* deltaTime)
+int NeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime)
 {
     //std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
     //currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
     currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
-    agent->worldPosition.addVector(0, 10);
+    obj->addVector(0, 1, *objectManager); //TODO: Fix moveObject quadtree fail b/c
+    //testNeed.ept update rate is at 0's instead of 2 seconds at this speed
     return 1;
 }
 void NeedProcessor::initNeed(Need* currentNeed)

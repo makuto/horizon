@@ -29,7 +29,7 @@ class Time
         //Adds an exact second, making sure to account for overflows
         void addSeconds(float secondsToAdd);
         //Gets the delta between this time and timeToCompare and
-        //stores the result in deltaTime; same as this time - timeToCompare
+        //stores the result in deltaTime; same as timeToCompare - this time
         void getDeltaTime(Time* timeToCompare, Time& deltaTime);
         bool isGreaterThan(Time* timeToCompare);
         void invert();
