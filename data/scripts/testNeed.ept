@@ -6,6 +6,6 @@ defaults:
     needID=1;
     fulfilledThreshold=200;
     updateRateMS=0;
-    updateRateSeconds=0;
+    updateRateSeconds=1;
     updateRateDays=0;
     updateRateYears=0;

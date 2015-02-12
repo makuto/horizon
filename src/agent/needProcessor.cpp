@@ -22,8 +22,9 @@ int NeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectMa
 {
     //std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
     //currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
-    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
-    obj->addVector(0, 1, *objectManager); //TODO: Fix moveObject quadtree fail b/c
+    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 50);
+    //std::cout << "Delta time is " << deltaTime->getExactSeconds() << "\n";
+    //obj->addVector(0, 100, *objectManager); //TODO: Fix moveObject quadtree fail b/c
     //testNeed.ept update rate is at 0's instead of 2 seconds at this speed
     return 1;
 }

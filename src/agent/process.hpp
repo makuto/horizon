@@ -37,6 +37,8 @@ typedef std::vector<Process*> ProcessChain;
 
 class Process
 {
+    private:
+        int counter;
     public:
         virtual ~Process();
         //TODO: Is need needed? (UPDATE: Yes, so generic search processes

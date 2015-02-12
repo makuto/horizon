@@ -53,6 +53,8 @@ int AgentProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* m
     }
     Time deltaTime;
     obj->lastUpdate.getDeltaTime(globalTime, deltaTime);
+    if (deltaTime.getExactSeconds() <= 0) return 1;
+    //std::cout << "AgentProcessor dTime " << deltaTime.getExactSeconds() << "\n";
     species->updateAgent(agent, obj, manager, globalTime, &deltaTime, processDir);
     
     obj->lastUpdate = *globalTime;

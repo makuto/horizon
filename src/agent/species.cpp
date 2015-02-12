@@ -12,8 +12,10 @@ Species::Species(eptFile* spec, NeedProcessorDir* needProcessorDir,
     eptGroup* nonvitalNeedsGroup = spec->getGroup("nonvitalNeeds");
     
     //Set member variables to the spec's required needs
-    numVitalNeeds = vitalNeedsGroup->getTotalAttributes();
-    numNonvitalNeeds = nonvitalNeedsGroup->getTotalAttributes();
+    if (vitalNeedsGroup) numVitalNeeds = vitalNeedsGroup->getTotalAttributes();
+    else numVitalNeeds = 0;
+    if (nonvitalNeedsGroup) numNonvitalNeeds = nonvitalNeedsGroup->getTotalAttributes();
+    else numNonvitalNeeds = 0;
     //Get the species ID
     speciesID = attrToInt(spec->getGroup("vars")->getAttribute("id"));
 
@@ -61,9 +63,11 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
         //Get time since last update
         Time delta;
         agent->vitalNeeds[i].lastUpdateGlobal.getDeltaTime(globalTime, delta);
+        
         //delta.print();
         if (delta.isGreaterThan(&agent->vitalNeeds[i].updateRate))
         {
+            //std::cout << "delta (from species.update vital) " << delta.getExactSeconds() << "\n";
             //Update need
             vitalNeedProcessors[i]->updateNeed(agent, obj, objectManager, &agent->vitalNeeds[i], &delta);
             agent->vitalNeeds[i].lastUpdateGlobal = *globalTime;
@@ -86,6 +90,8 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
         //delta.print();
         if (delta.isGreaterThan(&agent->nonvitalNeeds[i].updateRate))
         {
+            //std::cout << "  delta (from species.update nonvital) " << delta.getExactSeconds() << "\n";
+            //std::cout << "globalTime " << globalTime->getExactSeconds() << " passed delta " << deltaTime->getExactSeconds() << " need last update " << agent->nonvitalNeeds[i].lastUpdateGlobal.getExactSeconds() << "\n";
             //Update need
             nonvitalNeedProcessors[i]->updateNeed(agent, obj, objectManager, &agent->nonvitalNeeds[i], &delta);
             agent->nonvitalNeeds[i].lastUpdateGlobal = *globalTime;
@@ -158,6 +164,7 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
             //std::cout << "Processing vital need; val: " << (int)needToProcess->currentValue << " threshold: " << (int)needToProcess->fulfilledThreshold << "\n";
         }
         int result = (*agent->currentProcessChain)[agent->currentProcessIndex]->update(agent, obj, objectManager, needToProcess, deltaTime);
+        //std::cout << "processed; delta " << deltaTime->getExactSeconds() << "\n";
         if (result==1) agent->currentProcessIndex++; //Move to next process in chain
         if (result==-1 || (unsigned int) agent->currentProcessIndex >= agent->currentProcessChain->size()) //Process chain finished
         {

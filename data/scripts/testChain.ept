@@ -3,8 +3,8 @@
 //Process chains for needID 1 (hunger)
 //Sort by least difficult first for faster difficulty searches (must
 //be conscious of group name!)
-1_EatPocket:
-    1=useItem;
+//1_EatPocket:
+//    1=useItem;
 2_OtherThing:
     1=useItem;
     2=useItem;

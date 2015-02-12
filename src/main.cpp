@@ -393,7 +393,7 @@ int main()
         //previousUpdate = globalTime;
         //if (deltaTime.getExactSeconds()>=0.016)
         //if (deltaTime.getExactSeconds()>=avgFrameTime)
-        if (deltaTime.getExactSeconds()>=0.014 || true)
+        if (deltaTime.getExactSeconds()>=0.014)
         {
             prof.startTiming("updateAgent");
             //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);

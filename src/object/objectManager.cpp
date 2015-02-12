@@ -382,7 +382,20 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
             //Get a new velocity if the object is on a collision course
             float newVX = 0;
             float newVY = 0;
-            preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
+            //New addition: set the currentObj bounds to the relative cell rather
+            //than trusting that they're right before the movement
+            currentObj->bounds.setPosition(
+            currentObj->getPosition().getRelativeCellX(parentCellID) + currentObj->boundOffsetX,
+            currentObj->getPosition().getRelativeCellY(parentCellID) + currentObj->boundOffsetY);
+            /*if (currentObj->id == 49941)
+            {
+                std::cout << "Coll check debug - moving obj " << objectToMove->id << " currentObj " << currentObj->id << "\n";
+                std::cout << "moving obj pos "; objectToMove->getPosition().print();
+                std::cout << "current obj pos "; currentObj->getPosition().print();
+                std::cout << "new displacement pos "; newDisplacement.print();
+                preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, true);
+            }
+            else */preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
             
             newDisplacement = objectToMove->position;
             newDisplacement.addVector(newVX, newVY);

@@ -23,7 +23,10 @@
  * an individual basis due to the complexity of the agent-object setup.
  *
  * Note that Species isn't completely new-less because Need arrays are still
- * allocated when createAgent is called.*/
+ * allocated when createAgent is called.
+ *
+ * Additionally, note that ALL species agents MUST have at least one vital and
+ * one nonvital need.*/
 
 class Species
 {

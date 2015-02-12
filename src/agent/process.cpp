@@ -24,12 +24,18 @@ int Process::update(Agent* agent, Object* obj, ObjectManager* objectManager, Nee
     //std::cout << "Updated Process; index: "<< agent->currentProcessIndex <<"\n";
     if (agent->currentProcessIndex==0)
     {
-        need->currentValue=addNoOverflow(need->currentValue, 60);
         //agent->worldPosition.addVector(0, -60);
-        obj->addVector(0, -60, *objectManager);
+        obj->addVector(0, -5, *objectManager);
+        counter++;
+        if (counter>=10)
+        {
+            need->currentValue=addNoOverflow(need->currentValue, 255);
+            counter = 0;
+            return 1;
+        }
         //TODO: REPLACE NEEDPROCESSOR UPDATE WITH SIMPLE GENERIC DECAY?
         //TODO: Probably need to use floats or two chars due to very low update times (need.currentValue)
-        return 1;
+        return 0;
     }
     return 1;
 }
