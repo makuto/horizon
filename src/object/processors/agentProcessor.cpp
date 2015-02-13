@@ -98,7 +98,7 @@ void AgentProcessor::renderObject(Object* obj, float viewX, float viewY, window*
         std::cout << "err: cannot load debugText font\n";
         return;
     }
-    textToRender.setPosition(obj->getPosition().getCellOffsetX() - viewX + 16, obj->getPosition().getCellOffsetY() - viewY + 16);
+    textToRender.setPosition(obj->getPosition().getCellOffsetX() - viewX + 15, obj->getPosition().getCellOffsetY() - viewY + 15);
     textToRender.setText(ss.str());
     win->draw(&textToRender);
 }

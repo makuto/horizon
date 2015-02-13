@@ -15,15 +15,15 @@
 //For quadtree
 const unsigned int MAX_NODE_CAPACITY = 3;
 //The size of each object pool
-const unsigned int POOL_SIZE = 100;
+const unsigned int POOL_SIZE = 10;
 //Should equal largest object sprite half width (used to figure out what
 //objects are in the view and should be rendered); object centers not in
 //view size + VIEW_TOLERANCE will be culled
 const float VIEW_TOLERANCE = 32;
 //Use this in conjunction with NUM_DEFAULT_POOLS to pre-init object pools
 //The number is the type of object to pool
-const int DEFAULT_POOLS[] = {1};
-const int NUM_DEFAULT_POOLS = 1;
+const int DEFAULT_POOLS[] = {1 , 2};
+const int NUM_DEFAULT_POOLS = 2;
 //When moving an object, COLL_SEARCH_TOLERANCE is added to the range the moving
 //object could touch; this variable is also used for querying nearby cells
 //for neighborhood collision detection

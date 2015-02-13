@@ -11,7 +11,7 @@ const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
 const float MAX_WORLD_FAR_UPDATE = 0.001;
-const unsigned int CELL_POOL_SIZE = 100;
+const unsigned int CELL_POOL_SIZE = 25;
 //Number of seconds a cell has been untouched before the cell is unloaded
 //Note that values larger than SECONDS_IN_DAY will be ignored because
 //cells older than 1 day will always be unloaded
@@ -321,7 +321,13 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
         delta.invert();
         if (delta.getExactSeconds() > (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))) || delta.getDays() > 0)
         {
-            //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << "\n";
+            if (nextCellToUpdate->second->data.getTouched().getExactSeconds()==0) 
+            {
+                //Cell is brand new; set time to current globalTime
+                nextCellToUpdate->second->data.setTouched(*globalTime);
+                continue;
+            }
+            //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << ", delta: "; delta.print();
             cellPool.removeData(nextCellToUpdate->second);
             cells.erase(nextCellToUpdate);
         }

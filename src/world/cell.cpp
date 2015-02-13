@@ -47,6 +47,7 @@ void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* proces
     world = newWorld;
     cellID = newCellID;
     objectManager.init(newWorld, processorDir, newCellID, this);
+    touched.reset();
 }
 Cell::~Cell()
 {
