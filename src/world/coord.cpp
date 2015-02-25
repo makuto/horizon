@@ -1,6 +1,7 @@
 #ifndef COORD_CPP
 #define COORD_CPP
 #include <iostream>
+#include <cmath>
 #include "coord.hpp"
 
 const int CELL_WIDTH = 64;
@@ -37,15 +38,15 @@ float Coord::getTrueY()
 float Coord::getScreenX(Coord* viewPosition)
 {
     //TODO: Will this be a problem with overflows in big maps?
-    int newX = (cell.x * CELL_WIDTH_PIXELS) + x;
-    int newViewX = (viewPosition->cell.x * CELL_WIDTH_PIXELS) + viewPosition->x;
+    float newX = (cell.x * CELL_WIDTH_PIXELS) + x;
+    float newViewX = (viewPosition->cell.x * CELL_WIDTH_PIXELS) + viewPosition->x;
     return newX - newViewX;
 }
 float Coord::getScreenY(Coord* viewPosition)
 {
     //TODO: Will this be a problem with overflows in big maps?
-    int newY = (cell.y * CELL_HEIGHT_PIXELS) + y;
-    int newViewY = (viewPosition->cell.y * CELL_HEIGHT_PIXELS) + viewPosition->y;
+    float newY = (cell.y * CELL_HEIGHT_PIXELS) + y;
+    float newViewY = (viewPosition->cell.y * CELL_HEIGHT_PIXELS) + viewPosition->y;
     return newY - newViewY;
 }
 float Coord::getRelativeCellX(CellIndex& index)
@@ -64,10 +65,32 @@ void Coord::addVector(float dX, float dY)
 {
     x+=dX;
     y+=dY;
+    if (x > CELL_WIDTH_PIXELS)
+    {
+        int movedCells = truncf(x / CELL_WIDTH_PIXELS);
+        cell.x += movedCells;
+        x -= movedCells * CELL_WIDTH_PIXELS;
+    }
+    if (y > CELL_HEIGHT_PIXELS)
+    {
+        int movedCells = truncf(y / CELL_HEIGHT_PIXELS);
+        cell.y += movedCells;
+        y -= movedCells * CELL_HEIGHT_PIXELS;
+    }
+    if (x < 0)
+    {
+        cell.x-=1;
+        x = CELL_WIDTH_PIXELS + x;
+    }
+    if (y < 0)
+    {
+        cell.y-=1;
+        y = CELL_HEIGHT_PIXELS + y;
+    }
     //Converts whole coord into one
     //TODO: Will this be a problem with overflows in big maps?
-    int newX = (cell.x * CELL_WIDTH_PIXELS) + x;
-    int newY = (cell.y * CELL_HEIGHT_PIXELS) + y;
+    /*float newX = (cell.x * CELL_WIDTH_PIXELS) + x;
+    float newY = (cell.y * CELL_HEIGHT_PIXELS) + y;
     cell.x = newX / (CELL_WIDTH_PIXELS);
     x = newX % (CELL_WIDTH_PIXELS);
     cell.y = newY / (CELL_HEIGHT_PIXELS);
@@ -81,7 +104,7 @@ void Coord::addVector(float dX, float dY)
     {
         cell.y-=1;
         y = CELL_HEIGHT_PIXELS + y;
-    }
+    }*/
 }
 void Coord::setPosition(CellIndex& newCell, float newX, float newY)
 {

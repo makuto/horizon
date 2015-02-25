@@ -2,11 +2,13 @@
 #define OBJECTPROCESSOR_CPP
 #include "objectProcessor.hpp"
 #include "objectManager.hpp"
+#include <base2.0/math/math.hpp>
 #include <sstream>
 ObjectProcessor::ObjectProcessor()
 {
     in = NULL;
     processorType = -1;
+    globalVecX = globalVecY = 0;
 }
 ObjectProcessor::~ObjectProcessor()
 {
@@ -58,13 +60,15 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     float vecY = 0;
     if (obj->subType == 1)
     {
-        if (obj->getPosition().getTrueX() !=0)
+        float targetX = 0;
+        float targetY = 0;
+        if (obj->getPosition().getTrueX() !=targetX)
         {
-            vecX = -obj->getPosition().getTrueX() + 0;
+            vecX = -obj->getPosition().getTrueX() + targetX;
         }
-        if (obj->getPosition().getTrueY() !=0)
+        if (obj->getPosition().getTrueY() !=targetY)
         {
-            vecY = -obj->getPosition().getTrueY() + 0;
+            vecY = -obj->getPosition().getTrueY() + targetY;
         }
         
         //Normalize
@@ -77,6 +81,8 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
             vecY *= speed;
             vecX *= delta.getExactSeconds();
             vecY *= delta.getExactSeconds();
+            globalVecX = vecX;
+            globalVecY = vecY;
             if (globalTime->getExactSeconds() < 30)
             {
                 obj->addVector(vecX, vecY, *manager);
@@ -89,6 +95,22 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         if (in->isPressed(inputCode::S)) vecY += 2;
         if (in->isPressed(inputCode::A)) vecX -= 2;
         if (in->isPressed(inputCode::D)) vecX += 2;
+        coordinate vec;
+        vec.x = vecX;
+        vec.y = vecY;
+        normalize(&vec);
+        /*float mouseX = in->getMouseX();
+        float mouseY = in->getMouseY();
+        float objX = obj->getPosition().getCellOffsetX();
+        float objY = obj->getPosition().getCellOffsetY();
+        vecX += mouseX - objX;
+        vecY += mouseY - objY;*/
+        speed = 300;
+        vecX = vec.x * delta.getExactSeconds() * speed;
+        vecY = vec.y * delta.getExactSeconds() * speed;
+        globalVecX = vecX;
+        globalVecY = vecY;
+        std::cout << vecX << " , " << vecY << "\n";
         obj->addVector(vecX, vecY, *manager);
     }
     obj->lastUpdate = *globalTime;
@@ -119,6 +141,9 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     rectangle.setOutlineColor(sf::Color::White);
     rectangle.setPosition(obj->getPosition().getTrueX() - viewX, obj->getPosition().getTrueY() - viewY);
     sfWin->draw(rectangle);
+    rectangle.setOutlineColor(sf::Color::Red);
+    rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + globalVecX, obj->getPosition().getCellOffsetY() - viewY + globalVecY);
+    sfWin->draw(rectangle);
     
     std::stringstream ss;
     ss << obj->id << "\n[ " << pos.getCell().x << " , " << pos.getCell().y << " ]"
@@ -134,6 +159,14 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     textToRender.setPosition(obj->getPosition().getCellOffsetX() - viewX + 16, obj->getPosition().getCellOffsetY() - viewY + 16);
     textToRender.setText(ss.str());
     win->draw(&textToRender);
+
+    sf::Vertex line[] =
+    {
+        sf::Vertex(sf::Vector2f(obj->getPosition().getCellOffsetX() - viewX + 15, obj->getPosition().getCellOffsetY() - viewY + 15)),
+        sf::Vertex(sf::Vector2f(obj->getPosition().getCellOffsetX() - viewX + 15 + globalVecX, obj->getPosition().getCellOffsetY() - viewY + 15 + globalVecY))
+    };
+
+    win->getBase()->draw(line, 2, sf::Lines);
     return;
 }
 /*//Agent uses/activates object

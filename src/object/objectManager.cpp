@@ -19,7 +19,7 @@ const unsigned int POOL_SIZE = 10;
 //Should equal largest object sprite half width (used to figure out what
 //objects are in the view and should be rendered); object centers not in
 //view size + VIEW_TOLERANCE will be culled
-const float VIEW_TOLERANCE = 32;
+const float VIEW_TOLERANCE = 64;
 //Use this in conjunction with NUM_DEFAULT_POOLS to pre-init object pools
 //The number is the type of object to pool
 const int DEFAULT_POOLS[] = {1 , 2};
@@ -33,6 +33,8 @@ const float COLL_SEARCH_TOLERANCE = 96; //128
 //(apparently Box2D uses this and it is therefore a good idea)
 //See pg 17 http://box2d.org/manual.pdf
 const float COLL_SKIN_THICKNESS = 0; //3
+//Used in preventCollision(). Slight overlaps become touching within this range
+const float TOUCHING_TOLERANCE = 0.027;
 //Box2D is designed for smaller units, so pixels aren't good. All sizes/positions
 //will be divided by BOX2D_SCALE when doing collision functions so that the units
 //work better with Box2D.
@@ -312,8 +314,8 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
     
     //Prepare this object's bounds
     aabb objToMoveBounds = objectToMove->bounds;
-    objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
-    objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+    objToMoveBounds.x = objX + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+    objToMoveBounds.y = objY + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
     objToMoveBounds.w = objectToMove->bounds.w + (COLL_SKIN_THICKNESS * 2);
     objToMoveBounds.h = objectToMove->bounds.h + (COLL_SKIN_THICKNESS * 2);
     
@@ -335,7 +337,7 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
             float dispYa = newDisplacement.getRelativeCellY(parentCellID);
             float objXa = objectToMove->position.getRelativeCellX(parentCellID);
             float objYa = objectToMove->position.getRelativeCellY(parentCellID);
-            
+            //TODO: [FIXED] This could be the problem - rounds to nearest unit!
             float velX = (dispXa - objXa);
             float velY = (dispYa - objYa);
 
@@ -387,29 +389,29 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
             currentObj->bounds.setPosition(
             currentObj->getPosition().getRelativeCellX(parentCellID) + currentObj->boundOffsetX,
             currentObj->getPosition().getRelativeCellY(parentCellID) + currentObj->boundOffsetY);
-            /*if (currentObj->id == 49941)
+            if (objectToMove->id == 49941)
             {
                 std::cout << "Coll check debug - moving obj " << objectToMove->id << " currentObj " << currentObj->id << "\n";
                 std::cout << "moving obj pos "; objectToMove->getPosition().print();
                 std::cout << "current obj pos "; currentObj->getPosition().print();
                 std::cout << "new displacement pos "; newDisplacement.print();
-                preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, true);
+                preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, true);
             }
-            else */preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, false);
+            else preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
             
             newDisplacement = objectToMove->position;
             newDisplacement.addVector(newVX, newVY);
-            //NEW ADDITION
-            objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
-            objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
-            //NEW ADDITION (end)
+        
+            objToMoveBounds.x = objX + objectToMove->boundOffsetX - COLL_SKIN_THICKNESS;
+            objToMoveBounds.y = objY + objectToMove->boundOffsetY - COLL_SKIN_THICKNESS;
+            
             if (newVX == 0 && newVY == 0)
             {
                 break; //No more movement, so no more collisions need testing
             }
         }
     }
-
+    if (objectToMove->id==49941) std::cout << "\n\n\n";
     //Return the final adjusted displacement
     return newDisplacement;
 }
@@ -432,11 +434,6 @@ Coord ObjectManager::preventTileCollisions(Object* objectToMove, Coord& newPosit
     if (bottomX < 0) bottomX = 0;
     if (bottomY > CELL_HEIGHT) bottomY = CELL_HEIGHT;
     if (bottomY < 0) bottomY = 0;
-    /*if (objectToMove->id == 49941)
-    {
-        std::cout << "obj tile pos " << parentCell->pointToTileValue(objX, true) << " , " << parentCell->pointToTileValue(objY, false) << " search: " << topX << " , " << topY <<
-        " to " << bottomX << " , " << bottomY << "\n";
-    }*/
     if (topX > CELL_WIDTH) topX = CELL_WIDTH;
     if (topX < 0) topX = 0;
     if (topY > CELL_HEIGHT) topY = CELL_HEIGHT;
@@ -445,8 +442,8 @@ Coord ObjectManager::preventTileCollisions(Object* objectToMove, Coord& newPosit
     //Prepare this object's bounds
     aabb objToMoveBounds = objectToMove->bounds;
     //Note that there is no skin for tile collisions
-    objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX;
-    objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY;
+    objToMoveBounds.x = objX + objectToMove->boundOffsetX;
+    objToMoveBounds.y = objY + objectToMove->boundOffsetY;
     objToMoveBounds.w = objectToMove->bounds.w;
     objToMoveBounds.h = objectToMove->bounds.h;
     
@@ -503,14 +500,18 @@ Coord ObjectManager::preventTileCollisions(Object* objectToMove, Coord& newPosit
                 //Get a new velocity if the object is on a collision course
                 float newVX = 0;
                 float newVY = 0;
-                preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, false);
+                if (objectToMove->id == 49941)
+                {
+                    preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, true);
+                }
+                else preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
                 
                 newDisplacement = objectToMove->position;
                 newDisplacement.addVector(newVX, newVY);
-                //NEW ADDITION
-                objToMoveBounds.x = newDisplacement.getRelativeCellX(parentCellID) + objectToMove->boundOffsetX;
-                objToMoveBounds.y = newDisplacement.getRelativeCellY(parentCellID) + objectToMove->boundOffsetY;
-                //NEW ADDITION (end)
+
+                objToMoveBounds.x = objX + objectToMove->boundOffsetX;
+                objToMoveBounds.y = objY + objectToMove->boundOffsetY;
+    
                 if (newVX == 0 && newVY == 0)
                 {
                     break; //No more movement, so no more collisions need testing

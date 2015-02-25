@@ -20,6 +20,8 @@ class ObjectProcessor
         
         sprite testSpr;
         inputManager* in;
+        float globalVecX;
+        float globalVecY;
     public:
         ObjectProcessor();
         //Make your own setup functions for custom data
