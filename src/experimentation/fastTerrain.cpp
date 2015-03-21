@@ -101,7 +101,9 @@ int main()
                     float x = (n / xdiv) + offsetX;
                     float y = (i / ydiv) + offsetY;
                     //scale  = scaled_octave_noise_3d(8, 0.55, 0.001, 0, 5, x, y, seed);
-                    float value = scaled_octave_noise_3d(8, 0.55, scale, 0, 254, x, y, seed);
+                    float value = 0;
+                    if (n % 40<=30 || n < (width / 2)) value = scaled_octave_noise_3d(8, 0.55, scale, 0, 254, x, y, seed);
+                    else value = scaled_octave_noise_3d(4, 0.55, scale, 0, 254, x, y, seed);
                     float lookupY = 0;
                     //Biomes
                     {

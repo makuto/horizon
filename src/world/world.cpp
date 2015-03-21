@@ -4,6 +4,7 @@
 #include <base2.0/timer/timer.hpp>
 #include "world.hpp"
 #include "../utilities/debugText.hpp"
+#include "../utilities/simplexnoise.h" //For estimateDifficulty
 
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
@@ -11,7 +12,7 @@ const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
 const float MAX_WORLD_FAR_UPDATE = 0.001;
-const unsigned int CELL_POOL_SIZE = 25;
+const unsigned int CELL_POOL_SIZE = 100;
 //Number of seconds a cell has been untouched before the cell is unloaded
 //Note that values larger than SECONDS_IN_DAY will be ignored because
 //cells older than 1 day will always be unloaded
@@ -19,6 +20,9 @@ const unsigned int CELL_POOL_SIZE = 25;
 //CELL_UNLOAD_DELAY * (1 - (active cells / CELL_POOL_SIZE))
 //The more active cells there are, the less the delay is
 const float CELL_UNLOAD_DELAY = 60;
+//The number of tiles to skip when estimating cell difficulties
+const int CELL_ESTIMATION_SKIP = 16;
+
 
 World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir):cellPool(CELL_POOL_SIZE)
 {
@@ -97,6 +101,19 @@ Cell* World::getCell(CellIndex cell)
     }
     return newCell;
 }
+Cell* World::getCellIfExists(CellIndex cell)
+{
+    //Find the cell
+    std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator findIt =
+    cells.find(cell);
+    if (findIt != cells.end())
+    {
+        //Return the found cell
+        return &findIt->second->data;
+    }
+    //Cell doesn't exist
+    return NULL;
+}
 CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
 {
     CellIndex topLeftCellIndex = topLeftCorner.getCell();
@@ -171,6 +188,40 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
         cellArray[0].y = topLeftCellIndex.y;
     }
     return cellArray;*/
+}
+float World::estimateCellDifficulty(CellIndex& cellToEstimate)
+{
+    //Calculate a few tiles in the cell to estimate
+    float totalTiles = 0;
+    float numWaterTiles = 0;
+    float numMountainTiles = 0;
+    for (int y = 0; y < CELL_HEIGHT; y += CELL_ESTIMATION_SKIP)
+    {
+        for (int x = 0; x < CELL_WIDTH; x += CELL_ESTIMATION_SKIP)
+        {
+            totalTiles++;
+            float noiseX = x + (CELL_WIDTH * cellToEstimate.x);
+            float noiseY = y + (CELL_HEIGHT * cellToEstimate.y);
+            noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
+            noiseY /= 2;
+            const float SCALE = 0.001;
+            //TODO: Put all these values in a text file
+            float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, worldID);
+            //TODO: Make a function that says what water and mountain is
+            if (value < 142) numWaterTiles++;
+            else if (value > 185) numMountainTiles++;
+        }
+    }
+    float difficulty = ((numWaterTiles / totalTiles) + (numMountainTiles / totalTiles)) / 2;
+    /*float trueDifficulty = -1;
+    Cell* requestedCell = getCell(cellToEstimate);
+    if (requestedCell)
+    {
+        trueDifficulty = requestedCell->getDifficulty();
+    }
+    std::cout << "Estimated water: " << numWaterTiles << " Estimated ongrounds: " << numMountainTiles << " total tiles picked: " << totalTiles << "\n";
+    std::cout << "Estimated difficulty: " << difficulty << " via alg: " << ((numWaterTiles / totalTiles) + (numMountainTiles / totalTiles))  << " true difficulty: " << trueDifficulty << "\n\n";*/
+    return difficulty;
 }
 void World::render(Coord& viewPosition, Time* globalTime)
 {

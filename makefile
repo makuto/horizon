@@ -4,12 +4,12 @@ EXECUTABLE_NAME= LOCAL_horizon
 OBJ_DIR= LOCAL_obj
 LINK= g++ -std=c++11 -Wall -o "$(EXECUTABLE_NAME)" 
 LINKLIBS= -lBox2D -lbase2.0 -lsfml-graphics -lsfml-window -lsfml-system
-horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
+horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/micropather.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/path.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
 	@echo -----------Linking horizon-------------------------
 	mv *.o $(OBJ_DIR)
-	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o coord.o time.o object.o objectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
+	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o micropather.o coord.o time.o object.o objectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o path.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
-	cppcheck --enable=all --std=c++11 --template=gcc -q -v src
+	#cppcheck --enable=all --std=c++11 --template=gcc -q -v src
 
 $(OBJ_DIR)/debugText.o: src/utilities/debugText.hpp src/utilities/debugText.cpp
 	$(FLAGS) src/utilities/debugText.hpp
@@ -23,6 +23,9 @@ $(OBJ_DIR)/quadTree.o: src/utilities/quadTree.hpp src/utilities/quadTree.cpp
 $(OBJ_DIR)/simplexnoise.o: src/utilities/simplexnoise.h src/utilities/simplexnoise.cpp
 	$(FLAGS) src/utilities/simplexnoise.h
 	$(FLAGS) src/utilities/simplexnoise.cpp
+$(OBJ_DIR)/micropather.o: src/utilities/micropather.h src/utilities/micropather.cpp
+	$(FLAGS) src/utilities/micropather.h
+	$(FLAGS) src/utilities/micropather.cpp
 $(OBJ_DIR)/coord.o: src/world/coord.hpp src/world/coord.cpp
 	$(FLAGS) src/world/coord.hpp
 	$(FLAGS) src/world/coord.cpp
@@ -50,6 +53,9 @@ $(OBJ_DIR)/cell.o: src/world/cell.hpp src/world/cell.cpp
 $(OBJ_DIR)/world.o: src/world/world.hpp src/world/world.cpp
 	$(FLAGS) src/world/world.hpp
 	$(FLAGS) src/world/world.cpp
+$(OBJ_DIR)/path.o:src/world/path.hpp src/world/path.cpp
+	$(FLAGS) src/world/path.hpp
+	$(FLAGS) src/world/path.cpp
 $(OBJ_DIR)/needMath.o: src/agent/needMath.hpp src/agent/needMath.cpp
 	$(FLAGS) src/agent/needMath.hpp
 	$(FLAGS) src/agent/needMath.cpp	

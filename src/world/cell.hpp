@@ -11,12 +11,7 @@
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
 extern const int ONGROUND_LAYER;
-//Used to be able to use CellIndex as a key in a std::map. See 
-//http://stackoverflow.com/questions/6973406/c-stl-map-container-with-class-key-and-class-value
-struct CellIndexComparer
-{
-    bool operator()(const CellIndex& first, const CellIndex& second) const;
-};
+
 /* --Cell--
  * Cell holds all data for a single cell/chunk of the world.
  * Cells always assume the multilayerMap is set up correctly;
@@ -32,14 +27,24 @@ class Cell
         //TODO: Consider putting layer information together (like RGB)
         //instead of in separate arrays (faster)
         std::vector<std::vector<tile> > tiles;
-        //If isMasterLayer is true, this function will skip over the master
-        //layer header and load the raw tiles
-        bool loadLayer(const std::string& filename, int layerNum, bool isMasterLayer);
+
+        //Stores the percentage of the amount of the specified type of
+        //tiles (useful for estimating the "difficulty" of the cell) for
+        //pathfinding - cell with a large percentage of onGrounds or water is
+        //harder to navigate than a nearly empty cell.
+        float onGroundPercentage; //Tiles on ground (walls etc. contribute)
+        float unwalkablePercentage;//Tiles of ground (water etc. contribute)
+        //Calculates the above percentages
+        void calculateDifficulty();
 
         World* world;
         //If a cell is inactive for long periods of time, it can be unloaded.
         //Touched stores the last time it was active
         Time touched;
+        
+        //If isMasterLayer is true, this function will skip over the master
+        //layer header and load the raw tiles
+        bool loadLayer(const std::string& filename, int layerNum, bool isMasterLayer);
     public:
         void setTouched(Time newValue);
         Time getTouched();
@@ -73,6 +78,13 @@ class Cell
         //Takes a value and converts it to the tile value (value % TILE_WIDTH
         //or TILE_HEIGHT, depending on bool isX)
         unsigned int pointToTileValue(float value, bool isX);
+
+        //Returns the difficulty of this cell, determined by the amount
+        //of ground tiles that are unwalkable and the amount of onground
+        //spots that are not empty. This is calculated by simply doing
+        //onGroundPercentage + unwalkablePercentage and normalizing to 1.
+        //Very difficult tiles are near 1 while very easy tiles are near 0
+        float getDifficulty();
         
         //Renders objects relative to the provided coordinates
         //Note that render() calls renderObjects automatically

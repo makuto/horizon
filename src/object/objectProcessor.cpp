@@ -45,6 +45,16 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->boundOffsetY = -15;
     newObj->manhattanRadius = 1000;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
+    if (newObj->subType==3) //Path test
+    {
+        Coord goal;
+        goal.setPosition(1, 1, 1024, 1024);
+        mainPath.init(manager->getWorld(), position, goal);
+        mainPath.calculateCellPath();
+        std::cout << "OBJ: Cell: " << mainPath.getStatus() << "\n";
+        mainPath.calculateTilePath();
+        std::cout << "OBJ: Tile: " << mainPath.getStatus() << "\n";
+    }
     return true;
 }
 //Do a routine update on the object
@@ -89,7 +99,7 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
             }
         }
     }
-    else if (obj->subType == 2)
+    else if (obj->subType == 2) //Human input test
     {
         if (in->isPressed(inputCode::W)) vecY -= 2;
         if (in->isPressed(inputCode::S)) vecY += 2;
@@ -110,8 +120,46 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         vecY = vec.y * delta.getExactSeconds() * speed;
         globalVecX = vecX;
         globalVecY = vecY;
-        std::cout << vecX << " , " << vecY << "\n";
+        //std::cout << vecX << " , " << vecY << "\n";
         obj->addVector(vecX, vecY, *manager);
+    }
+    else if (obj->subType == 3) //Follow path test
+    {
+        switch(mainPath.getStatus())
+        {
+            case 0:
+                mainPath.calculateTilePath();
+                break;
+            case 1:
+                Coord target;
+                Coord objPos;
+                objPos = obj->getPosition();
+                target = mainPath.advance(objPos);
+                target.print();
+                CellIndex relCell;
+                relCell = obj->getPosition().getCell();
+                float axDiff;
+                axDiff = obj->getPosition().getRelativeCellX(relCell) - target.getRelativeCellX(relCell);
+                float ayDiff;
+                ayDiff = obj->getPosition().getRelativeCellY(relCell) - target.getRelativeCellY(relCell);
+                coordinate vec;
+                vec.x = axDiff;
+                vec.y = ayDiff;
+                normalize(&vec);
+                float speed;
+                speed = 300;
+                float vecX;
+                vecX = -vec.x * delta.getExactSeconds() * speed;
+                float vecY;
+                vecY = -vec.y * delta.getExactSeconds() * speed;
+                globalVecX = vecX;
+                globalVecY = vecY;
+                std::cout << "VEC " << vecX << " , " << vecY << "\n";
+                obj->addVector(vecX, vecY, *manager);
+                break;
+            default:
+                break;
+        }
     }
     obj->lastUpdate = *globalTime;
     return 1;

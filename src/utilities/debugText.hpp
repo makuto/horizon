@@ -16,6 +16,7 @@ class DebugText
         static void addEntry(const char* key, bool value);
         static void addEntry(const char* key, float value);
         static void addEntry(const char* key, unsigned char value);
+        static void addEntry(const char* key, float x, float y);
         static void clear();
         static void render(window* win, text* textToRender);
 };

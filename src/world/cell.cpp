@@ -18,17 +18,13 @@ const std::string MAKE_DIR_COMMAND = "mkdir ";
 const int NUM_LAYERS = 3;
 const int ONGROUND_LAYER = 1;
 
-bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& second) const
-{
-    if (first.x > second.x) return true;
-    if (first.x < second.x) return false;
-    return first.y > second.y;
-}
 
 Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir):cellID(newCellID), objectManager(newWorld, processorDir, newCellID, this)
 {
     world = newWorld;
     tiles.resize(NUM_LAYERS);
+    onGroundPercentage = 0;
+    unwalkablePercentage = 0;
 }
 Cell::Cell()
 {
@@ -41,6 +37,8 @@ Cell::Cell()
     {
         (*it).resize(CELL_WIDTH * CELL_HEIGHT);
     }
+    onGroundPercentage = 0;
+    unwalkablePercentage = 0;
 }
 void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir)
 {
@@ -48,17 +46,61 @@ void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* proces
     cellID = newCellID;
     objectManager.init(newWorld, processorDir, newCellID, this);
     touched.reset();
+    onGroundPercentage = 0;
+    unwalkablePercentage = 0;
 }
 Cell::~Cell()
 {
-    for (std::vector<std::vector<tile> >::iterator it = tiles.begin();
-    it!=tiles.end(); ++it)
+}
+void Cell::calculateDifficulty()
+{
+    //Loop layers
+    for (int i = 0; i < NUM_LAYERS; i++)
     {
-        for (std::vector<tile>::iterator tIt = (*it).begin(); tIt != (*it).end(); ++tIt)
+        int totalTileCount = 0;
+        int applicableCount = 0;
+        //Loop tiles in layer
+        for (std::vector<tile>::iterator tIt = tiles[i].begin(); tIt != tiles[i].end(); ++tIt)
         {
-            //delete (*tIt);
+            totalTileCount++;
+            switch(i)
+            {
+                case 0: //Ground layer
+                    //TODO: Add functions that say what tiles are? (e.g isWater())
+                    //If the tile is a water tile, add it to the count
+                    if ((*tIt).y==0 && (*tIt).x <= 141)
+                    {
+                        applicableCount++;
+                    }
+                    break;
+                case 1: //Onground layer
+                    //If the tile isn't a null tile, add it to the count
+                    if ((*tIt).x!=255 || (*tIt).y!=255)
+                    {
+                        applicableCount++;
+                    }
+                    break;
+                default: //Everything else
+                    break;
+            }
+        }
+        //Calculate the percentages
+        switch(i)
+        {
+            case 0: //Ground layer
+                unwalkablePercentage = (float)applicableCount / (float)totalTileCount;
+                std::cout << applicableCount << " of " << totalTileCount << " ground tiles\n";
+                break;
+            case 1: //Onground layer
+                //If the tile isn't a null tile, add it to the count
+                onGroundPercentage = (float)applicableCount / (float)totalTileCount;
+                std::cout << applicableCount << " of " << totalTileCount << " onground tiles\n";
+                break;
+            default: //Everything else
+                break; 
         }
     }
+    std::cout << "unwalkable: " << unwalkablePercentage << " onground: " << onGroundPercentage << "\n";
 }
 void Cell::setTouched(Time newValue)
 {
@@ -135,6 +177,7 @@ bool Cell::load(int worldID)
         //std::cout << "Successfully loaded " << layerFileName.str() << "\n";
     }
     std::cout << "Successfully loaded " << cellFileName.str() << "\n";
+    calculateDifficulty();
     return true;
 }
 void Cell::generate(int worldID, int seed, int algorithm)
@@ -235,7 +278,8 @@ void Cell::generate(int worldID, int seed, int algorithm)
                         if (value > 254) value = 254;
                         if (value < 142) value = 142;
                     }
-
+                    //TEMP DELETE ME!
+                    //value = 150;
                     if (value > 185) //Mountains are on multiple layers
                     {
                         //Ground and onground are solid black
@@ -265,6 +309,7 @@ void Cell::generate(int worldID, int seed, int algorithm)
           //  std::cout << algorithm << "is not a valid algorithm (Cell.generate())\n";
            // break;
     }
+    calculateDifficulty();
 }
 //Returns the tile at the x and y and layer
 tile* Cell::getTileAt(int tileX, int tileY,  int layer)
@@ -281,6 +326,11 @@ unsigned int Cell::pointToTileValue(float value, bool isX)
 {
     if (isX) return value / TILE_WIDTH;
     return value / TILE_HEIGHT;
+}
+
+float Cell::getDifficulty()
+{
+    return (unwalkablePercentage + onGroundPercentage) / 2;
 }
 //Export a .maplayer (private and local b/c nothing else needs this)
 bool exportAsLayer(const std::string& filename, std::vector<tile>* map, unsigned int layerIndex)

@@ -24,6 +24,8 @@
 
 #include "utilities/debugText.hpp"
 
+#include "world/path.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -141,6 +143,39 @@ int main()
     dynamicMasterMap->setViewSize(win.getHeight() / TILE_HEIGHT, win.getWidth() / TILE_WIDTH);
     dynamicMasterMap->setImage(&tileSet);
     World newWorld(&win, &dynamicMap, worldToLoad, &testDir);
+
+    Path testPath;
+    Coord start;
+    start.setPosition(0, 0, 1024, 2047);
+    Coord end;
+    end.setPosition(23, -10, 1666, 1666);
+    //end.setPosition(0, 1, 512, 512);
+    testPath.init(&newWorld, start, end);
+    testPath.calculateCellPath();
+    std::cout << testPath.getStatus() << "\n";
+    testPath.calculateTilePath();
+    std::cout << testPath.getStatus() << "\n";
+    //Coord followResult = testPath.advance(start);
+    //followResult.print();
+    Coord nextPos = start;
+    /*while(testPath.getStatus() != -1 && testPath.getStatus() != 2)
+    {
+        int tileX = nextPos.getCellOffsetX() / TILE_WIDTH;
+        int tileY = nextPos.getCellOffsetY() / TILE_HEIGHT;
+        Cell* currentCell = newWorld.getCell(nextPos.getCell());
+        if (currentCell)
+        {
+            tile* currentTile = currentCell->getTileAt(tileX, tileY, 2);
+            currentTile->x = 153;
+            currentTile->y = 0;
+        }
+        nextPos = testPath.advance(nextPos);
+        if (testPath.getStatus() == 0) testPath.calculateTilePath();
+    }*/
+    //testPath.calculateTilePath();
+    //testPath.calculate(); //Macro
+    //testPath.calculate(); //Micro
+    //return 1;
     /*CellIndex index;
     index.x = 0;
     index.y = 0;
@@ -180,6 +215,7 @@ int main()
     //testAgent->worldPosition.setPosition(agentCell, 100, 100);
     Coord windowPosition;
     windowPosition.setPosition(agentCell, 0, 0);
+    //windowPosition.setPosition(23, -10, 0, 0);
     float defaultViewSpeed = 400;
     float viewSpeed = defaultViewSpeed;
     profiler prof;
@@ -201,6 +237,7 @@ int main()
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
     originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
+    originObjMan->getNewInitializedObject(1, 3, 512, 512, 0); //Path test object
     //Agent object
     Agent* pooledAgent = testSpecies.createAgent(0);
     if (!pooledAgent) return -1;
@@ -388,6 +425,7 @@ int main()
         //globalTime.addSeconds(avgFrameTime);
         globalTime.addSeconds(0.016);
         DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
+        DebugText::addEntry("Window Cell Position: ", windowPosition.getCell().x, windowPosition.getCell().y);
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;

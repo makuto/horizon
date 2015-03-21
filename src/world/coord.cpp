@@ -15,6 +15,13 @@ const int TILE_MANHATTAN_RADIUS = 1000;
 const int CELL_WIDTH_PIXELS = CELL_WIDTH * TILE_WIDTH;
 const int CELL_HEIGHT_PIXELS = CELL_HEIGHT * TILE_HEIGHT;
 
+bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& second) const
+{
+    if (first.x > second.x) return true;
+    if (first.x < second.x) return false;
+    return first.y > second.y;
+}
+
 float Coord::getCellOffsetX()
 {
     return x;
@@ -109,6 +116,13 @@ void Coord::addVector(float dX, float dY)
 void Coord::setPosition(CellIndex& newCell, float newX, float newY)
 {
     cell = newCell;
+    x = newX;
+    y = newY;
+}
+void Coord::setPosition(int newCellX, int newCellY, float newX, float newY)
+{
+    cell.x = newCellX;
+    cell.y = newCellY;
     x = newX;
     y = newY;
 }

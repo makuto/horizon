@@ -23,6 +23,10 @@ void DebugText::addEntry(const char* key, unsigned char value)
 {
     ss << key << value << "\n";
 }
+void DebugText::addEntry(const char* key, float x, float y)
+{
+    ss << key << x << " , " << y << "\n";
+}
 void DebugText::clear()
 {
     ss.str(std::string());

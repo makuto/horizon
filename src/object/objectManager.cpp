@@ -638,12 +638,15 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
         }
     }
     //Debug render quadtree
-    //indexQuadTree->render(win, -viewX, -viewY);
+    indexQuadTree->render(win, -viewX, -viewY);
 }
 bool ObjectManager::updateObjects(Time* globalTime)
 {
     bool hasObject = false;
     ObjectProcessor* processor = NULL;
+    //TODO: It might actually be much faster to simply do a quadtree query
+    //so that only active objects will be updated (skip over all pool objects
+    //that are not initialized)
     for (std::map<int, ObjectPool>::iterator it = objectPools.begin();
     it != objectPools.end(); ++it)
     {
@@ -670,5 +673,9 @@ bool ObjectManager::updateObjects(Time* globalTime)
         }
     }
     return hasObject;
+}
+World* ObjectManager::getWorld()
+{
+    return world;
 }
 #endif

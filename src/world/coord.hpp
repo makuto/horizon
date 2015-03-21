@@ -18,6 +18,12 @@ struct CellIndex
     int x;
     int y;
 };
+//Used to be able to use CellIndex as a key in a std::map. See 
+//http://stackoverflow.com/questions/6973406/c-stl-map-container-with-class-key-and-class-value
+struct CellIndexComparer
+{
+    bool operator()(const CellIndex& first, const CellIndex& second) const;
+};
 //TODO: fix small hitch at cell borders
 class Coord
 {
@@ -43,5 +49,6 @@ class Coord
         //overrun will be applied to CellIndex automatically
         void addVector(float dX, float dY);
         void setPosition(CellIndex& newCell, float newX, float newY);
+        void setPosition(int newCellX, int newCellY, float newX, float newY);
 };
 #endif

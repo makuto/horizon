@@ -34,8 +34,16 @@ class World
         //newMasterMap should be set up correctly already
         World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
         ~World();
-        //Returns NULL if cell is not in map
+        //getCell will attempt to find the cell in the pool. If it is not
+        //in the pool, it will try to load the cell. If it doesn't exist,
+        //it will try to generate the cell procedurally. The only time
+        //NULL will be returned is if the pool is full.
         Cell* getCell(CellIndex cell);
+        //Returns NULL if the cell is not in the pool. Differs from
+        //getCell because getCell will attempt to load or generate the
+        //cell, while getCellIfExists simply returns NULL if it isn't
+        //already in the pool
+        Cell* getCellIfExists(CellIndex cell);
         //Returns an array of pointers to all unique cells the range contains
         //[UPDATE: Now using a cached array with size MAX_INTERSECTING_CELLS] 
         //There is no reliable ordering, so use indices if that is needed
@@ -50,6 +58,10 @@ class World
         //Ex worlds/world1/cells/1-1/1-1.map
         //Returns NULL if the cell cannot be loaded
         Cell* loadCell(CellIndex cellToLoad);
+
+        //Samples tile simplex noise values to estimate the pathfinding difficulty of a cell
+        //Returns a float between 0 and 1 where 1 is the highest difficulty.
+        float estimateCellDifficulty(CellIndex& cellToEstimate);
         
         //Displays the map
         void render(Coord& viewPosition, Time* globalTime);

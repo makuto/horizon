@@ -109,5 +109,7 @@ class ObjectManager
         //Updates all objects
         //Returns false if there are no active objects
         bool updateObjects(Time* globalTime);
+        //TODO: TEMPORARY! Delete me!
+        World* getWorld();
 };
 #endif

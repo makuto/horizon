@@ -6,7 +6,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include <vector>
+#include <list>
 #include <stdlib.h>     /* system, NULL, EXIT_FAILURE */
 #include <base2.0/collision/collision.hpp>
 #include <iostream>
@@ -48,7 +48,7 @@ class QuadTree
         aabb bounds;
 
         int maxCapacity;
-        std::vector<QuadPoint<T> > data;
+        std::list<QuadPoint<T> > data;
         
         QuadTree(unsigned int newMaxCapacity, float newX, float newY, float newWidth, float newHeight, unsigned int newDepth)
         {
@@ -267,7 +267,7 @@ class QuadTree
             if(!isPointInRange(x, y, bounds)) return false;
             
             //Search through points for the data
-            for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!= data.end(); ++it)
+            for (typename std::list<QuadPoint<T> >::iterator it = data.begin(); it!= data.end(); ++it)
             {
                 //Found the data point; erase it (inefficient only in large vectors)
                 //TODO: Replace vector with list or something?
@@ -311,7 +311,7 @@ class QuadTree
             }
             
             //Add points in this node to results if contained in range
-            for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
+            for (typename std::list<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
             {
                 //std::cout << "has point\n";
                 if (isPointInRange((*it).x, (*it).y, range))
@@ -355,7 +355,7 @@ class QuadTree
             }
             
             //Add points in this node to results if contained in range
-            for (typename std::vector<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
+            for (typename std::list<QuadPoint<T> >::iterator it = data.begin(); it!=data.end(); ++it)
             {
                 if (isPointInRange((*it).x, (*it).y, range))
                 {

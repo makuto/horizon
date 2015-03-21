@@ -13,7 +13,7 @@
  * For example, a simple Hunger NeedProcessor would subtract 10 from the need
  * every 30 seconds in updateNeed(), then when the need reaches its detriment
  * threshold, idk (TODO)
- * 
+ *
  * This class is designed to be overloaded to do any custom need logic
  * */
 class NeedProcessor
