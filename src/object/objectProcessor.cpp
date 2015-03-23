@@ -214,7 +214,7 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     testSpr.setPosition(pos.getCellOffsetX() - viewX, pos.getCellOffsetY() - viewY);
     testSpr.setRotation(obj->rotation);
     win->draw(&testSpr);
-    //Debug bounds render
+    /*//Debug bounds render
     sf::RenderWindow* sfWin = win->getBase();
     sf::RectangleShape rectangle;
     rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
@@ -258,7 +258,7 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     };
 
     win->getBase()->draw(line, 2, sf::Lines);
-    return;
+    return;*/
 }
 /*//Agent uses/activates object
 int ObjectProcessor::activateObject(Object* obj, Agent* agent)

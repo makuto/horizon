@@ -67,8 +67,6 @@ class Path : public micropather::Graph
         bool isMacro;   //Keep track of whether we are processing macro or not
         bool isGoalInCurrentCell;   //If we are in the the same cell as goal,
                                     //This will let us do that
-        int cellBorderGoalX;
-        int cellBorderGoalY;
         bool isTransferringCells;
 
         float estimatedDifficulty;
