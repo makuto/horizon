@@ -258,14 +258,14 @@ int main()
     }
 
     ///////////////////
-    sprite tileSheet;
+    /*sprite tileSheet;
     if (!tileSheet.load("src/utilities/terrainTest.png")) return -1;
     multilayerMap map;
     if (!map.load("src/utilities/terrainTest.map", 1)) return -1;
     map.setImage(&tileSheet);
     map.getMasterMap()->setViewSize(256, 256);
     std::vector<tile*>* layer = map.getMasterMap()->getMap();
-    if (layer==NULL) return -1;
+    if (layer==NULL) return -1;*/
     ///////////////////
 
     //Used for debug text
@@ -307,7 +307,13 @@ int main()
     //win.getBase()->setFramerateLimit(60);
     bool isTapped = false;
     bool isPressed = false;
-    
+
+    pixels miniMap(256, 256);
+    sprite* miniMapSpr = miniMap.getSprite();
+    miniMapSpr->setPosition(win.getWidth() - 256, win.getHeight() - 256);
+    timer miniMapTimer;
+    miniMapTimer.start();
+    const float MINIMAP_UPDATE_RATE = 0.5;
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
@@ -360,46 +366,68 @@ int main()
         ///////////////////////MINIMAP
         if (in.isPressed(inputCode::Space))
         {
-            for (int i = 0; i < 256; ++i)
+            if (miniMapTimer.getTime() >= MINIMAP_UPDATE_RATE)
             {
-                for (int n = 0; n < 256; ++n)
+                miniMapTimer.start();
+                const int quality = 8; //Determines how many tiles to skip
+                for (int i = 0; i < 256 - quality; i += quality)
                 {
-                    tile* currentTile = (*layer)[(i * 1024) + n];
-                    //currentTile->x = n % 255;
-                    float xdiv = 2;
-                    float ydiv = 2;
-                    float noiseX = n + ((windowPosition.getTrueX() - 4096) / 32);
-                    float noiseY = i + ((windowPosition.getTrueY() - 4096) / 32);
-                    noiseX /= xdiv;
-                    noiseY /= ydiv;
-                    float x = noiseX;
-                    float y = noiseY;
-                    float scale = 0.001;
-                    float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, 0);
-                    //Winter bands
-                    if (value > 142)
+                    for (int n = 0; n < 256 - quality; n += quality)
                     {
-                        //value += 100 / (((int)(y+1) % 100) + 1);
-                        //int yInt = (int) y;
-                        float factor = fabs(sin(y * scale));
-                        const float SNOW_AMOUNT = 1.9;
-                        factor -= SNOW_AMOUNT - factor; //1.3
-                        if (factor < 0) factor = 0;
-                        const float SNOW_FALLOFF = 1000;
-                        value += SNOW_FALLOFF * factor; //Winter climates
-                        if (value > 254) value = 254;
-                        if (value < 142) value = 142;
+                        //tile* currentTile = (*layer)[(i * 1024) + n];
+                        //currentTile->x = n % 255;
+                        float xdiv = 2;
+                        float ydiv = 2;
+                        float noiseX = n + ((windowPosition.getTrueX() - 4096) / 32);
+                        float noiseY = i + ((windowPosition.getTrueY() - 4096) / 32);
+                        noiseX /= xdiv;
+                        noiseY /= ydiv;
+                        float x = noiseX;
+                        float y = noiseY;
+                        float scale = 0.001;
+                        float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, 0);
+                        //Winter bands
+                        if (value > 142)
+                        {
+                            //value += 100 / (((int)(y+1) % 100) + 1);
+                            //int yInt = (int) y;
+                            float factor = fabs(sin(y * scale));
+                            const float SNOW_AMOUNT = 1.9;
+                            factor -= SNOW_AMOUNT - factor; //1.3
+                            if (factor < 0) factor = 0;
+                            const float SNOW_FALLOFF = 1000;
+                            value += SNOW_FALLOFF * factor; //Winter climates
+                            if (value > 254) value = 254;
+                            if (value < 142) value = 142;
+                        }
+                        //Grid
+                        //if (i % 64 == 0) value = 0;
+                        //if (n % 64 == 0) value = 0;
+                        //currentTile->x = value;
+                        unsigned char alpha = 230;
+                        if (value > 185) value = 25 + (value - 185);
+                        else if (value > 142) value = 50 + (value - 142);
+                        else
+                        {
+                            //value = 0;
+                            alpha = 100;
+                        }
+                        for (int y = 0; y < quality; ++y)
+                        {
+                            for (int x = 0; x < quality; ++x)
+                            {
+                                if (x + n < 240 && y + i < 240 && x + n > 8 && y + i > 8) miniMap.setPixel(n + x, i + y, 255, value, value, alpha);
+                                else miniMap.setPixel(n + x, i + y, 255, 255, value, 230);
+                            }
+                        }
                     }
-                    
-                    if (i % 64 == 0) value = 0;
-                    if (n % 64 == 0) value = 0;
-                    currentTile->x = value;
                 }
             }
-            map.render(0, 0, 0, 0, &win);
+            miniMap.update();
+            //map.render(0, 0, 0, 0, &win);
+            win.draw(&miniMap);
         }
         ///////////////////////
-        win.draw(&testSprite);
         frameTime.start();
     
         ////Day night
