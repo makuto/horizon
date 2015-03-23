@@ -57,7 +57,7 @@ class Path : public micropather::Graph
         int status; //-1 = failed; 0 = standby (calculating), 1 = ready,
                     //2 = goal reached, 3 = Empty
                     
-        micropather::MicroPather pather;
+        micropather::MicroPather* pather;
         std::vector<void*> cellPath;
         std::vector<void*> currentTilePath;
         //The next cell the object is moving into (not necessarily the goal point's cell)
@@ -70,6 +70,8 @@ class Path : public micropather::Graph
         int cellBorderGoalX;
         int cellBorderGoalY;
         bool isTransferringCells;
+
+        float estimatedDifficulty;
 
         //Helper functions for converting coordinate pairs to/from states
         void stateToPosition(void* state, unsigned int& x, unsigned int& y);
@@ -92,6 +94,9 @@ class Path : public micropather::Graph
         
         //Returns the status of the path
         int getStatus();
+        //Returns the expected difficulty (at the cell level); This is scaled
+        //by CELL_DIFFICULTY_SCALE by MicroPather
+        float getEstimatedDifficulty();
 
         //Functions for micropather
         virtual float LeastCostEstimate(void* startNode, void* endNode);

@@ -13,9 +13,10 @@ ObjectProcessor::ObjectProcessor()
 ObjectProcessor::~ObjectProcessor()
 {
 }
-void ObjectProcessor::setup(inputManager* newIn)
+void ObjectProcessor::setup(inputManager* newIn, PathManager* newPathManager)
 {
     in = newIn;
+    pathManager = newPathManager;
 }
 int ObjectProcessor::getType()
 {
@@ -49,11 +50,13 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     {
         Coord goal;
         goal.setPosition(1, 1, 1024, 1024);
-        mainPath.init(manager->getWorld(), position, goal);
+        newObj->state = pathManager->requestNewPath(position, goal);
+        std::cout << "State: " << newObj->state << "\n";
+        /*mainPath.init(manager->getWorld(), position, goal);
         mainPath.calculateCellPath();
         std::cout << "OBJ: Cell: " << mainPath.getStatus() << "\n";
         mainPath.calculateTilePath();
-        std::cout << "OBJ: Tile: " << mainPath.getStatus() << "\n";
+        std::cout << "OBJ: Tile: " << mainPath.getStatus() << "\n";*/
     }
     return true;
 }
@@ -125,7 +128,47 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     }
     else if (obj->subType == 3) //Follow path test
     {
-        switch(mainPath.getStatus())
+        Coord target;
+        Coord objPos = obj->getPosition();
+        switch(pathManager->advanceAlongPath((unsigned int)obj->state, objPos, target))
+        {
+            case 0: //Waiting for calculations
+                std::cout << "Waiting for calculation\n";
+                break;
+            case 1: //Ready
+                CellIndex relCell;
+                relCell = obj->getPosition().getCell();
+                float axDiff;
+                axDiff = obj->getPosition().getRelativeCellX(relCell) - target.getRelativeCellX(relCell);
+                float ayDiff;
+                ayDiff = obj->getPosition().getRelativeCellY(relCell) - target.getRelativeCellY(relCell);
+                coordinate vec;
+                vec.x = axDiff;
+                vec.y = ayDiff;
+                normalize(&vec);
+                float speed;
+                speed = 300;
+                float vecX;
+                vecX = -vec.x * delta.getExactSeconds() * speed;
+                float vecY;
+                vecY = -vec.y * delta.getExactSeconds() * speed;
+                globalVecX = vecX;
+                globalVecY = vecY;
+                obj->addVector(vecX, vecY, *manager);
+                break;
+            case -1: //Path failed
+                std::cout << "Path failed to calculate!\n";
+                break;
+            case -2: //Path doesn't exist
+                std::cout << "Path doesn't exist! Creating new path\n";
+                Coord goal;
+                goal.setPosition(rand() % 10, rand() % 10, rand() % 2048, rand() % 2048);
+                obj->state = pathManager->requestNewPath(objPos, goal);
+                break;
+            default: //Unknown return
+                break;
+        }
+        /*switch(mainPath.getStatus())
         {
             case 0:
                 mainPath.calculateTilePath();
@@ -159,7 +202,7 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
                 break;
             default:
                 break;
-        }
+        }*/
     }
     obj->lastUpdate = *globalTime;
     return 1;
@@ -178,7 +221,7 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     rectangle.setFillColor(sf::Color::Transparent);
     if (obj->state > 500) rectangle.setOutlineColor(sf::Color::Red);
     else rectangle.setOutlineColor(sf::Color::Green);
-    obj->state--;
+    //obj->state--;
     rectangle.setOutlineThickness(2);
     rectangle.setPosition(obj->getPosition().getCellOffsetX() - viewX + obj->boundOffsetX, obj->getPosition().getCellOffsetY() - viewY + obj->boundOffsetY);
     sfWin->draw(rectangle);
@@ -231,6 +274,12 @@ int ObjectProcessor::touchObject(Object* collider, Coord& collideDisplacement, A
 //Object collides with tile
 int ObjectProcessor::onCollideTile(Object* collider, Coord& collideDisplacement, tile* touchedTile)
 {
+    if (collider->subType == 3)
+    {
+        touchedTile->x = 255;
+        touchedTile->y = 255;
+        return 0;
+    }
     return 1;
 }
 //Object collides with object

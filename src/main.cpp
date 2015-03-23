@@ -122,15 +122,6 @@ int main()
     processMap.addProcess("useItem", new Process);
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
-    ObjectProcessorDir testDir;
-    ObjectProcessor* test2 = new ObjectProcessor();
-    test2->setup(&in);
-    test2->initialize(parser.getFile("pickupObj"));
-    AgentProcessor* agentObj = new AgentProcessor(&testSpecies, &processDir);
-    agentObj->initialize(parser.getFile("agentObj"));
-    testDir.addObjProcessor(test2);
-    testDir.addObjProcessor(agentObj);
-    
     //multilayerMap defaultMap;
     //if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
     sprite tileSet;
@@ -142,7 +133,18 @@ int main()
     dynamicMasterMap->setTileSize(TILE_WIDTH, TILE_HEIGHT);
     dynamicMasterMap->setViewSize(win.getHeight() / TILE_HEIGHT, win.getWidth() / TILE_WIDTH);
     dynamicMasterMap->setImage(&tileSet);
+    ObjectProcessorDir testDir;
     World newWorld(&win, &dynamicMap, worldToLoad, &testDir);
+
+    PathManager pathManager(&newWorld);
+    
+    ObjectProcessor* test2 = new ObjectProcessor();
+    test2->setup(&in, &pathManager);
+    test2->initialize(parser.getFile("pickupObj"));
+    AgentProcessor* agentObj = new AgentProcessor(&testSpecies, &processDir);
+    agentObj->initialize(parser.getFile("agentObj"));
+    testDir.addObjProcessor(test2);
+    testDir.addObjProcessor(agentObj);
 
     Path testPath;
     Coord start;
@@ -437,6 +439,7 @@ int main()
             //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
+            pathManager.update(0.01);
             newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
             /*if (isTapped)
             {

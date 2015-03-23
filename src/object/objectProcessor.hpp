@@ -5,7 +5,7 @@
 #include <base2.0/input/input.hpp>
 #include <base2.0/tileMap/tileMap.hpp>
 #include "object.hpp"
-#include "../world/path.hpp"
+#include "../world/pathManager.hpp"
 //#include "objectManager.hpp"
 //#include "../agent/agent.hpp"
 /* --ObjectProcessor--
@@ -23,11 +23,11 @@ class ObjectProcessor
         inputManager* in;
         float globalVecX;
         float globalVecY;
-        Path mainPath;
+        PathManager* pathManager;
     public:
         ObjectProcessor();
         //Make your own setup functions for custom data
-        void setup(inputManager* newIn);
+        void setup(inputManager* newIn, PathManager* newPathManager);
         virtual ~ObjectProcessor();
         
         int getType();

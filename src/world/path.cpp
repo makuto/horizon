@@ -30,15 +30,17 @@ const int PATH_CELL_TILE_INDENT = 4;
 const float CELL_DIFFICULTY_SCALE = 100;
 
 
-Path::Path():pather(this, PATHER_STATE_CACHE_SIZE, PATHER_ADJACENT_CACHE)
+Path::Path()
 {
+    pather = new micropather::MicroPather(this, PATHER_STATE_CACHE_SIZE, PATHER_ADJACENT_CACHE);
     world = NULL;
     isMacro = true;
     isGoalInCurrentCell = false;
     status = 3; //Empty
 }
-Path::Path(World* newWorld):pather(this, PATHER_STATE_CACHE_SIZE, PATHER_ADJACENT_CACHE)
+Path::Path(World* newWorld)
 {
+    pather = new micropather::MicroPather(this, PATHER_STATE_CACHE_SIZE, PATHER_ADJACENT_CACHE);
     world = newWorld;
     isMacro = true;
     isGoalInCurrentCell = false;
@@ -46,11 +48,11 @@ Path::Path(World* newWorld):pather(this, PATHER_STATE_CACHE_SIZE, PATHER_ADJACEN
 }
 Path::~Path()
 {
-    
+    delete pather;
 }
 void Path::init(World* newWorld, Coord newStartPosition, Coord newEndPosition)
 {
-    pather.Reset();
+    pather->Reset();
     world = newWorld;
     startPosition = newStartPosition;
     endPosition = newEndPosition;
@@ -91,10 +93,16 @@ int Path::getStatus()
 {
     return status;
 }
+//Returns the expected difficulty (at the cell level); This is scaled
+//by CELL_DIFFICULTY_SCALE
+float Path::getEstimatedDifficulty()
+{
+    return estimatedDifficulty;
+}
 void Path::calculateCellPath()
 {
     if (!isMacro) return;
-    pather.Reset();
+    pather->Reset();
     isMacro = true;
     CellIndex startCellIndex = startPosition.getCell();
     CellIndex endCellIndex = endPosition.getCell();
@@ -105,13 +113,15 @@ void Path::calculateCellPath()
 
     //Find the most optimal macro path
     float totalCost = 0;
-    int result = pather.Solve(startState, endState, &cellPath, &totalCost);
+    int result = pather->Solve(startState, endState, &cellPath, &totalCost);
     if (result==MICROPATHER_FAILED)
     {
         std::cout << "Micropather failed\n";
         status = -1;
         return;
     }
+    estimatedDifficulty = totalCost;
+    
     std::cout << "Total cost: " << totalCost << "\n";
     if (cellPath.size()==0) //No cells to transfer; go straight to goal
     {
@@ -164,11 +174,12 @@ void Path::calculateCellPath()
         
         currentPosition.setPosition(currentGoalCell.x, currentGoalCell.y, lastTileX, lastTileY);
     }*/
+    isMacro = false;
     status = 0;
 }
 void Path::calculateTilePath()
 {
-    pather.Reset();
+    pather->Reset();
     isMacro = false;
     CellIndex currentCellIndex = currentPosition.getCell();
     CellIndex endCellIndex = currentGoalCell;
@@ -249,7 +260,7 @@ void Path::calculateTilePath()
     //Find the most optimal micro path
     float totalCost = 0;
     std::cout << "At pather\n";
-    int result = pather.Solve(startTileState, endTileState, &currentTilePath, &totalCost);
+    int result = pather->Solve(startTileState, endTileState, &currentTilePath, &totalCost);
     if (result==MICROPATHER_FAILED)
     {
         std::cout << "Micropather failed\n";
@@ -265,124 +276,14 @@ void Path::calculateTilePath()
         std::cout << "ERROR: calculateInGoal(): Cell " << currentIndex.x << " , " << currentIndex.y << " cannot be retrieved (or goal cell)\n";
         return;
     }
-    /*int numLoops = 0;
-    for (std::vector<void*>::iterator it = currentTilePath.begin(); it != currentTilePath.end(); ++it)
-    {
-        numLoops++;
-        //PrintStateInfo((*it));
-        unsigned int x = 0;
-        unsigned int y = 0;
-        stateToPosition((*it), x, y);
-        Coord adjacentPosition;
-        adjacentPosition.setPosition((x / CELL_WIDTH) + cellCoordOrigin.x,
-            (y / CELL_HEIGHT) + cellCoordOrigin.y, x % CELL_WIDTH, y % CELL_HEIGHT);
-        //adjacentPosition.print();
-        CellIndex trueIndex = adjacentPosition.getCell();
-        tile* currentTile = NULL;
-        if (trueIndex.x == currentIndex.x && trueIndex.y == currentIndex.y)
-        {
-            currentTile = currentCell->getTileAt(adjacentPosition.getCellOffsetX(), adjacentPosition.getCellOffsetY(), 2);
-        }
-        else
-        {
-            currentTile = currentGoalCellPtr->getTileAt(adjacentPosition.getCellOffsetX(), adjacentPosition.getCellOffsetY(), 2);
-        }
-        if (currentTile)
-        {
-            currentTile->x = numLoops * 2;
-            currentTile->y = 0;
-        }
-    }*/
     status = 1;
 }
 void Path::calculate()
 {
-    pather.Reset();
-    if (isMacro)
+    if (status == 0)
     {
-        CellIndex startCell = startPosition.getCell();
-        CellIndex endCell = startPosition.getCell();
-        if (startCell.x == endCell.x && startCell.y == endCell.y)
-        {
-            isMacro = false; //Goal is in current cell; done calculating macro
-            isGoalInCurrentCell = true;
-            status = 0;
-            cellCoordOrigin.x = startCell.x;
-            cellCoordOrigin.y = startCell.y;
-            return;
-        }
-        //Get the range for the relative coordinates (all state positions must be positive)
-        int minX = 0;
-        int minY = 0;
-        //Find the smallest value for relative range origin
-        if (startCell.x < endCell.x) minX = startCell.x;
-        else minX = endCell.x;
-        if (startCell.y < endCell.y) minY = startCell.y;
-        else minY = endCell.y;
-        minX -= MACRO_CELL_ORIGIN_ALLOWANCE;
-        minY -= MACRO_CELL_ORIGIN_ALLOWANCE;
-        //Set the origin to the new range
-        cellCoordOrigin.x = minX;
-        cellCoordOrigin.y = minY;
-        //Get the relative positions of the start and end cells
-        unsigned int relativeX = startCell.x - cellCoordOrigin.x;
-        unsigned int relativeY = startCell.y - cellCoordOrigin.y;
-        void* startCellState = positionToState(relativeX, relativeY);
-        relativeX = endCell.x - cellCoordOrigin.x;
-        relativeY = endCell.y - cellCoordOrigin.y;
-        void* endCellState = positionToState(relativeX, relativeY);
-        //Find the most optimal macro path
-        float totalCost = 0;
-        int result = pather.Solve(startCellState, endCellState, &cellPath, &totalCost);
-        if (result==MICROPATHER_FAILED)
-        {
-            status = -1;
-            return;
-        }
-        isMacro = false;
-        status = 0; //Still need to calculate micro
-        //The next cell to target
-        currentGoalCellIndex = 1;
-        void* nextGoalState = cellPath[currentGoalCellIndex];
-        unsigned int x;
-        unsigned int y;
-        stateToPosition(nextGoalState, x, y);
-        currentGoalCell.x = x + cellCoordOrigin.x;
-        currentGoalCell.y = y + cellCoordOrigin.y;
-    }
-    else //Micro
-    {
-        if (isGoalInCurrentCell) //Go straight to the goal
-        {
-            float endX = endPosition.getCellOffsetX();
-            float endY = endPosition.getCellOffsetY();
-            float currentX = currentPosition.getCellOffsetX();
-            float currentY = currentPosition.getCellOffsetY();
-            unsigned int goalTileX = endX / TILE_WIDTH;
-            unsigned int goalTileY = endY / TILE_HEIGHT;
-            unsigned int currentTileX = currentX / TILE_WIDTH;
-            unsigned int currentTileY = currentY / TILE_HEIGHT;
-            void* endState = positionToState(goalTileX, goalTileY);
-            void* currentState = positionToState(currentTileX, currentTileY);
-            //Calculate the path
-            float totalCost = 0;
-            int result = pather.Solve(currentState, endState, &currentTilePath, &totalCost);
-            if (result==MICROPATHER_FAILED)
-            {
-                status = -1;
-                return;
-            }
-            for (std::vector<void*>::iterator it = cellPath.begin(); it != cellPath.end(); ++it)
-            {
-            }
-            status = 1;
-            
-        }
-        else //Go to the next cell
-        {
-            
-        }
-        status = 1;
+        if (isMacro) calculateCellPath();
+        else calculateTilePath();
     }
 }
 Coord Path::advance(Coord& currentAdvPosition)

@@ -100,10 +100,68 @@ int main()
                     //float div = changingValue;
                     float x = (n / xdiv) + offsetX;
                     float y = (i / ydiv) + offsetY;
-                    //scale  = scaled_octave_noise_3d(8, 0.55, 0.001, 0, 5, x, y, seed);
-                    float value = 0;
-                    if (n % 40<=30 || n < (width / 2)) value = scaled_octave_noise_3d(8, 0.55, scale, 0, 254, x, y, seed);
-                    else value = scaled_octave_noise_3d(4, 0.55, scale, 0, 254, x, y, seed);
+                    float newScale  = scaled_octave_noise_3d(8, 0.55, 0.01, 0, 5, x, y, seed);
+                    //float borderSubtract = (1 - (newScale - truncf(newScale))) * 20;
+                    //Interpolate current scale and new scale values
+
+                    float value;
+                    float transitionVal = newScale - truncf(newScale);
+                    float LOW_TRANSITION_START = 0.1;
+                    float HIGH_TRANSITION_START = 1 - LOW_TRANSITION_START;
+                    if (transitionVal < LOW_TRANSITION_START) //Transition down a scale
+                    {
+                        //Get values for both scales
+                        float scale1 = truncf(newScale);
+                        float largeValue;
+                        if (n % 40<=30 || n < (width / 2)) largeValue = scaled_octave_noise_3d(8, 0.55, scale1, 0, 254, x, y, seed);
+                        else largeValue = scaled_octave_noise_3d(4, 0.55, scale1, 0, 254, x, y, seed);
+                        float scale2 = truncf(newScale) - 1;
+                        if (scale2 < 0) scale2 = 0;
+                        float smallValue;
+                        if (n % 40<=30 || n < (width / 2)) smallValue = scaled_octave_noise_3d(8, 0.55, scale2, 0, 254, x, y, seed);
+                        else smallValue = scaled_octave_noise_3d(4, 0.55, scale2, 0, 254, x, y, seed);
+                        //Interpolate values
+                        //Linear interpolation: x=(1-t)a + tb where A & B are points
+                        float interp = transitionVal * (1 / LOW_TRANSITION_START); //Make transition 0 - 1 (for eq)
+                        //Only go halfway (the up scale will get the rest)
+                        interp /= 2;
+                        interp += 0.5;
+                        //largeValue = 144;
+                        //smallValue = 0;
+                        value = ((1-interp) * smallValue) + (interp * largeValue);
+                        //value = 250;
+                        
+                    }
+                    else if (transitionVal > HIGH_TRANSITION_START) //Transition up a scale
+                    {
+                        //Get values for both scales
+                        float scale1 = truncf(newScale) + 1;
+                        float largeValue;
+                        if (n % 40<=30 || n < (width / 2)) largeValue = scaled_octave_noise_3d(8, 0.55, scale1, 0, 254, x, y, seed);
+                        else largeValue = scaled_octave_noise_3d(4, 0.55, scale1, 0, 254, x, y, seed);
+                        float scale2 = truncf(newScale);
+                        if (scale2 < 0) scale2 = 0;
+                        float smallValue;
+                        if (n % 40<=30 || n < (width / 2)) smallValue = scaled_octave_noise_3d(8, 0.55, scale2, 0, 254, x, y, seed);
+                        else smallValue = scaled_octave_noise_3d(4, 0.55, scale2, 0, 254, x, y, seed);
+                        //Interpolate values
+                        //Linear interpolation: x=(1-t)a + tb where A & B are points
+                        float interp = (1 - transitionVal) * (1 / LOW_TRANSITION_START); //Make transition 0 - 1 (for eq)
+                        //Only go halfway (the up scale will get the rest)
+                        interp /= 2;
+                        interp += 0.5;
+                        //largeValue = 0;
+                        //smallValue = 144;
+                        value = ((1-interp) * largeValue) + (interp * smallValue);
+                        //value = 0;
+                    }
+                    else //No transition (normal)
+                    {
+                        float scale1 = truncf(newScale);
+                        if (n % 40<=30 || n < (width / 2)) value = scaled_octave_noise_3d(8, 0.55, scale1, 0, 254, x, y, seed);
+                        else value = scaled_octave_noise_3d(4, 0.55, scale1, 0, 254, x, y, seed);
+                    }
+        
                     float lookupY = 0;
                     //Biomes
                     {
