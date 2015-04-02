@@ -4,10 +4,10 @@ EXECUTABLE_NAME= LOCAL_horizon
 OBJ_DIR= LOCAL_obj
 LINK= g++ -std=c++11 -Wall -o "$(EXECUTABLE_NAME)" 
 LINKLIBS= -lBox2D -lbase2.0 -lsfml-graphics -lsfml-window -lsfml-system
-horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/micropather.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/path.o $(OBJ_DIR)/pathManager.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
+horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/micropather.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/time.o $(OBJ_DIR)/item.o $(OBJ_DIR)/inventory.o $(OBJ_DIR)/itemProcessor.o $(OBJ_DIR)/itemManager.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/path.o $(OBJ_DIR)/pathManager.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/useItemProcess.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/hungerNeedProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
 	@echo -----------Linking horizon-------------------------
 	mv *.o $(OBJ_DIR)
-	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o micropather.o coord.o time.o object.o objectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o path.o pathManager.o needMath.o need.o process.o processMap.o agent.o needProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
+	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o micropather.o coord.o time.o item.o inventory.o itemProcessor.o itemManager.o object.o objectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o path.o pathManager.o needMath.o need.o process.o useItemProcess.o processMap.o agent.o needProcessor.o hungerNeedProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
 	#cppcheck --enable=all --std=c++11 --template=gcc -q -v src
 
@@ -32,6 +32,18 @@ $(OBJ_DIR)/coord.o: src/world/coord.hpp src/world/coord.cpp
 $(OBJ_DIR)/time.o: src/world/time.hpp src/world/time.cpp
 	$(FLAGS) src/world/time.hpp
 	$(FLAGS) src/world/time.cpp
+$(OBJ_DIR)/item.o: src/item/item.hpp src/item/item.cpp
+	$(FLAGS) src/item/item.hpp
+	$(FLAGS) src/item/item.cpp
+$(OBJ_DIR)/inventory.o: src/item/inventory.hpp src/item/inventory.cpp
+	$(FLAGS) src/item/inventory.hpp
+	$(FLAGS) src/item/inventory.cpp
+$(OBJ_DIR)/itemProcessor.o: src/item/itemProcessor.hpp src/item/itemProcessor.cpp
+	$(FLAGS) src/item/itemProcessor.hpp
+	$(FLAGS) src/item/itemProcessor.cpp
+$(OBJ_DIR)/itemManager.o: src/item/itemManager.hpp src/item/itemManager.cpp
+	$(FLAGS) src/item/itemManager.hpp
+	$(FLAGS) src/item/itemManager.cpp
 $(OBJ_DIR)/object.o: src/object/object.hpp src/object/object.cpp
 	$(FLAGS) src/object/object.hpp
 	$(FLAGS) src/object/object.cpp
@@ -68,6 +80,9 @@ $(OBJ_DIR)/need.o: src/agent/need.hpp src/agent/need.cpp
 $(OBJ_DIR)/process.o: src/agent/process.hpp src/agent/process.cpp
 	$(FLAGS) src/agent/process.hpp
 	$(FLAGS) src/agent/process.cpp
+$(OBJ_DIR)/useItemProcess.o: src/agent/processes/useItemProcess.hpp src/agent/processes/useItemProcess.cpp
+	$(FLAGS) src/agent/processes/useItemProcess.hpp
+	$(FLAGS) src/agent/processes/useItemProcess.cpp
 $(OBJ_DIR)/processMap.o: src/agent/processMap.hpp src/agent/processMap.cpp
 	$(FLAGS) src/agent/processMap.hpp
 	$(FLAGS) src/agent/processMap.cpp
@@ -77,6 +92,9 @@ $(OBJ_DIR)/agent.o: src/agent/agent.hpp src/agent/agent.cpp
 $(OBJ_DIR)/needProcessor.o: src/agent/needProcessor.hpp src/agent/needProcessor.cpp
 	$(FLAGS) src/agent/needProcessor.hpp
 	$(FLAGS) src/agent/needProcessor.cpp
+$(OBJ_DIR)/hungerNeedProcessor.o: src/agent/needProcessors/hungerNeedProcessor.hpp src/agent/needProcessors/hungerNeedProcessor.cpp
+	$(FLAGS) src/agent/needProcessors/hungerNeedProcessor.hpp
+	$(FLAGS) src/agent/needProcessors/hungerNeedProcessor.cpp
 $(OBJ_DIR)/processDirectory.o: src/agent/processDirectory.hpp src/agent/processDirectory.cpp
 	$(FLAGS) src/agent/processDirectory.hpp
 	$(FLAGS) src/agent/processDirectory.cpp

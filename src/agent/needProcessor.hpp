@@ -22,9 +22,10 @@ class NeedProcessor
         Need defaultNeed;
     public:
         int needID;
-
-        NeedProcessor(eptFile* spec);
+        NeedProcessor();
         virtual ~NeedProcessor();
+        //Use this function to set defaults for this need (you must call this!)
+        virtual bool initialize(eptFile* spec);
         //deltaTime should be the time since this need was last updated
         virtual int updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime);
         //Sets the passed need's fields to defaults (specified by defaultNeed)

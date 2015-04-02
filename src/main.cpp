@@ -26,6 +26,9 @@
 
 #include "world/path.hpp"
 
+#include "agent/needProcessors/hungerNeedProcessor.hpp"
+#include "agent/processes/useItemProcess.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -115,11 +118,17 @@ int main()
 
     //TODO: Convert to class?
     NeedProcessorDir needProcessorDir;
-    needProcessorDir[1] = new NeedProcessor(parser.getFile("1_spec"));
+    NeedProcessor* testNeedProcessor = new NeedProcessor;
+    testNeedProcessor->initialize(parser.getFile("1_spec"));
+    NeedProcessor* hungerNeedProcessor = new HungerNeedProcessor;
+    hungerNeedProcessor->initialize(parser.getFile("2_spec"));
+    needProcessorDir[1] = testNeedProcessor;
+    needProcessorDir[2] = hungerNeedProcessor;
     Species testSpecies(parser.getFile("testSpecies"), &needProcessorDir, 1);
 
     ProcessMap processMap;
-    processMap.addProcess("useItem", new Process);
+    processMap.addProcess("testProcess", new Process);
+    processMap.addProcess("useItem", new UseItemProcess);
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
     //multilayerMap defaultMap;

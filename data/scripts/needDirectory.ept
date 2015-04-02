@@ -1,11 +1,20 @@
 <needDirectory.1>
 //NeedDirectory contains a list of all needs, their ids, specs, and chains files
+//It is primarily used by ProcessDirectory to load chains
 
 //Group name isn't important
-1:
+//Test need
+Test:
     //Critical for finding spec and chain files
     //The actual needID is set in the spec
     id=1;
+    //Spec isn't required here
     spec=data/scripts/testNeed.ept;
     //Chains is named like so: <{id}_chains.{version}>
     chains=data/scripts/testChain.ept;
+
+//Hunger
+Hunger:
+    id=2;
+    spec=data/scripts/needs/hungerNeed.ept;
+    chains=data/scripts/chains/hungerChains.ept;

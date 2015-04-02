@@ -6,7 +6,7 @@ vars:
 vitalNeeds:
     //Name does not matter, value is needProcessor name (should be needID)
     //Need names come from needProcessor keys in needProcessorDir (should be needID)
-    need1=1;
+    hunger=2;
     //need2=1;
 nonvitalNeeds:
     need1=1;

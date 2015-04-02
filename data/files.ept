@@ -3,8 +3,11 @@
 scripts:
     needDirectory=data/scripts/needDirectory.ept;
     testNeed=data/scripts/testNeed.ept;
+    hungerNeed=data/scripts/needs/hungerNeed.ept;
     testSpecies=data/scripts/testSpecies.ept;
-    testChain=data/scripts/testChain.ept;
+    //Don't need chains files
+    //testChain=data/scripts/testChain.ept;
+    
     testObject=data/scripts/testObject.ept;
     testObjectAgent=data/scripts/testObjectAgent.ept;
 worldDefaults:

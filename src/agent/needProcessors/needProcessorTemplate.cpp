@@ -1,18 +1,19 @@
-#ifndef NEEDPROCESSOR_CPP
-#define NEEDPROCESSOR_CPP
+#ifndef $T_NEEDPROCESSOR_CPP
+#define $T_NEEDPROCESSOR_CPP
 #include <iostream>
-#include "needProcessor.hpp"
-#include "needMath.hpp"
+#include "CHANGEME.hpp"
+#include "../needMath.hpp"
 
-NeedProcessor::NeedProcessor()
+ 
+$tNeedProcessor::$tNeedProcessor()
 {
     
 }
-NeedProcessor::~NeedProcessor()
+$tNeedProcessor::~$tNeedProcessor()
 {
 }
 //Use this function to set defaults for this need (you must call this!)
-bool NeedProcessor::initialize(eptFile* spec)
+bool $tNeedProcessor::initialize(eptFile* spec)
 {
     eptGroup* defaultNeedVars = spec->getGroup("defaults");
     defaultNeed.currentValue = (unsigned char)attrToInt(defaultNeedVars->getAttribute("currentValue"));
@@ -25,17 +26,12 @@ bool NeedProcessor::initialize(eptFile* spec)
     defaultNeed.updateRate.setYears(attrToInt(defaultNeedVars->getAttribute("updateRateYears")));
     return true;
 }
-int NeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime)
+int $tNeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime)
 {
-    //std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
-    //currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
     currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 50);
-    //std::cout << "Delta time is " << deltaTime->getExactSeconds() << "\n";
-    //obj->addVector(0, 100, *objectManager); //TODO: Fix moveObject quadtree fail b/c
-    //testNeed.ept update rate is at 0's instead of 2 seconds at this speed
     return 1;
 }
-void NeedProcessor::initNeed(Need* currentNeed)
+void $tNeedProcessor::initNeed(Need* currentNeed)
 {
     currentNeed->currentValue = defaultNeed.currentValue;
     currentNeed->needID = defaultNeed.needID;

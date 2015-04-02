@@ -3,11 +3,13 @@
 #include "need.hpp"
 #include "process.hpp"
 #include "../world/coord.hpp"
+#include "../item/item.hpp"
 struct Agent
 {
     int id;
     int mutationSeed;
     int species;
+    Item inventory[10];
     Need* vitalNeeds;
     Need* nonvitalNeeds;
     //TODO: Add a "careerNeeds" array for individual career needs

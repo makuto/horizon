@@ -1,0 +1,15 @@
+<2_chains.1>
+//^ Chain files must be named in this format: {needID}_chains
+//Process chains for needID 2 (hunger)
+//Sort by least difficult first for faster difficulty searches (must
+//be conscious of group name!)
+1_EatFromInventory:
+    1=useItem;
+    
+//2_Cannibalism:
+    //Must be in order sorted by name!
+//    1=findHuman;
+//    2=attackHuman;
+//    3=findFood;
+//    4=eatNearbyFood;
+

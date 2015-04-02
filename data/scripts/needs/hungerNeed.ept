@@ -1,0 +1,11 @@
+<2_spec.1>
+//^ Spec must be named like so: {id}_spec
+//Spec for needID 2
+defaults:
+    currentValue=255;
+    needID=2;
+    fulfilledThreshold=200;
+    updateRateMS=0;
+    updateRateSeconds=5;
+    updateRateDays=0;
+    updateRateYears=0;

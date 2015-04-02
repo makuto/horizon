@@ -1,18 +1,16 @@
-#ifndef NEEDPROCESSOR_CPP
-#define NEEDPROCESSOR_CPP
+#ifndef HUNGER_NEEDPROCESSOR_CPP
+#define HUNGER_NEEDPROCESSOR_CPP
 #include <iostream>
-#include "needProcessor.hpp"
-#include "needMath.hpp"
-
-NeedProcessor::NeedProcessor()
-{
-    
-}
-NeedProcessor::~NeedProcessor()
+#include "hungerNeedProcessor.hpp"
+#include "../needMath.hpp"
+ 
+HungerNeedProcessor::HungerNeedProcessor()
 {
 }
-//Use this function to set defaults for this need (you must call this!)
-bool NeedProcessor::initialize(eptFile* spec)
+HungerNeedProcessor::~HungerNeedProcessor()
+{
+}
+bool HungerNeedProcessor::initialize(eptFile* spec)
 {
     eptGroup* defaultNeedVars = spec->getGroup("defaults");
     defaultNeed.currentValue = (unsigned char)attrToInt(defaultNeedVars->getAttribute("currentValue"));
@@ -25,17 +23,12 @@ bool NeedProcessor::initialize(eptFile* spec)
     defaultNeed.updateRate.setYears(attrToInt(defaultNeedVars->getAttribute("updateRateYears")));
     return true;
 }
-int NeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime)
+int HungerNeedProcessor::updateNeed(Agent* agent, Object* obj, ObjectManager* objectManager, Need* currentNeed, Time* deltaTime)
 {
-    //std::cout << (int) currentNeed->currentValue << " (updateNeed)\n";
-    //currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10 * (deltaTime->seconds + deltaTime->milliseconds));
-    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 50);
-    //std::cout << "Delta time is " << deltaTime->getExactSeconds() << "\n";
-    //obj->addVector(0, 100, *objectManager); //TODO: Fix moveObject quadtree fail b/c
-    //testNeed.ept update rate is at 0's instead of 2 seconds at this speed
+    currentNeed->currentValue = subNoOverflow(currentNeed->currentValue, 10);
     return 1;
 }
-void NeedProcessor::initNeed(Need* currentNeed)
+void HungerNeedProcessor::initNeed(Need* currentNeed)
 {
     currentNeed->currentValue = defaultNeed.currentValue;
     currentNeed->needID = defaultNeed.needID;
