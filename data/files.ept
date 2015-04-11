@@ -1,5 +1,6 @@
 <files.1>
 
+//Automatically loaded
 scripts:
     needDirectory=data/scripts/needDirectory.ept;
     testNeed=data/scripts/testNeed.ept;
@@ -10,6 +11,14 @@ scripts:
     
     testObject=data/scripts/testObject.ept;
     testObjectAgent=data/scripts/testObjectAgent.ept;
+    pickupObject=data/scripts/objects/pickupObject.ept;
+
+    consumableItemProcessor=data/scripts/itemProcessors/consumableItemProcessor.ept;
+    
+//Must be loaded individually
+specialScripts:
+    itemDatabase=data/scripts/itemDatabase.ept;
+    
 worldDefaults:
     //tileSet=data/images/castle.png;
     tileSet=data/images/terrain.png;

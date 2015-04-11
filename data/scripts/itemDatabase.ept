@@ -1,0 +1,5 @@
+<itemDatabase.1>
+
+scripts:
+    //Attribute names do not matter
+    1=data/scripts/items/consumables.ept;

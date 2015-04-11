@@ -88,15 +88,17 @@ ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need
     {
         int totalDifficulty = 0;
         //Loop through each process in the chain and get its difficulty
+        int index = 0;
         for (ProcessChain::iterator pIt=(*it)->begin(); pIt!=(*it)->end(); ++pIt)
         {
-            int currentDifficulty = (*pIt)->getDifficulty(agent, need);
+            int currentDifficulty = (*pIt)->getDifficulty(agent, need, index);
             if (currentDifficulty == -1) //Impossible process
             {
                 totalDifficulty = MAX_DIFFICULTY;
                 break;
             }
             totalDifficulty += currentDifficulty;
+            index++;
         }
         if (totalDifficulty < minimumDifficulty)
         {

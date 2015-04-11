@@ -1,4 +1,4 @@
-<fakePickupObj.1>
+<pickupObj.1>
 
 renderSettings:
     image=data/images/agent.png;
@@ -16,4 +16,4 @@ renderSettings:
 
 defaults:
     //Governs which ObjectProcessor is used
-    type=1;
+    type=3;

@@ -29,6 +29,12 @@
 #include "agent/needProcessors/hungerNeedProcessor.hpp"
 #include "agent/processes/useItemProcess.hpp"
 
+#include "item/itemManager.hpp"
+#include "item/processors/consumableItemProcessor.hpp"
+#include "item/itemDatabase.hpp"
+
+#include "object/processors/pickupObjectProcessor.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -105,12 +111,17 @@ int main()
     {
         if (!parser.load(currentFileName.c_str()))
         {
-            std::cout << "Failed to load script " << currentFileName << "!/n";
+            std::cout << "Failed to load script " << currentFileName << "!\n";
             return -1;
         }
         std::cout << "Loaded script " << currentFileName << " successfully\n";
         currentFileName = filesToLoad->getAttributeFromIndex(i, attrName);
     }
+    //Special scripts
+    ItemDatabase itemDB;
+    if (!itemDB.loadDatabase(parser.getAttribute("files.specialScripts.itemDatabase")))
+        return -1;
+
     //if(!parser.load("data/scripts/testObject.ept")) return -1;
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
@@ -126,9 +137,19 @@ int main()
     needProcessorDir[2] = hungerNeedProcessor;
     Species testSpecies(parser.getFile("testSpecies"), &needProcessorDir, 1);
 
+    ItemManager itemManager;
+    ConsumableItemProcessor consumableIP;
+    sprite coconut;
+    if (!coconut.load("data/images/coconut.png")) return -1;
+    consumableIP.setup(&coconut);
+    consumableIP.initialize(parser.getFile("consumableItemProcessor"), &itemDB);
+    itemManager.addItemProcessor(1, &consumableIP);
+    
     ProcessMap processMap;
     processMap.addProcess("testProcess", new Process);
-    processMap.addProcess("useItem", new UseItemProcess);
+    UseItemProcess* useItemProcess = new UseItemProcess;
+    useItemProcess->setup(&itemDB, &itemManager);
+    processMap.addProcess("useItem", useItemProcess);
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
     //multilayerMap defaultMap;
@@ -149,11 +170,15 @@ int main()
     
     ObjectProcessor* test2 = new ObjectProcessor();
     test2->setup(&in, &pathManager);
-    test2->initialize(parser.getFile("pickupObj"));
-    AgentProcessor* agentObj = new AgentProcessor(&testSpecies, &processDir);
-    agentObj->initialize(parser.getFile("agentObj"));
+    test2->initialize(parser.getFile("fakePickupObj"));
+    AgentProcessor* agentObjPro = new AgentProcessor(&testSpecies, &processDir);
+    agentObjPro->initialize(parser.getFile("agentObj"));
+    PickupObjectProcessor* pickupOP = new PickupObjectProcessor;
+    pickupOP->initialize(parser.getFile("pickupObj"));
+    pickupOP->setup(&itemManager);
     testDir.addObjProcessor(test2);
-    testDir.addObjProcessor(agentObj);
+    testDir.addObjProcessor(agentObjPro);
+    testDir.addObjProcessor(pickupOP);
 
     Path testPath;
     Coord start;
@@ -249,10 +274,18 @@ int main()
     }
     originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
     originObjMan->getNewInitializedObject(1, 3, 512, 512, 0); //Path test object
+    originObjMan->getNewInitializedObject(3, 1, 1024, 1024, 0); //Pickup test object
     //Agent object
     Agent* pooledAgent = testSpecies.createAgent(0);
     if (!pooledAgent) return -1;
-    Object* testAgentObj = originObjMan->getNewInitializedObject(2, pooledAgent->id, 64, 64, 0);
+    Item* testItem = &pooledAgent->inventory[0];
+    testItem->type = 1;
+    testItem->subType = 1;
+    testItem->id = 1;
+    testItem->stackCount = 1;
+    testItem->state = 0;
+    testItem->useState = 0;
+    Object* testAgentObj = originObjMan->getNewInitializedObject(2, pooledAgent->id, 64, 64, 0); //Agent test object
     if (!testAgentObj) return -1;
     cellToGet.x = -1;
     cellToGet.y = -1;

@@ -50,9 +50,9 @@ class $tProcess:public Process
         int counter;
     public:
         virtual ~$tProcess();
-        
-        virtual int getDifficulty(Agent* agent, Need* need);
-        virtual unsigned char getValue(Agent* agent, Need* need);
+        //Return the difficulty of the process, or -1 if impossible. index
+        //contains the index of the process in its chain
+        virtual int getDifficulty(Agent* agent, Need* need, int index);
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately

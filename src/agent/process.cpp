@@ -8,11 +8,7 @@ Process::~Process()
 {
     
 }
-int Process::getDifficulty(Agent* agent, Need* need)
-{
-    return 1;
-}
-unsigned char Process::getValue(Agent* agent, Need* need)
+int Process::getDifficulty(Agent* agent, Need* need, int index)
 {
     return 1;
 }
@@ -25,7 +21,7 @@ int Process::update(Agent* agent, Object* obj, ObjectManager* objectManager, Nee
     if (agent->currentProcessIndex==0)
     {
         //agent->worldPosition.addVector(0, -60);
-        obj->addVector(0, -5, *objectManager);
+        //obj->addVector(0, -5, *objectManager);
         counter++;
         if (counter>=10)
         {

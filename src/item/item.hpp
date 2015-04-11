@@ -9,7 +9,8 @@ struct Item
     int type;   //Used by ItemManager to select this item's ItemProcessor
     int subType;    //Used by processors for specific items
     int id; //The ID of this particular item
-    int state;  //Used by processors (for whatever is needed)
+    float state;  //Used by processors (for whatever is needed - esp time-related)
     int useState;   //The state of the item itself - is it held, in an inventory? etc.
+    int stackCount; //The number of this item in this stack (if unstackable, 1)
 };
 #endif

@@ -1,36 +1,54 @@
-#ifndef ITEMPROCESSOR_HPP
-#define ITEMPROCESSOR_HPP
+#ifndef $T_ITEMPROCESSOR_HPP
+#define $T_ITEMPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
-#include "../world/time.hpp"
-#include "../object/object.hpp"
-#include "item.hpp"
-/* --ItemProcessor--
- * ItemProcessors provide the logic for a type of item. For example, a
- * sword would have a "WeaponItemProcessor." It's 'sword' distinction would
- * be a subtype of weapon (this would be dealt with by the processor).
- * Override these functions to create new item types.
+#include "../itemProcessor.hpp"
+#include "../../object/object.hpp"
+#include "../item.hpp"
+
+/*To use template:
+ * Save As -> yourItemProcessor.hpp (and .cpp) (e.g. weaponItemProcessor.hpp, weaponItemProcessor.cpp)
+ * In both .cpp and .hpp:
+ *  Replace $T with CAPS name (e.g $T -> WEAPON)
+ *  Replace $t with Proper name (e.g $t -> Weapon)
+ *  Replace $l with lower name (e.g. $l -> weapon)
+ * 
+ *  In .cpp, change the include "CHANGEME.hpp" to the name of this .hpp
+ * 
+ * Cut the text below into the makefile
+        --------------
+        under itemProcessor:
+        --------------
+$(OBJ_DIR)/$lItemProcessor.o: src/item/processors/$lItemProcessor.hpp src/item/processors/$lItemProcessor.cpp
+	$(FLAGS) src/item/processors/$lItemProcessor.hpp
+	$(FLAGS) src/item/processors/$lItemProcessor.cpp
+        ---------------------------
+        To horizon (after itemProcessor):
+        ---------------------------
+$(OBJ_DIR)/$lItemProcessor.o
+        -------------------------
+        To link (after itemProcessor):
+        -------------------------
+$lItemProcessor.o
+
  *
- * This is a very general and extremely powerful class - it should be able
- * to handle all items needed in the game
- *
- * Items are bound to Objects by default (they are designed to be used by
- * Agents, so this seemed OK), but there is no reason why you couldn't pass
- * NULL values for Objects when not needed - it's up to you.
+ * 
+ * DELETE THIS COMMENT*/
+
+/* --$tItemProcessor--
+ * TODO: Document this ItemProcessor
  * */
+ 
 class ObjectManager;
 struct tile;
 class World;
 class window;
 struct Need;
 struct Agent;
-class ItemDatabase;
-class ItemProcessor
+class $tItemProcessor:public ItemProcessor
 {
-    protected:
-        ItemDatabase* itemDB;
     public:
-        ItemProcessor();
-        virtual ~ItemProcessor();
+        $tItemProcessor();
+        virtual ~$tItemProcessor();
 
         //Use this function to create your itemProcessor. You must call
         //this function yourself. This encourages data-driven processors
@@ -45,7 +63,7 @@ class ItemProcessor
          * item needs to be drawn before firing, so you would return 2 (or
          * any other number) and the caller would continue using the item
          * until you returned 1 (and the bow fires).*/
-        //Use the item on the Object using it (e.g., use a health potion)
+        //Use the item on the Object using it
         virtual int useItemOnSelf(Item* item, Object* obj, Time* deltaTime);
         //Use the item on another Object (e.g., use a sword on another agent)
         virtual int useItemOnObject(Item* item, Object* obj, Object* target, Time* deltaTime);

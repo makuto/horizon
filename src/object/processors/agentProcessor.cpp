@@ -68,7 +68,7 @@ void AgentProcessor::renderObject(Object* obj, float viewX, float viewY, window*
     testSpr.setPosition(pos.getCellOffsetX() - viewX, pos.getCellOffsetY() - viewY);
     testSpr.setRotation(obj->rotation);
     win->draw(&testSpr);
-    //Debug bounds render
+    /*//Debug bounds render
     sf::RenderWindow* sfWin = win->getBase();
     sf::RectangleShape rectangle;
     rectangle.setSize(sf::Vector2f(obj->bounds.w, obj->bounds.h));
@@ -100,7 +100,7 @@ void AgentProcessor::renderObject(Object* obj, float viewX, float viewY, window*
     }
     textToRender.setPosition(obj->getPosition().getCellOffsetX() - viewX + 15, obj->getPosition().getCellOffsetY() - viewY + 15);
     textToRender.setText(ss.str());
-    win->draw(&textToRender);
+    win->draw(&textToRender);*/
 }
 //Agent uses/activates object
 /*int AgentProcessor::activateObject(Object* obj, Agent* agent)

@@ -2,6 +2,7 @@
 #define SPECIES_CPP
 #include <iostream>
 #include "species.hpp"
+#include "../item/item.hpp"
 
 const unsigned int AGENT_POOL_SIZE = 255;
 //TODO: Replace needProcessorDir with a class?
@@ -71,6 +72,7 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
             //Update need
             vitalNeedProcessors[i]->updateNeed(agent, obj, objectManager, &agent->vitalNeeds[i], &delta);
             agent->vitalNeeds[i].lastUpdateGlobal = *globalTime;
+            //std::cout << "Need " << &agent->vitalNeeds[i] << " id " << agent->vitalNeeds[i].needID << " now at " << (int)agent->vitalNeeds[i].currentValue << "\n";
         }
         //Check if need is the lowest
         int currentNeedValue = agent->vitalNeeds[i].currentValue;
@@ -200,15 +202,32 @@ Agent* Species::createAgent(unsigned int id)
     
     newAgent->mutationSeed = 1;
     newAgent->species = speciesID;
+    
+    //Set defaults for inventory
+    Item defaultItem;
+    defaultItem.type = -1;
+    defaultItem.subType = -1;
+    defaultItem.state = 0;
+    defaultItem.stackCount = 0;
+    defaultItem.id = -1;
+    defaultItem.useState = 0;
+    for (int i = 0; i < AGENT_INVENTORY_SIZE; i++)
+    {
+        newAgent->inventory[i] = defaultItem;
+    }
+    
     //Set defaults for processes
     newAgent->processChainNonvitalNeedID = -1;
     newAgent->processChainVitalNeedID = -1;
     newAgent->currentProcessChain = NULL;
     newAgent->currentProcessIndex = -1;
+    newAgent->targetID = -1;
     
     //TODO: Allocate these in a pool of some sort
     newAgent->vitalNeeds = new Need[numVitalNeeds];
     newAgent->nonvitalNeeds = new Need[numNonvitalNeeds];
+    newAgent->numVitalNeeds = numVitalNeeds;
+    newAgent->numNonvitalNeeds = numNonvitalNeeds;
     
     //Set defaults for vital needs
     for (int i = 0; i < numVitalNeeds; ++i)
@@ -236,6 +255,7 @@ Agent* Species::getAgent(unsigned int id)
 //Remove an agent from the map and pool
 void Species::removeAgent(unsigned int id)
 {
+    //TODO: IMPORTANT: Need to delete needs! [FIXED]
     std::map<unsigned int, PoolData<Agent>* >::iterator findIt =
     agentMap.find(id);
     if (findIt==agentMap.end())
@@ -243,6 +263,8 @@ void Species::removeAgent(unsigned int id)
         std::cout << "WARNING: removeAgent(): Attempted to remove nonexistant agent with id " << id << "\n";
         return;
     }
+    delete[] findIt->second->data.vitalNeeds;
+    delete[] findIt->second->data.nonvitalNeeds;
     agentPool.removeData(findIt->second);
     agentMap.erase(findIt);
 }

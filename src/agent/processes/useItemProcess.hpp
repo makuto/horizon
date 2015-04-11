@@ -9,37 +9,19 @@
 #include "../../object/objectManager.hpp"
 #include "../../object/object.hpp"
 
-/*To use template:
- * Save As -> yourProcess.hpp (and .cpp) (e.g. useItemProcess.hpp, useItemProcess.cpp)
- * In both .cpp and .hpp:
- *  Replace USEITEM with CAPS name (e.g USEITEM -> USEITEM)
- *  Replace UseItem with Proper name (e.g UseItem -> UseItem)
- *  Replace useItem with lower name (e.g. useItem -> useItem)
- * 
- *  In .cpp, change the include "CHANGEME.hpp" to the name of this .hpp
- * 
- * Cut the text below into the makefile
-        --------------
-        under process:
-        --------------
-$(OBJ_DIR)/useItemProcess.o: src/agent/processes/useItemProcess.hpp src/agent/processes/useItemProcess.cpp
-	$(FLAGS) src/agent/processes/useItemProcess.hpp
-	$(FLAGS) src/agent/processes/useItemProcess.cpp
-        ---------------------------
-        To horizon (after process):
-        ---------------------------
-$(OBJ_DIR)/useItemProcess.o
-        -------------------------
-        To link (after process):
-        -------------------------
-useItemProcess.o
-
- *
- * 
- * DELETE THIS COMMENT*/
-
+#include "../../item/itemDatabase.hpp"
+#include "../../item/itemManager.hpp"
 /* --UseItemProcess--
- * TODO: Document this process
+ * UseItemProcess searches the agent's inventory for a consumable item
+ * that will raise the requested need. It does this by looking up each
+ * item in the ItemDatabase and seeing if the requested need is in
+ * the consumable's needBenefits. If there is no beneficial need, difficulty
+ * is impossible.
+ *
+ * UseItemProcess can be used in a chain; if it is not the first process,
+ * it will trust that previous processes acquire beneficial items.
+ *
+ * UseItem currently works only with consumables (type 1)
  * */
 struct Agent;
 
@@ -48,11 +30,15 @@ class UseItemProcess:public Process
 {
     private:
         int counter;
+        ItemDatabase* itemDB;
+        ItemManager* itemManager;
     public:
         virtual ~UseItemProcess();
         
-        virtual int getDifficulty(Agent* agent, Need* need);
-        virtual unsigned char getValue(Agent* agent, Need* need);
+        void setup(ItemDatabase* newItemDB, ItemManager* newItemManager);
+        //Return the difficulty of the process, or -1 if impossible. index
+        //contains the index of the process in its chain
+        virtual int getDifficulty(Agent* agent, Need* need, int index);
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately

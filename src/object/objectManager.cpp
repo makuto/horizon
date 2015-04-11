@@ -389,15 +389,7 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
             currentObj->bounds.setPosition(
             currentObj->getPosition().getRelativeCellX(parentCellID) + currentObj->boundOffsetX,
             currentObj->getPosition().getRelativeCellY(parentCellID) + currentObj->boundOffsetY);
-            if (objectToMove->id == 49941)
-            {
-                std::cout << "Coll check debug - moving obj " << objectToMove->id << " currentObj " << currentObj->id << "\n";
-                std::cout << "moving obj pos "; objectToMove->getPosition().print();
-                std::cout << "current obj pos "; currentObj->getPosition().print();
-                std::cout << "new displacement pos "; newDisplacement.print();
-                preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, true);
-            }
-            else preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
+            preventCollision(objToMoveBounds, currentObj->bounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
             
             newDisplacement = objectToMove->position;
             newDisplacement.addVector(newVX, newVY);
@@ -411,7 +403,6 @@ Coord ObjectManager::preventObjectCollisions(Object* objectToMove, Coord& newPos
             }
         }
     }
-    if (objectToMove->id==49941) std::cout << "\n\n\n";
     //Return the final adjusted displacement
     return newDisplacement;
 }
@@ -500,11 +491,7 @@ Coord ObjectManager::preventTileCollisions(Object* objectToMove, Coord& newPosit
                 //Get a new velocity if the object is on a collision course
                 float newVX = 0;
                 float newVY = 0;
-                if (objectToMove->id == 49941)
-                {
-                    preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, true);
-                }
-                else preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
+                preventCollision(objToMoveBounds, tileBounds, velX, velY, newVX, newVY, TOUCHING_TOLERANCE, false);
                 
                 newDisplacement = objectToMove->position;
                 newDisplacement.addVector(newVX, newVY);

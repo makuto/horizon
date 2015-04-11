@@ -9,11 +9,7 @@ $tProcess::~$tProcess()
 {
     
 }
-int $tProcess::getDifficulty(Agent* agent, Need* need)
-{
-    return 1;
-}
-unsigned char $tProcess::getValue(Agent* agent, Need* need)
+int $tProcess::getDifficulty(Agent* agent, Need* need, int index)
 {
     return 1;
 }

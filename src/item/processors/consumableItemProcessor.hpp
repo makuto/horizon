@@ -1,36 +1,44 @@
-#ifndef ITEMPROCESSOR_HPP
-#define ITEMPROCESSOR_HPP
+#ifndef CONSUMABLE_ITEMPROCESSOR_HPP
+#define CONSUMABLE_ITEMPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
-#include "../world/time.hpp"
-#include "../object/object.hpp"
-#include "item.hpp"
-/* --ItemProcessor--
- * ItemProcessors provide the logic for a type of item. For example, a
- * sword would have a "WeaponItemProcessor." It's 'sword' distinction would
- * be a subtype of weapon (this would be dealt with by the processor).
- * Override these functions to create new item types.
+#include "../itemProcessor.hpp"
+#include "../../object/object.hpp"
+#include "../item.hpp"
+
+#include <base2.0/graphics/graphics.hpp>
+/* --ConsumableItemProcessor--
+ * Consumable items can be eaten/consumed to restore/harm Need levels.
  *
- * This is a very general and extremely powerful class - it should be able
- * to handle all items needed in the game
+ * Consumables should be defined in the itemDatabase. Define the following
+ * attributes:
+ * bool stackable   Whether or not the item can be stacked
+ * {int} needBenefits   Which needs are changed by consuming this item.
+ *                      Use this format: {needID, change, needID, change...}
+ *                      For example, to raise hunger (needID 2) by 50,
+ *                      needBenefits={2, 50};
+ * int difficulty   Used to determine how difficult it is to consume this item
+ * float useTimeSeconds When consuming an item, it will take useTimeSeconds to finish
  *
- * Items are bound to Objects by default (they are designed to be used by
- * Agents, so this seemed OK), but there is no reason why you couldn't pass
- * NULL values for Objects when not needed - it's up to you.
+ * Consumables use item.state when consuming an item to store how much longer
+ * until the item is consumed
  * */
+ 
 class ObjectManager;
 struct tile;
 class World;
 class window;
 struct Need;
 struct Agent;
-class ItemDatabase;
-class ItemProcessor
+class ConsumableItemProcessor:public ItemProcessor
 {
-    protected:
-        ItemDatabase* itemDB;
+    private:
+        sprite* itemSprite;
     public:
-        ItemProcessor();
-        virtual ~ItemProcessor();
+        ConsumableItemProcessor();
+        virtual ~ConsumableItemProcessor();
+
+        //Setup for consumable item processor
+        void setup(sprite* renderSprite); //TEST
 
         //Use this function to create your itemProcessor. You must call
         //this function yourself. This encourages data-driven processors
@@ -45,7 +53,7 @@ class ItemProcessor
          * item needs to be drawn before firing, so you would return 2 (or
          * any other number) and the caller would continue using the item
          * until you returned 1 (and the bow fires).*/
-        //Use the item on the Object using it (e.g., use a health potion)
+         //Use the item on the Object using it
         virtual int useItemOnSelf(Item* item, Object* obj, Time* deltaTime);
         //Use the item on another Object (e.g., use a sword on another agent)
         virtual int useItemOnObject(Item* item, Object* obj, Object* target, Time* deltaTime);
@@ -56,6 +64,7 @@ class ItemProcessor
         //would be a staff that spawns goblins)
         virtual int useItemOnWorld(Item* item, Object* obj, World* world, Time* deltaTime);
         //Use the item on an Agent; for example, use a food item to restore hunger
+        //Returns 0 while consuming and 1 when done.
         virtual int useItemOnAgent(Item* item, Object* obj, Agent* agent, Time* deltaTime);
         //Render the item at the specified position. Use useState to determine
         //how it should be rendered.

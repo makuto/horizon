@@ -1,0 +1,27 @@
+<1.1>
+//The 1 is the type of item (no need to use unique name due to private parser)
+
+//In all items, base is defined as the base/default/parent item. Subsequent
+//subtype definitions need not include any attributes that are not different
+//from the base definition. 
+base:
+    //NeedBenefits is in the following format: {needID, benefitAmount}
+    needBenefits={};
+    difficulty=1;
+    stackable=true;
+    //Setting this to 0 means it can be consumed instantly
+    useTimeSeconds=0;
+    
+//The 1 here is the subtype of item
+1:
+    //Override need benefits to this value (note that all other values are
+    //lost; needBenefits is {2, 50}, not {1, 0, 2, 50, 3, 0...})
+    needBenefits={2, 50};
+    //Override difficulty
+    difficulty=15;
+    useTimeSeconds=0.1;
+
+2:
+    needBenefits={2, 15};
+    stackable=false;
+
