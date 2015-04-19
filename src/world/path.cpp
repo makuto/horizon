@@ -317,7 +317,6 @@ void* Path::positionToState(unsigned int x, unsigned int y)
     positionToCast <<= 16;
     positionToCast |= y;
     return reinterpret_cast<void*>(positionToCast);
-    
 }
 float Path::LeastCostEstimate(void* startNode, void* endNode)
 {

@@ -1,7 +1,7 @@
 #ifndef $T_PROCESS_HPP
 #define $T_PROCESS_HPP
 #include <vector>
-#include "../process.cpp"
+#include "../process.hpp"
 #include "../../world/time.hpp"
 //#include "agent.hpp" //Forward declared
 #include "../need.hpp"
@@ -46,13 +46,11 @@ struct Agent;
 
 class $tProcess:public Process
 {
-    private:
-        int counter;
     public:
         virtual ~$tProcess();
         //Return the difficulty of the process, or -1 if impossible. index
         //contains the index of the process in its chain
-        virtual int getDifficulty(Agent* agent, Need* need, int index);
+        virtual int getDifficulty(Agent* agent, Object* obj, Need* need, int index);
         //Update should return 0 if process didn't complete (run next frame)
         //1 if process is ready to go to the next process in chain
         //-1 if process chain should end immediately

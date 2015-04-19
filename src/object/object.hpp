@@ -41,6 +41,8 @@ class Object
         //(which is why ObjectManager is passed in)
         void setPosition(Coord& newPosition, ObjectManager& manager);
         void addVector(float dx, float dy, ObjectManager& manager);
+        //Moves towards the given point at the specified speed
+        void moveTowards(Coord& point, float speed, Time* deltaTime, ObjectManager& manager);
         Coord getPosition();
         
 };

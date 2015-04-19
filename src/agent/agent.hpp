@@ -25,7 +25,8 @@ struct Agent
     //Coord worldPosition;  //Agents are now going to be tied to Objects, so
                             //position is redundant
     int targetID;   //Used by Processes for whatever is needed; for example,
-                    //this could store a Path ID or even inventory index 
+                    //this could store a Path ID or even inventory index
+                    //Reset every time a new chain is started (to -1)
 };
 
 #endif

@@ -117,13 +117,14 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
         {
             int needID = agent->vitalNeeds[minVitalIndex].needID;
             int difficulty;
-            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->vitalNeeds[minVitalIndex], needID, difficulty);
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, obj, &agent->vitalNeeds[minVitalIndex], needID, difficulty);
             if (optimalChain)
             {
                 agent->currentProcessChain = optimalChain;
                 agent->currentProcessIndex = 0;
                 agent->processChainVitalNeedID = minVitalIndex;
                 agent->processChainNonvitalNeedID = -1;
+                agent->targetID = -1;
             }
         }
         //Otherwise, continue on the current process (or give time for
@@ -139,13 +140,14 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
         {
             int needID = agent->nonvitalNeeds[minNonvitalIndex].needID;
             int difficulty;
-            ProcessChain* optimalChain = processDir->getOptimalChain(agent, &agent->nonvitalNeeds[minNonvitalIndex], needID, difficulty);
+            ProcessChain* optimalChain = processDir->getOptimalChain(agent, obj, &agent->nonvitalNeeds[minNonvitalIndex], needID, difficulty);
             if (optimalChain)
             {
                 agent->currentProcessChain = optimalChain;
                 agent->currentProcessIndex = 0;
                 agent->processChainVitalNeedID = -1;
                 agent->processChainNonvitalNeedID = minNonvitalIndex;
+                agent->targetID = -1;
             }
         }
         //Else continue with the current process

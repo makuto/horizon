@@ -28,12 +28,15 @@
 
 #include "agent/needProcessors/hungerNeedProcessor.hpp"
 #include "agent/processes/useItemProcess.hpp"
+#include "agent/processes/gotoResourceProcess.hpp"
 
 #include "item/itemManager.hpp"
 #include "item/processors/consumableItemProcessor.hpp"
 #include "item/itemDatabase.hpp"
 
 #include "object/processors/pickupObjectProcessor.hpp"
+
+#include "world/resourceTree.hpp"
 
 void test()
 {
@@ -126,7 +129,7 @@ int main()
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
     inputManager in(&win);
-
+    
     //TODO: Convert to class?
     NeedProcessorDir needProcessorDir;
     NeedProcessor* testNeedProcessor = new NeedProcessor;
@@ -145,13 +148,6 @@ int main()
     consumableIP.initialize(parser.getFile("consumableItemProcessor"), &itemDB);
     itemManager.addItemProcessor(1, &consumableIP);
     
-    ProcessMap processMap;
-    processMap.addProcess("testProcess", new Process);
-    UseItemProcess* useItemProcess = new UseItemProcess;
-    useItemProcess->setup(&itemDB, &itemManager);
-    processMap.addProcess("useItem", useItemProcess);
-    ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
-    
     //multilayerMap defaultMap;
     //if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
     sprite tileSet;
@@ -166,7 +162,23 @@ int main()
     ObjectProcessorDir testDir;
     World newWorld(&win, &dynamicMap, worldToLoad, &testDir);
 
+    ResourceTree resourceTree(&newWorld);
+    //Coord resPos;
+    //resPos.setPosition(0, 0, 0, 0);
+    //resourceTree.addResource(ResourceTree::LAYER_TYPE::SINGLE_NEED_BENEFITS, Resource::TYPE::OBJECT, 1, resPos);
+    //resourceTree.removeResource(ResourceTree::LAYER_TYPE::SINGLE_NEED_BENEFITS, Resource::TYPE::OBJECT, 1, resPos);
+
     PathManager pathManager(&newWorld);
+
+    ProcessMap processMap;
+    UseItemProcess* useItemProcess = new UseItemProcess;
+    useItemProcess->setup(&itemDB, &itemManager);
+    GoToResourceProcess* goToResourceProcess = new GoToResourceProcess;
+    goToResourceProcess->setup(&pathManager, &resourceTree);
+    processMap.addProcess("goToResource", goToResourceProcess);
+    processMap.addProcess("testProcess", new Process);
+    processMap.addProcess("useItem", useItemProcess);
+    ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
     ObjectProcessor* test2 = new ObjectProcessor();
     test2->setup(&in, &pathManager);
@@ -175,7 +187,7 @@ int main()
     agentObjPro->initialize(parser.getFile("agentObj"));
     PickupObjectProcessor* pickupOP = new PickupObjectProcessor;
     pickupOP->initialize(parser.getFile("pickupObj"));
-    pickupOP->setup(&itemManager);
+    pickupOP->setup(&itemManager, &itemDB, &resourceTree);
     testDir.addObjProcessor(test2);
     testDir.addObjProcessor(agentObjPro);
     testDir.addObjProcessor(pickupOP);
@@ -193,7 +205,7 @@ int main()
     std::cout << testPath.getStatus() << "\n";
     //Coord followResult = testPath.advance(start);
     //followResult.print();
-    Coord nextPos = start;
+    //Coord nextPos = start;
     /*while(testPath.getStatus() != -1 && testPath.getStatus() != 2)
     {
         int tileX = nextPos.getCellOffsetX() / TILE_WIDTH;
@@ -274,7 +286,10 @@ int main()
     }
     originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
     originObjMan->getNewInitializedObject(1, 3, 512, 512, 0); //Path test object
-    originObjMan->getNewInitializedObject(3, 1, 1024, 1024, 0); //Pickup test object
+    std::cout << "Pickup\n";
+    Object* pickupTestObj = originObjMan->getNewInitializedObject(3, 1, 1024, 1024, 0); //Pickup test object
+    pickupTestObj->state = 1;
+    std::cout << "/pickup\n";
     //Agent object
     Agent* pooledAgent = testSpecies.createAgent(0);
     if (!pooledAgent) return -1;
@@ -347,15 +362,15 @@ int main()
     win.shouldClear(false);
     //win.getBase()->setVerticalSyncEnabled(false);
     //win.getBase()->setFramerateLimit(60);
-    bool isTapped = false;
-    bool isPressed = false;
+    //bool isTapped = false;
+    //bool isPressed = false;
 
     pixels miniMap(256, 256);
     sprite* miniMapSpr = miniMap.getSprite();
     miniMapSpr->setPosition(win.getWidth() - 256, win.getHeight() - 256);
     timer miniMapTimer;
     miniMapTimer.start();
-    const float MINIMAP_UPDATE_RATE = 0.5;
+    const float MINIMAP_UPDATE_RATE = 1;
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {

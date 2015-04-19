@@ -2,7 +2,8 @@
 #define PICKUP_OBJECTPROCESSOR_CPP
 #include "pickupObjectProcessor.hpp"
 #include "../objectManager.hpp"
-
+#include "../../world/resourceTree.hpp"
+#include "../../item/itemDatabase.hpp"
 PickupObjectProcessor::PickupObjectProcessor()
 {
     processorType = -1;
@@ -11,9 +12,11 @@ PickupObjectProcessor::~PickupObjectProcessor()
 {
 }
 
-void PickupObjectProcessor::setup(ItemManager* newItemManager)
+void PickupObjectProcessor::setup(ItemManager* newItemManager, ItemDatabase* newItemDB, ResourceTree* newResourceTree)
 {
     itemManager = newItemManager;
+    itemDB = newItemDB;
+    resourceTree = newResourceTree;
 }
 
 bool PickupObjectProcessor::initialize(eptFile* spec)
@@ -38,11 +41,24 @@ bool PickupObjectProcessor::initObject(Object* newObj, int subType, Coord& posit
     newObj->boundOffsetY = -15;
     newObj->manhattanRadius = 1000;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
+    newObj->state = 0;
     return true;
 }
 //Do a routine update on the object
 int PickupObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* manager)
 {
+    //Add item to resourceTree if consumable (only on first update)
+    if (obj->lastUpdate.getExactSeconds()==0 && obj->subType==1) //TODO: Replace 1 with constant!
+    {
+        Coord position = obj->getPosition();
+        std::string needBenefits = itemDB->getStringAttribute(obj->subType, obj->state, "needBenefits");
+        int benefitsLength = attrToArrayLength(needBenefits);
+        for (int i = 0; i < benefitsLength; i+=2)
+        {
+            resourceTree->addResource(ResourceTree::LAYER_TYPE::NEED_BENEFITS,
+            Resource::TYPE::ITEM, attrToArrayInt(needBenefits, i), position);
+        }
+    }
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
     obj->lastUpdate = *globalTime;
@@ -88,6 +104,18 @@ int PickupObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplace
 //should NOT be deleted by this function
 void PickupObjectProcessor::onDestroyObject(Object* obj)
 {
+    //Remove this item from the resourceTree
+    if (obj->subType==1) //TODO: Replace 1 with constant!
+    {
+        std::string needBenefits = itemDB->getStringAttribute(obj->subType, obj->state, "needBenefits");
+        int benefitsLength = attrToArrayLength(needBenefits);
+        for (int i = 0; i < benefitsLength; i+=2)
+        {
+            Coord position = obj->getPosition();
+            resourceTree->removeResource(ResourceTree::LAYER_TYPE::NEED_BENEFITS,
+            Resource::TYPE::OBJECT, attrToArrayInt(needBenefits, 1), position);
+        }
+    }
     return;
 }
 #endif

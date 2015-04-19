@@ -14,9 +14,9 @@ void UseItemProcess::setup(ItemDatabase* newItemDB, ItemManager* newItemManager)
     itemManager = newItemManager;
     itemDB = newItemDB;
 }
-int UseItemProcess::getDifficulty(Agent* agent, Need* need, int index)
+int UseItemProcess::getDifficulty(Agent* agent, Object* obj, Need* need, int index)
 {
-    std::cout << "in difficulty (need " << need << " is " << (int)need->currentValue << ")\n";
+    //std::cout << "in difficulty (need " << need << " is " << (int)need->currentValue << ")\n";
     //If the index isn't 0, chances are the agent is going to harvest the
     //item first, then use it. We cannot know this, so UseItem will just
     //trust that they'll have the item by the time this is executed
@@ -44,7 +44,6 @@ int UseItemProcess::getDifficulty(Agent* agent, Need* need, int index)
             }
         }
     }
-    std::cout << "in difficulty done\n";
     return difficulty;
 }
 

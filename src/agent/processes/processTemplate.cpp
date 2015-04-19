@@ -9,7 +9,7 @@ $tProcess::~$tProcess()
 {
     
 }
-int $tProcess::getDifficulty(Agent* agent, Need* need, int index)
+int $tProcess::getDifficulty(Agent* agent, Object* obj, Need* need, int index)
 {
     return 1;
 }
@@ -20,15 +20,7 @@ int $tProcess::update(Agent* agent, Object* obj, ObjectManager* objectManager, N
 {
     if (agent->currentProcessIndex==0)
     {
-        obj->addVector(0, -5, *objectManager);
-        counter++;
-        if (counter>=10)
-        {
-            need->currentValue=addNoOverflow(need->currentValue, 255);
-            counter = 0;
-            return 1;
-        }
-        return 0;
+        need->currentValue=addNoOverflow(need->currentValue, 255);
     }
     return 1;
 }

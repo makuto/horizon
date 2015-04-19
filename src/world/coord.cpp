@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include "coord.hpp"
+#include "time.hpp"
 
 const int CELL_WIDTH = 64;
 const int CELL_HEIGHT = 64;
@@ -21,7 +22,11 @@ bool CellIndexComparer::operator()(const CellIndex& first, const CellIndex& seco
     if (first.x < second.x) return false;
     return first.y > second.y;
 }
-
+bool Coord::operator==(const Coord& a)
+{
+    if (a.x != x || a.y != y || a.cell.x != cell.x || a.cell.y != cell.y) return false;
+    return true;
+}
 float Coord::getCellOffsetX()
 {
     return x;
@@ -63,6 +68,23 @@ float Coord::getRelativeCellX(CellIndex& index)
 float Coord::getRelativeCellY(CellIndex& index)
 {
     return (CELL_HEIGHT_PIXELS * (cell.y - index.y)) + y;
+}
+//Returns the distance between the two
+float Coord::getDistanceTo(Coord& point)
+{
+    return sqrtf(getManhattanTo(point));
+}
+//Returns the manhattan distance between the two
+float Coord::getManhattanTo(Coord& point)
+{
+    CellIndex pointIndex = point.getCell();
+    float aX = getRelativeCellX(pointIndex);
+    float aY = getRelativeCellY(pointIndex);
+    float bX = point.getRelativeCellX(pointIndex);
+    float bY = point.getRelativeCellY(pointIndex);
+    float xDiff = aX - bX;
+    float yDiff = aY - bY;
+    return (xDiff * xDiff) + (yDiff * yDiff);
 }
 void Coord::print()
 {
@@ -112,6 +134,30 @@ void Coord::addVector(float dX, float dY)
         cell.y-=1;
         y = CELL_HEIGHT_PIXELS + y;
     }*/
+}
+//Moves towards the given point at the specified speed
+void Coord::moveTowards(Coord& point, float speed, Time* deltaTime)
+{
+    //Get the relative difference between this Coord and the next
+    CellIndex pointIndex = point.getCell();
+    float aX = getRelativeCellX(pointIndex);
+    float aY = getRelativeCellY(pointIndex);
+    float bX = point.getRelativeCellX(pointIndex);
+    float bY = point.getRelativeCellY(pointIndex);
+    float xDiff = -aX + bX;
+    float yDiff = -aY + bY;
+    //Normalize vector
+    float distance = sqrtf((xDiff * xDiff) + (yDiff * yDiff));
+    if (distance > 0)
+    {
+        xDiff /= distance;
+        yDiff /= distance;
+    }
+    //Multiply vector by speed and deltaTime
+    xDiff *= speed * deltaTime->getExactSeconds();
+    yDiff *= speed * deltaTime->getExactSeconds();
+    //Add the vector
+    addVector(xDiff, yDiff);
 }
 void Coord::setPosition(CellIndex& newCell, float newX, float newY)
 {

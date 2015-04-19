@@ -10,6 +10,7 @@
  * ProcessDirectory creates and stores process chains that agents browse
  * in order to decide what to do. 
  * */
+class Object;
 class ProcessDirectory
 {
     private:
@@ -17,7 +18,7 @@ class ProcessDirectory
         std::map<int, std::vector<ProcessChain*>* > directory;
 
         std::vector<ProcessChain*>* getNeedListings(int needID);
-        ProcessChain* getLeastDifficultyChain(Agent* agent, Need* need, std::vector<ProcessChain*>*, int& difficulty);
+        ProcessChain* getLeastDifficultyChain(Agent* agent, Object* obj, Need* need, std::vector<ProcessChain*>*, int& difficulty);
     public:
         //Parses the directory specified for each need, parsing chain files and linking
         //chains from the chain files using ProcessMap Processes.
@@ -28,6 +29,6 @@ class ProcessDirectory
         ~ProcessDirectory();
         //Finds chains that fulfill the specified needID and calculates
         //which chain is the most optimal
-        ProcessChain* getOptimalChain(Agent* agent, Need* need, int needID, int& difficulty);
+        ProcessChain* getOptimalChain(Agent* agent, Object* obj, Need* need, int needID, int& difficulty);
 };
 #endif

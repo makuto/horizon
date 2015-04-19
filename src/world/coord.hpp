@@ -2,6 +2,9 @@
 #define COORD_HPP
 /* --Coord--
  * Coord is a universal position coordinate.
+ *
+ * The entire coordinate system is defined in coord.cpp. Use these
+ * constants whenever you can in order to make it flexible
  * */
 extern const int CELL_WIDTH;
 extern const int CELL_HEIGHT;
@@ -25,12 +28,14 @@ struct CellIndexComparer
     bool operator()(const CellIndex& first, const CellIndex& second) const;
 };
 //TODO: fix small hitch at cell borders
+class Time;
 class Coord
 {
     protected:
         CellIndex cell;
         float x, y;
     public:
+        bool operator==(const Coord& a);
         //Returns the coordinate inside the cell
         float getCellOffsetX();
         float getCellOffsetY();
@@ -43,11 +48,17 @@ class Coord
         //Return the position relative to the passed in index
         float getRelativeCellX(CellIndex& index);
         float getRelativeCellY(CellIndex& index);
+        //Returns the distance between the two
+        float getDistanceTo(Coord& point);
+        //Returns the manhattan distance between the two
+        float getManhattanTo(Coord& point);
 
         void print();
-        //Add the desired delta (in floating pixels);
+        //Add the desired delta (in floating points);
         //overrun will be applied to CellIndex automatically
         void addVector(float dX, float dY);
+        //Moves towards the given point at the specified speed
+        void moveTowards(Coord& point, float speed, Time* deltaTime);
         void setPosition(CellIndex& newCell, float newX, float newY);
         void setPosition(int newCellX, int newCellY, float newX, float newY);
 };

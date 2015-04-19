@@ -11,19 +11,30 @@
 /* --PickupObjectProcessor--
  * Pickup objects represent items that are lying on the ground. They can
  * represent all items. Item type is stored in Obj subType and item subType
- * is stored in Obj state. 
+ * is stored in Obj state.
+ *
+ * You must set the Item subtype by changing obj state. Do this immediately
+ * after you call objectManager->getNewInitializedObject(), otherwise, it will
+ * not be set properly.
+ *
+ * If the item is consumable, it will automatically be added to the world
+ * ResourceTree NEED_BENEFITS layer so that it can be found by agents.
  * */
 class ObjectManager;
+class ItemDatabase;
+class ResourceTree;
 class PickupObjectProcessor:public ObjectProcessor
 {
     protected:
         
         ItemManager* itemManager;   //Allows access to all ItemProcessors
+        ItemDatabase* itemDB;
+        ResourceTree* resourceTree;
     public:
         PickupObjectProcessor();
         virtual ~PickupObjectProcessor();
 
-        void setup(ItemManager* newItemManager);
+        void setup(ItemManager* newItemManager, ItemDatabase* newItemDB, ResourceTree* newResourceTree);
         //Use this function to init your custom ObjectProcessor (get images,
         //set default object starting values (hint: hold a object in your
         //processor with the values, then copy them over), etc.)

@@ -89,18 +89,18 @@ void Cell::calculateDifficulty()
         {
             case 0: //Ground layer
                 unwalkablePercentage = (float)applicableCount / (float)totalTileCount;
-                std::cout << applicableCount << " of " << totalTileCount << " ground tiles\n";
+                //std::cout << applicableCount << " of " << totalTileCount << " ground tiles\n";
                 break;
             case 1: //Onground layer
                 //If the tile isn't a null tile, add it to the count
                 onGroundPercentage = (float)applicableCount / (float)totalTileCount;
-                std::cout << applicableCount << " of " << totalTileCount << " onground tiles\n";
+                //std::cout << applicableCount << " of " << totalTileCount << " onground tiles\n";
                 break;
             default: //Everything else
                 break; 
         }
     }
-    std::cout << "unwalkable: " << unwalkablePercentage << " onground: " << onGroundPercentage << "\n";
+    //std::cout << "unwalkable: " << unwalkablePercentage << " onground: " << onGroundPercentage << "\n";
 }
 void Cell::setTouched(Time newValue)
 {

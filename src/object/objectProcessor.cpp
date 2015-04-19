@@ -51,7 +51,7 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
         Coord goal;
         goal.setPosition(1, 1, 1024, 1024);
         newObj->state = pathManager->requestNewPath(position, goal);
-        std::cout << "State: " << newObj->state << "\n";
+        //std::cout << "State: " << newObj->state << "\n";
         /*mainPath.init(manager->getWorld(), position, goal);
         mainPath.calculateCellPath();
         std::cout << "OBJ: Cell: " << mainPath.getStatus() << "\n";
@@ -133,28 +133,10 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         switch(pathManager->advanceAlongPath((unsigned int)obj->state, objPos, target))
         {
             case 0: //Waiting for calculations
-                std::cout << "Waiting for calculation\n";
+                //std::cout << "Waiting for calculation\n";
                 break;
             case 1: //Ready
-                CellIndex relCell;
-                relCell = obj->getPosition().getCell();
-                float axDiff;
-                axDiff = obj->getPosition().getRelativeCellX(relCell) - target.getRelativeCellX(relCell);
-                float ayDiff;
-                ayDiff = obj->getPosition().getRelativeCellY(relCell) - target.getRelativeCellY(relCell);
-                coordinate vec;
-                vec.x = axDiff;
-                vec.y = ayDiff;
-                normalize(&vec);
-                float speed;
-                speed = 300;
-                float vecX;
-                vecX = -vec.x * delta.getExactSeconds() * speed;
-                float vecY;
-                vecY = -vec.y * delta.getExactSeconds() * speed;
-                globalVecX = vecX;
-                globalVecY = vecY;
-                obj->addVector(vecX, vecY, *manager);
+                obj->moveTowards(target, 300, &delta, *manager);
                 break;
             case -1: //Path failed
                 std::cout << "Path failed to calculate!\n";

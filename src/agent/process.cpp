@@ -8,7 +8,7 @@ Process::~Process()
 {
     
 }
-int Process::getDifficulty(Agent* agent, Need* need, int index)
+int Process::getDifficulty(Agent* agent, Object* obj, Need* need, int index)
 {
     return 1;
 }

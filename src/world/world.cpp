@@ -44,11 +44,11 @@ World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID,
 World::~World()
 {
     delete[] cellArrayCache;
-    for (std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator it = cells.begin();
+    /*for (std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator it = cells.begin();
     it != cells.end(); ++it)
     {
         //delete it->second;
-    }
+    }*/
     //Reset masterMap layers
     for (unsigned int i = 0; i < masterMap->getTotalLayers(); i++)
     {

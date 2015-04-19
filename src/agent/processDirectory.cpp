@@ -2,7 +2,8 @@
 #define PROCESSDIRECTORY_CPP
 #include <iostream>
 #include "processDirectory.hpp"
-const int MAX_DIFFICULTY = 1000000;
+#include "../object/object.hpp"
+const int MAX_DIFFICULTY = 2147483600;
 ProcessDirectory::ProcessDirectory(eptParser* parser, eptFile* needFileListing, ProcessMap* processes)
 {
     std::string groupName;
@@ -79,7 +80,7 @@ std::vector<ProcessChain*>* ProcessDirectory::getNeedListings(int needID)
 	else return it->second;
 }
 //TODO: use Process.getValue()?
-ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need, std::vector<ProcessChain*>* listing, int& difficulty)
+ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Object* obj, Need* need, std::vector<ProcessChain*>* listing, int& difficulty)
 {
     int minimumDifficulty = MAX_DIFFICULTY;
     ProcessChain* currentBestChain = NULL;
@@ -91,7 +92,7 @@ ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need
         int index = 0;
         for (ProcessChain::iterator pIt=(*it)->begin(); pIt!=(*it)->end(); ++pIt)
         {
-            int currentDifficulty = (*pIt)->getDifficulty(agent, need, index);
+            int currentDifficulty = (*pIt)->getDifficulty(agent, obj, need, index);
             if (currentDifficulty == -1) //Impossible process
             {
                 totalDifficulty = MAX_DIFFICULTY;
@@ -110,10 +111,10 @@ ProcessChain* ProcessDirectory::getLeastDifficultyChain(Agent* agent, Need* need
     difficulty = minimumDifficulty;
     return currentBestChain;
 }
-ProcessChain* ProcessDirectory::getOptimalChain(Agent* agent, Need* need, int needID, int& difficulty)
+ProcessChain* ProcessDirectory::getOptimalChain(Agent* agent, Object* obj, Need* need, int needID, int& difficulty)
 {
     std::vector<ProcessChain*>* listings = getNeedListings(needID);
     if (!listings) return NULL;
-    return getLeastDifficultyChain(agent, need, listings, difficulty);
+    return getLeastDifficultyChain(agent, obj, need, listings, difficulty);
 }
 #endif
