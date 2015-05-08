@@ -1,0 +1,12 @@
+<imageManager.1>
+
+testAgent:
+    _file=data/images/agent.png;
+    agent={0, 0, 32, 32};
+    subRectTest={16, 16, 16, 16};
+testFood:
+    _file=data/images/coconut.png;
+    coconut={0, 0, 32, 32};
+tileMap:
+    _file=data/images/terrain.png;
+    

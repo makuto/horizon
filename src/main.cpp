@@ -38,6 +38,10 @@
 
 #include "world/resourceTree.hpp"
 
+#include "utilities/renderQueue.hpp"
+
+#include "utilities/imageManager.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -129,6 +133,66 @@ int main()
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
     inputManager in(&win);
+
+    //Setup ImageManager
+    ImageManager imageManager;
+    if (!imageManager.load(parser.getFile("imageManager"))) return -1;
+
+    
+    ///////////
+    RenderQueue rQ(parser.getFile("renderQueue"));
+    RenderInstance* instance = NULL;
+    Coord testViewPos;
+    testViewPos.setPosition(0, 0, 0, 0);
+    while(!win.shouldClose())
+    {
+        //sprite* testSpr = imageManager.getSubRectSprite("testAgent", "agent");
+        sprite* testSpr = imageManager.getSprite("testAgent");
+        if (!testSpr) return -1;
+        testSpr->clearSubRect();
+        testSpr->setPosition(300, 300);
+        win.draw(testSpr);
+        instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
+        if (instance) instance->position.setPosition(0, 0, 100, 32);
+        instance->imageId = "testAgent";
+        instance->subRectId = "";
+        instance->requestorId = 1;
+        instance->originMode = RENDER_ORIGIN_MODE::TOP_LEFT;
+        instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
+        if (instance) instance->position.setPosition(0, 0, 200, 32);
+        instance->imageId = "testFood";
+        instance->subRectId = "";
+        instance->requestorId = 2;
+        instance->originMode = RENDER_ORIGIN_MODE::TOP_LEFT;
+        instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 1);
+        if (instance) instance->position.setPosition(0, 0, 200, 32);
+        instance->imageId = "testFood";
+        instance->subRectId = "subRectTest";
+        instance->requestorId = 2;
+        instance->originMode = RENDER_ORIGIN_MODE::TOP_RIGHT;
+        rQ.renderLayer(&win, &imageManager, testViewPos, RENDER_QUEUE_LAYER::ONGROUND);
+        win.update();
+    }
+    /*std::cout << instance << "\n";
+    instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
+    if (instance) instance->position.setPosition(0, 0, 78, 1023);
+    instance->requestorId = 2;
+    std::cout << instance << "\n";
+    instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 2);
+    if (instance) instance->position.setPosition(0, 0, 1002, 32);
+    instance->requestorId = 3;
+    std::cout << instance << "\n";
+    Coord viewPos;
+    viewPos.setPosition(0, 0, 0, 0);
+    rQ.renderLayer(&win, viewPos, RENDER_QUEUE_LAYER::ONGROUND);
+    rQ.renderLayer(&win, viewPos, RENDER_QUEUE_LAYER::ONGROUND);
+    instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 2);
+    if (instance) instance->position.setPosition(1, 0, 1002, 32);
+    instance->requestorId = 3;
+    std::cout << instance << "\n";
+    rQ.renderLayer(&win, viewPos, RENDER_QUEUE_LAYER::ONGROUND);*/
+    //return -1;
+    ///////////
     
     //TODO: Convert to class?
     NeedProcessorDir needProcessorDir;
@@ -286,10 +350,8 @@ int main()
     }
     originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
     originObjMan->getNewInitializedObject(1, 3, 512, 512, 0); //Path test object
-    std::cout << "Pickup\n";
     Object* pickupTestObj = originObjMan->getNewInitializedObject(3, 1, 1024, 1024, 0); //Pickup test object
     pickupTestObj->state = 1;
-    std::cout << "/pickup\n";
     //Agent object
     Agent* pooledAgent = testSpecies.createAgent(0);
     if (!pooledAgent) return -1;

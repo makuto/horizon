@@ -22,7 +22,6 @@ void GoToResourceProcess::setup(PathManager* newPathManager, ResourceTree* newRe
     pathManager = newPathManager;
     resourceTree = newResourceTree;
 }
-//TODO: Put object into difficulty pipeline
 int GoToResourceProcess::getDifficulty(Agent* agent, Object* obj, Need* need, int index)
 {
     //std::cout << "goToResource.getDifficulty()\n";
@@ -69,7 +68,7 @@ int GoToResourceProcess::update(Agent* agent, Object* obj, ObjectManager* object
             obj->moveTowards(target, 300, deltaTime, *objectManager);
             return 0;
         case -1: //Path failed
-            std::cout << "Path failed to calculate!\n";
+            std::cout << "GoToResourceProcess: Path failed to calculate!\n";
             return -1;
         case -2: //Path doesn't exist - it's probably done
             return 1;

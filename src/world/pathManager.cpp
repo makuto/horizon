@@ -36,7 +36,7 @@ unsigned int PathManager::requestNewPath(Coord& startPosition, Coord& endPositio
 //Sets the passed Coord if the path is ready
 //Returns 1 if ready, 0 if requiring calculation, -2 if the path
 //does not exist (in the pool), or -1 if failed
-int PathManager::advanceAlongPath(unsigned int pathID, Coord &currentPosition, Coord& targetPosition)
+int PathManager::advanceAlongPath(unsigned int pathID, Coord &currentPosition, Coord& newTargetPosition)
 {
     PoolData<Path>* currentPathData = getPath(pathID);
     if (currentPathData)
@@ -44,7 +44,7 @@ int PathManager::advanceAlongPath(unsigned int pathID, Coord &currentPosition, C
         Path* currentPath = &currentPathData->data;
         int status = currentPath->getStatus();
         if (status != 1) return status; //Path failed or not ready
-        targetPosition = currentPath->advance(currentPosition);
+        newTargetPosition = currentPath->advance(currentPosition);
         return 1;
         
     }

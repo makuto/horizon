@@ -1,0 +1,16 @@
+<renderQueue.1>
+
+//These must be named as numbers for the title of the layer
+//RENDER_QUEUE_LAYER::ONGROUND
+0:
+    //The value is the max instance number for that stage (make sure to order)
+    1=100;
+    2=100;
+    3=100;
+    4=100;
+    5=100;
+    
+//RENDER_QUEUE_LAYER::ABOVEGROUND
+1:
+    1=10;
+    2=10;

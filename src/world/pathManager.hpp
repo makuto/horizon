@@ -5,6 +5,20 @@
 #include "../utilities/pool.hpp"
 #include "path.hpp"
 
+/**--PathManager--
+ * PathManager manages all active paths in a pool and controls calculation
+ * of paths. By using PathManager, clients can store an index to a path rather
+ * than the path itself. It also takes control from clients in regards to
+ * Path and calculating paths. PathManager batch calculates paths, which is
+ * a lot safer (performance-wise) because it can calculate for a specified
+ * amount of time.
+ *
+ * To use, simply call requestNewPath and store the returned ID. update() should
+ * then be called (likely in the game loop somewhere) so that the path can be
+ * calculated. Once it is ready, advanceAlongPath() will provide the path
+ * follower with a point to move towards. The path will be automatically freed
+ * if calculations fail or the follower reaches the destination.
+ * */
 class World;
 class PathManager
 {
@@ -33,7 +47,7 @@ class PathManager
         //(getPathStatus is not required). If return is 1, do movement calculations
         //Returns 1 if ready, 0 if requiring calculation, -2 if the path
         //does not exist (in the pool), or -1 if failed
-        int advanceAlongPath(unsigned int pathID, Coord &currentPosition, Coord& targetPosition);
+        int advanceAlongPath(unsigned int pathID, Coord &currentPosition, Coord& newTargetPosition);
         
         //Returns path status, or -2 if path does not exist in pool
         int getPathStatus(unsigned int pathID);

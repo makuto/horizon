@@ -14,6 +14,10 @@ scripts:
     pickupObject=data/scripts/objects/pickupObject.ept;
 
     consumableItemProcessor=data/scripts/itemProcessors/consumableItemProcessor.ept;
+
+    renderQueue=data/scripts/renderQueue.ept;
+
+    imageManager=data/scripts/imageManager.ept;
     
 //Must be loaded individually
 specialScripts:
