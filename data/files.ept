@@ -12,12 +12,12 @@ scripts:
     testObject=data/scripts/testObject.ept;
     testObjectAgent=data/scripts/testObjectAgent.ept;
     pickupObject=data/scripts/objects/pickupObject.ept;
-
+    
     consumableItemProcessor=data/scripts/itemProcessors/consumableItemProcessor.ept;
-
+    
     renderQueue=data/scripts/renderQueue.ept;
-
     imageManager=data/scripts/imageManager.ept;
+    input=data/scripts/input.ept;
     
 //Must be loaded individually
 specialScripts:

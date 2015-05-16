@@ -1,0 +1,12 @@
+<input.1>
+
+gameplay:
+    //Standard arrow key movement
+    moveUp=73;
+    moveDown=74;
+    moveLeft=71;
+    moveRight=72;
+    
+    //Abstract away mouse for joystick etc.
+    pointerX=2000;
+    pointerY=2001;

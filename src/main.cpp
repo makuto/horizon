@@ -37,10 +37,9 @@
 #include "object/processors/pickupObjectProcessor.hpp"
 
 #include "world/resourceTree.hpp"
-
 #include "utilities/renderQueue.hpp"
-
 #include "utilities/imageManager.hpp"
+#include "utilities/inputState.hpp"
 
 void test()
 {
@@ -134,6 +133,18 @@ int main()
     win.setBackgroundColor(100, 100, 100, 100);
     inputManager in(&win);
 
+    /*//Test InputState
+    InputState testInput;
+    testInput.setup(parser.getGroup("input.gameplay"), &in);
+    Time bogusTime;
+    while (!win.shouldClose())
+    {
+        testInput.update(&bogusTime);
+        std::cout << testInput.getInputState("moveUp") << "\n";
+        std::cout << testInput.getInputState("pointerX") << "\n";
+        win.update();
+    }*/
+
     //Setup ImageManager
     ImageManager imageManager;
     if (!imageManager.load(parser.getFile("imageManager"))) return -1;
@@ -144,7 +155,7 @@ int main()
     RenderInstance* instance = NULL;
     Coord testViewPos;
     testViewPos.setPosition(0, 0, 0, 0);
-    while(!win.shouldClose())
+    /*while(!win.shouldClose())
     {
         //sprite* testSpr = imageManager.getSubRectSprite("testAgent", "agent");
         sprite* testSpr = imageManager.getSprite("testAgent");
@@ -172,7 +183,7 @@ int main()
         instance->originMode = RENDER_ORIGIN_MODE::TOP_RIGHT;
         rQ.renderLayer(&win, &imageManager, testViewPos, RENDER_QUEUE_LAYER::ONGROUND);
         win.update();
-    }
+    }*/
     /*std::cout << instance << "\n";
     instance = rQ.getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
     if (instance) instance->position.setPosition(0, 0, 78, 1023);
