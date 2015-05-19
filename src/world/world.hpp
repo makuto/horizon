@@ -14,6 +14,7 @@ extern const std::string WORLDS_PATH;
 //Cells not near to the view (UPDATE_CLOSE_DISTANCE) will be updated
 //after close cells for MAX_WORLD_FAR_UPDATE before breaking
 extern const float MAX_WORLD_FAR_UPDATE;
+class RenderQueue;
 class World
 {
     private:
@@ -24,6 +25,7 @@ class World
         //Holds the original masterMap layers 
         std::vector<std::vector<tile>* > oldLayers;
         window* win;
+        RenderQueue* renderQueue;
         ObjectProcessorDir* processorDir;
         tileCamera camera;
         //Cache for GetIntersectingCells; set size via MAX_INTERSECTING_CELLS
@@ -32,7 +34,7 @@ class World
         std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator nextCellToUpdate;
     public:
         //newMasterMap should be set up correctly already
-        World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir);
+        World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir, RenderQueue* newRenderQueue);
         ~World();
         //getCell will attempt to find the cell in the pool. If it is not
         //in the pool, it will try to load the cell. If it doesn't exist,
@@ -63,8 +65,8 @@ class World
         //Returns a float between 0 and 1 where 1 is the highest difficulty.
         float estimateCellDifficulty(CellIndex& cellToEstimate);
         
-        //Displays the map
-        void render(Coord& viewPosition, Time* globalTime);
+        //Displays the map. Pass a value from 0 to 1 for renderQueue extrapolation
+        void render(Coord& viewPosition, Time* globalTime, float extrapolateAmount);
         //Updates objects
         //Objects nearest to viewPosition will be updated in real time,
         //then cells will be updated until extraTime is reached or the end of

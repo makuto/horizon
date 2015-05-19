@@ -7,6 +7,7 @@
 #include "../object/objectManager.hpp"
 #include "../object/objectProcessorDir.hpp"
 #include "time.hpp"
+#include "../utilities/renderQueue.hpp"
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
@@ -41,6 +42,9 @@ class Cell
         //If a cell is inactive for long periods of time, it can be unloaded.
         //Touched stores the last time it was active
         Time touched;
+
+        //RenderQueue for Object layer rendering
+        RenderQueue* renderQueue;
         
         //If isMasterLayer is true, this function will skip over the master
         //layer header and load the raw tiles
@@ -49,10 +53,10 @@ class Cell
         void setTouched(Time newValue);
         Time getTouched();
         
-        Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
+        Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir, RenderQueue* newRenderQueue);
         Cell();
         //Used to allow pooling
-        void init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir);
+        void init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir, RenderQueue* newRenderQueue);
         ~Cell();
         ObjectManager* getObjectManager();
         

@@ -30,6 +30,8 @@ class Object
         Time lastUpdate;//Last time this object was updated (you have control over this!
                         //It's not changed automatically - updateObject should handle that)
         int state;      //Use this for whatever you want
+        float velX;     //Use these to store velocity. You have control over
+        float velY;     //these - use them in renderQueue to make extrapolation work
         float rotation; //Graphical rotation for this object
         aabb bounds;    //Bounds for all external collisions (x and y ignored)
         float boundOffsetX; //Offsets for bounds (added to position; for center, you would do negative)

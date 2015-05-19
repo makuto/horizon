@@ -591,7 +591,7 @@ void ObjectManager::moveObject(Object* objectToMove, Coord& newPosition)
         std::cout << "WARNING: moveObject(): QuadTree insertion failed!\n";
     }
 }
-void ObjectManager::renderObjects(float viewX, float viewY, window* win)
+void ObjectManager::renderObjects(float viewX, float viewY, window* win, RenderQueue* renderQueue)
 {
     //Construct view bounds
     aabb view(viewX - VIEW_TOLERANCE, viewY - VIEW_TOLERANCE,
@@ -620,7 +620,7 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
                     lastType = currentObject->type;
                 }
                 
-                processor->renderObject(currentObject, viewX, viewY, win);
+                processor->renderObject(currentObject, viewX, viewY, win, renderQueue);
             }
         }
     }
@@ -629,6 +629,7 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win)
 }
 bool ObjectManager::updateObjects(Time* globalTime)
 {
+    std::cout << "updating objects cell " << parentCellID.x << " , " << parentCellID.y << "\n";
     bool hasObject = false;
     ObjectProcessor* processor = NULL;
     //TODO: It might actually be much faster to simply do a quadtree query

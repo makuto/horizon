@@ -40,8 +40,10 @@ void RenderStage::reset()
 {
     nextEmptyIndex = 0;
 }
-RenderQueue::RenderQueue(eptFile* spec)
+RenderQueue::RenderQueue(eptFile* spec, window* newWin, ImageManager* newImageManager)
 {
+    win = newWin;
+    imageManager = newImageManager;
     eptGroup* group;
     std::string groupName;
     group = spec->getGroupFromIndex(0, groupName);
@@ -97,7 +99,7 @@ RenderInstance* RenderQueue::getInstance(RENDER_QUEUE_LAYER layer, unsigned int 
     return (*currentLayer)[stage].getEmptyInstance();
 }
 //Renders a single instance.
-void RenderQueue::renderInstance(window* win, ImageManager* imageManager, Coord& viewPosition, RenderInstance* instance)
+void RenderQueue::renderInstance(Coord& viewPosition, RenderInstance* instance)
 {
     //Get instance sprite
     sprite* spr = NULL;
@@ -109,8 +111,8 @@ void RenderQueue::renderInstance(window* win, ImageManager* imageManager, Coord&
 
     //Prepare sprite
     CellIndex viewCell = viewPosition.getCell();
-    float x = instance->position.getRelativeCellX(viewCell);
-    float y = instance->position.getRelativeCellY(viewCell);
+    float x = instance->position.getRelativeCellX(viewCell) - viewPosition.getCellOffsetX();
+    float y = instance->position.getRelativeCellY(viewCell) - viewPosition.getCellOffsetY();
     spr->setPosition(x, y);
     spr->setRotation(instance->rotation);
 
@@ -144,12 +146,12 @@ void RenderQueue::renderInstance(window* win, ImageManager* imageManager, Coord&
             spr->setOrigin(0, 0);
             break;
     }
-
+    //TODO: Clip sprites not in window
     //Render the instance
     win->draw(spr);
 }
 //Renders all used instances in each stage of the specified layer
-void RenderQueue::renderLayer(window* win, ImageManager* imageManager, Coord& viewPosition, RENDER_QUEUE_LAYER layer)
+void RenderQueue::renderLayer(Coord& viewPosition, RENDER_QUEUE_LAYER layer)
 {
     //Find the layer
     renderLayerMap::iterator findIt = layers.find(layer);
@@ -166,7 +168,35 @@ void RenderQueue::renderLayer(window* win, ImageManager* imageManager, Coord& vi
         RenderInstance* instance = (*it).popInstance();
         while (instance != NULL)
         {
-            renderInstance(win, imageManager, viewPosition, instance);
+            renderInstance(viewPosition, instance);
+            instance = (*it).popInstance();
+        }
+    }
+}
+//Renders all used instances in each stage, extrapolating on their next
+//position by predicting how far they will be at their velocity
+void RenderQueue::renderLayerExtrapolate(Coord& viewPosition, RENDER_QUEUE_LAYER layer, float extrapolateAmount)
+{
+    //Find the layer
+    renderLayerMap::iterator findIt = layers.find(layer);
+    if (findIt == layers.end())
+    {
+        std::cout << "ERROR: RenderQueue.renderLayer(): Layer " << layer << " doesn't exist!\n";
+        return;
+    }
+    
+    std::vector<RenderStage>* currentLayer = findIt->second;
+    for (std::vector<RenderStage>::iterator it = currentLayer->begin(); it != currentLayer->end(); ++it)
+    {
+        //Render all instances in this stage
+        RenderInstance* instance = (*it).popInstance();
+        while (instance != NULL)
+        {
+            //Extrapolate position depending on extrapolateAmount
+            float eVelX = instance->velX * extrapolateAmount;
+            float eVelY = instance->velY * extrapolateAmount;
+            instance->position.addVector(eVelX, eVelY);
+            renderInstance(viewPosition, instance);
             instance = (*it).popInstance();
         }
     }

@@ -6,6 +6,7 @@
 #include <base2.0/tileMap/tileMap.hpp>
 #include "object.hpp"
 #include "../world/pathManager.hpp"
+#include "../utilities/renderQueue.hpp"
 //#include "objectManager.hpp"
 //#include "../agent/agent.hpp"
 /* --ObjectProcessor--
@@ -51,7 +52,7 @@ class ObjectProcessor
         virtual int updateObject(Object* obj, Time* globalTime, ObjectManager* manager);
         //Render the object (it is in view). ViewX and Y are the window's top left corner coordinates
         //relative to the current cell.
-        virtual void renderObject(Object* obj, float viewX, float viewY, window* win);
+        virtual void renderObject(Object* obj, float viewX, float viewY, window* win, RenderQueue* renderQueue);
         //Agent uses/activates object
         //virtual int activateObject(Object* obj, Agent* agent);
         //Object is hit by a used item (sword etc)

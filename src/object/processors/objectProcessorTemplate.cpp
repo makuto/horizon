@@ -46,7 +46,7 @@ int $tObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager
     return 1;
 }
 //Render the object (it is in view of player)
-void $tObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win)
+void $tObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win, RenderQueue* renderQueue)
 {
     
 }

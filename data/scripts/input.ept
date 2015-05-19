@@ -1,11 +1,19 @@
 <input.1>
 
 gameplay:
-    //Standard arrow key movement
-    moveUp=73;
-    moveDown=74;
-    moveLeft=71;
-    moveRight=72;
+    //Move player (WASD)
+    movePlayerUp=22;
+    movePlayerDown=18;
+    movePlayerLeft=0;
+    movePlayerRight=3;
+
+    //Move camera (arrow keys)
+    viewUp=73;
+    viewDown=74;
+    viewLeft=71;
+    viewRight=72;
+
+    viewFastMove=38;
     
     //Abstract away mouse for joystick etc.
     pointerX=2000;

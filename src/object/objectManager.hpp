@@ -25,6 +25,7 @@ struct ObjectPool
 class Cell;
 class World;
 class ObjectProcessor;
+class RenderQueue;
 class ObjectManager
 {
     private:
@@ -105,7 +106,7 @@ class ObjectManager
         void moveObject(Object* objectToMove, Coord& newPosition);
         
         //Gets all objects onscreen and calls ObjProcessor.renderObject()
-        void renderObjects(float viewX, float viewY, window* win);
+        void renderObjects(float viewX, float viewY, window* win, RenderQueue* renderQueue);
         //Updates all objects
         //Returns false if there are no active objects
         bool updateObjects(Time* globalTime);

@@ -19,12 +19,13 @@ const int NUM_LAYERS = 3;
 const int ONGROUND_LAYER = 1;
 
 
-Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir):cellID(newCellID), objectManager(newWorld, processorDir, newCellID, this)
+Cell::Cell(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir, RenderQueue* newRenderQueue):cellID(newCellID), objectManager(newWorld, processorDir, newCellID, this)
 {
     world = newWorld;
     tiles.resize(NUM_LAYERS);
     onGroundPercentage = 0;
     unwalkablePercentage = 0;
+    renderQueue = newRenderQueue;
 }
 Cell::Cell()
 {
@@ -39,8 +40,9 @@ Cell::Cell()
     }
     onGroundPercentage = 0;
     unwalkablePercentage = 0;
+    renderQueue = NULL;
 }
-void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir)
+void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir, RenderQueue* newRenderQueue)
 {
     world = newWorld;
     cellID = newCellID;
@@ -48,6 +50,7 @@ void Cell::init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* proces
     touched.reset();
     onGroundPercentage = 0;
     unwalkablePercentage = 0;
+    renderQueue = newRenderQueue;
 }
 Cell::~Cell()
 {
@@ -406,7 +409,7 @@ bool Cell::save(int worldID, dynamicMultilayerMap* map)
 }
 void Cell::renderObjects(float viewX, float viewY, window* win)
 {
-    objectManager.renderObjects(viewX, viewY, win);
+    objectManager.renderObjects(viewX, viewY, win, renderQueue);
 }
 void Cell::renderBottom(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win)
 {

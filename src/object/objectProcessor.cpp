@@ -63,8 +63,10 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
 //Do a routine update on the object
 int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* manager)
 {
+    Coord prevPosition = obj->getPosition();
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
+    std::cout << " updating " << obj->id << " delta " << delta.getExactSeconds() << "\n";
     //obj->rotation += delta.getExactSeconds() * 200;
     float speed = 100; //Why doesn't 25 work?
     //float vecX = obj->getPosition().getTrueX() + 512;
@@ -186,16 +188,27 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
                 break;
         }*/
     }
+    CellIndex prevCell = prevPosition.getCell();
+    obj->velX = obj->getPosition().getRelativeCellX(prevCell) - prevPosition.getCellOffsetX();
+    obj->velY = obj->getPosition().getRelativeCellY(prevCell) - prevPosition.getCellOffsetY();
     obj->lastUpdate = *globalTime;
     return 1;
 }
 //Render the object (it is in view of player)
-void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win)
+void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win, RenderQueue* renderQueue)
 {
-    Coord pos = obj->getPosition();
+    /*Coord pos = obj->getPosition();
     testSpr.setPosition(pos.getCellOffsetX() - viewX, pos.getCellOffsetY() - viewY);
     testSpr.setRotation(obj->rotation);
-    win->draw(&testSpr);
+    win->draw(&testSpr);*/
+    RenderInstance* instance = renderQueue->getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
+    if (instance) instance->position = obj->getPosition();
+    instance->imageId = "testAgent";
+    instance->subRectId = "agent";
+    instance->requestorId = obj->id;
+    instance->originMode = RENDER_ORIGIN_MODE::CENTER;
+    instance->velX = obj->velX;
+    instance->velY = obj->velY;
     /*//Debug bounds render
     sf::RenderWindow* sfWin = win->getBase();
     sf::RectangleShape rectangle;

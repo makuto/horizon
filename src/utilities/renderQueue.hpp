@@ -18,7 +18,7 @@ enum RENDER_ORIGIN_MODE
 //The layer to render on
 enum RENDER_QUEUE_LAYER:int
 {
-    ONGROUND,
+    ONGROUND = 0,
     ABOVEGROUND
 };
 struct RenderInstance
@@ -29,6 +29,9 @@ struct RenderInstance
     Coord               position;       //The position of the image (I use a
                                         //Coord here so that view no longer has
                                         //to be so global)
+    float               velX;           //Stores the velocity of the image.
+    float               velY;           //Used to extrapolate for fixed timesteps
+                                        //Should be set if using renderLayerExtrapolate
     float               rotation;       //The rotation of the image
     RENDER_ORIGIN_MODE  originMode;     //What the origin should be in regards to
                                         //the provided position (e.g. CENTER would
@@ -71,9 +74,11 @@ class RenderQueue
 {
     private:
         renderLayerMap layers;
+        window* win;
+        ImageManager* imageManager;
     public:
         //Sets up layers as specified in the EPT specification (see end of file)
-        RenderQueue(eptFile* spec);
+        RenderQueue(eptFile* spec, window* newWin, ImageManager* newImageManager);
         //Destroys layers
         ~RenderQueue();
         //Returns a RenderInstance on the desired layer and stage. Simply set
@@ -82,9 +87,13 @@ class RenderQueue
         //Returns NULL if the stage doesn't exist or is full
         RenderInstance* getInstance(RENDER_QUEUE_LAYER layer, unsigned int stage);
         //Renders a single instance.
-        void renderInstance(window* win, ImageManager* imageManager, Coord& viewPosition, RenderInstance* instance);
+        void renderInstance(Coord& viewPosition, RenderInstance* instance);
         //Renders all used instances in each stage of the specified layer
-        void renderLayer(window* win, ImageManager* imageManager, Coord& viewPosition, RENDER_QUEUE_LAYER layer);
+        void renderLayer(Coord& viewPosition, RENDER_QUEUE_LAYER layer);
+        //Renders all used instances in each stage, extrapolating on their next
+        //position by predicting how far they will be at their velocity.
+        //extrapolateAmount is how far we should extrapolate - between 0 and 1.0
+        void renderLayerExtrapolate(Coord& viewPosition, RENDER_QUEUE_LAYER layer, float extrapolateAmount);
         //Resets all RenderStages on all layers
         void reset();
 };

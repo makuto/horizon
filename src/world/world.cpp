@@ -24,7 +24,7 @@ const float CELL_UNLOAD_DELAY = 60;
 const int CELL_ESTIMATION_SKIP = 16;
 
 
-World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir):cellPool(CELL_POOL_SIZE)
+World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir, RenderQueue* newRenderQueue):cellPool(CELL_POOL_SIZE)
 {
     win = newWin;
     masterMap = newMasterMap;
@@ -40,6 +40,7 @@ World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID,
     worldID = newWorldID;
     cellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS];
     nextCellToUpdate =  cells.begin();
+    renderQueue = newRenderQueue;
 }
 World::~World()
 {
@@ -64,7 +65,7 @@ Cell* World::loadCell(CellIndex cellToLoad)
         std::cout << "ERROR: world.loadCell(): Pool returned null!\n";
         return NULL;
     }
-    newCell->data.init(cellToLoad, this, processorDir);
+    newCell->data.init(cellToLoad, this, processorDir, renderQueue);
     if (!newCell->data.load(worldID))
     {
         cellPool.removeData(newCell);
@@ -95,7 +96,7 @@ Cell* World::getCell(CellIndex cell)
             return NULL;
         }
         newCell = &newPoolCell->data;
-        newCell->init(cell, this, processorDir);
+        newCell->init(cell, this, processorDir, renderQueue);
         newCell->generate(worldID, worldID, 2); //Seed is simply worldID
         cells[cell] = newPoolCell;
     }
@@ -223,7 +224,7 @@ float World::estimateCellDifficulty(CellIndex& cellToEstimate)
     std::cout << "Estimated difficulty: " << difficulty << " via alg: " << ((numWaterTiles / totalTiles) + (numMountainTiles / totalTiles))  << " true difficulty: " << trueDifficulty << "\n\n";*/
     return difficulty;
 }
-void World::render(Coord& viewPosition, Time* globalTime)
+void World::render(Coord& viewPosition, Time* globalTime, float extrapolateAmount)
 {
     //Set the camera to the view relative to the cell it's in
     int viewX = viewPosition.getCellOffsetX();
@@ -286,6 +287,8 @@ void World::render(Coord& viewPosition, Time* globalTime)
             currentCell->renderMiddle(camera, newX, newY, masterMap, win);
         }
     }
+    //Render renderQueue onGround layer
+    renderQueue->renderLayerExtrapolate(viewPosition, RENDER_QUEUE_LAYER::ONGROUND, extrapolateAmount);
     //Render top layer
     for (int i = 0; i < size; ++i)
     {
@@ -309,6 +312,8 @@ void World::render(Coord& viewPosition, Time* globalTime)
             currentCell->setTouched(*globalTime);
         }
     }
+    //Render renderQueue aboveGround layer
+    renderQueue->renderLayerExtrapolate(viewPosition, RENDER_QUEUE_LAYER::ABOVEGROUND, extrapolateAmount);
     //Render overlay
     /*sprite dayNightSpr;
     if (dayNightSpr.load("data/images/day-night.png"))
@@ -342,6 +347,7 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
     CellIndex* closeCells = getIntersectingCells(viewPosition,
     UPDATE_CLOSE_DISTANCE_X + CELL_WIDTH_PIXELS,
     UPDATE_CLOSE_DISTANCE_Y + CELL_HEIGHT_PIXELS, size);
+    std::cout << "  World update; num cells " << size << "\n";
     for (int i = 0; i < size; ++i)
     {
         Cell* currentCell = getCell(closeCells[i]);
@@ -363,13 +369,23 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
     for (; nextCellToUpdate!=cells.end();
     ++nextCellToUpdate)
     {
+        //Make sure we don't get stuck updating cells and harm the frame rate
         if (currentTime.getTime() >= extraTime) break;
+        //Skip any cells we updated in the view loop (above)
+        if (nextCellToUpdate->second->data.getTouched().getExactSeconds()==globalTime->getExactSeconds())
+            continue;
+
+        //Update the cell
         nextCellToUpdate->second->data.update(globalTime);
+        
         //Check if touched delta is large; if so, remove the cell
         Time delta;
         Time cellTouched = nextCellToUpdate->second->data.getTouched();
         globalTime->getDeltaTime(&cellTouched, delta);
         delta.invert();
+        //Equation explained at top of file; unloads cells faster depending on
+        //how full the cell pool is (if it's very full, it will unload cells with
+        //very small deltas
         if (delta.getExactSeconds() > (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))) || delta.getDays() > 0)
         {
             if (nextCellToUpdate->second->data.getTouched().getExactSeconds()==0) 

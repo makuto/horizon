@@ -144,6 +144,8 @@ int main()
         std::cout << testInput.getInputState("pointerX") << "\n";
         win.update();
     }*/
+    InputState input;
+    input.setup(parser.getGroup("input.gameplay"), &in);
 
     //Setup ImageManager
     ImageManager imageManager;
@@ -151,7 +153,7 @@ int main()
 
     
     ///////////
-    RenderQueue rQ(parser.getFile("renderQueue"));
+    RenderQueue renderQueue(parser.getFile("renderQueue"), &win, &imageManager);
     RenderInstance* instance = NULL;
     Coord testViewPos;
     testViewPos.setPosition(0, 0, 0, 0);
@@ -235,7 +237,7 @@ int main()
     dynamicMasterMap->setViewSize(win.getHeight() / TILE_HEIGHT, win.getWidth() / TILE_WIDTH);
     dynamicMasterMap->setImage(&tileSet);
     ObjectProcessorDir testDir;
-    World newWorld(&win, &dynamicMap, worldToLoad, &testDir);
+    World newWorld(&win, &dynamicMap, worldToLoad, &testDir, &renderQueue);
 
     ResourceTree resourceTree(&newWorld);
     //Coord resPos;
@@ -337,7 +339,8 @@ int main()
     agentCell.y = 0;
     //testAgent->worldPosition.setPosition(agentCell, 100, 100);
     Coord windowPosition;
-    windowPosition.setPosition(agentCell, 0, 0);
+    //windowPosition.setPosition(agentCell, 0, 0);
+    windowPosition.setPosition(0, 0, 0, 0);
     //windowPosition.setPosition(23, -10, 0, 0);
     float defaultViewSpeed = 400;
     float viewSpeed = defaultViewSpeed;
@@ -444,9 +447,24 @@ int main()
     timer miniMapTimer;
     miniMapTimer.start();
     const float MINIMAP_UPDATE_RATE = 1;
+
+    //Fixed timestep vars
+    float extrapolateAmount = 0;
+    timer currentRealTime;
+    double previousTime = 0;
+    double catchUp = 0;
+    Time gameTime;
+    gameTime.reset();
+    const double MS_PER_UPDATE = .016;
+    const int MAX_UPDATE_LOOPS = 5;
+    int totalUpdates = 0;
+    currentRealTime.start();
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {
+        //Get input
+        input.update(&gameTime);
+        
         prof.startTiming("frame");
         //Move view
         //TODO: Why is it so choppy? :(
@@ -492,7 +510,7 @@ int main()
         
         //testSprite.setPosition(testAgent->worldPosition.getScreenX(&windowPosition), testAgent->worldPosition.getScreenY(&windowPosition));
         prof.startTiming("render");
-        newWorld.render(windowPosition, &globalTime);
+        newWorld.render(windowPosition, &globalTime, extrapolateAmount);
         ///////////////////////MINIMAP
         if (in.isPressed(inputCode::Space))
         {
@@ -586,56 +604,47 @@ int main()
         globalTime.addSeconds(0.016);
         DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
         DebugText::addEntry("Window Cell Position: ", windowPosition.getCell().x, windowPosition.getCell().y);
+        DebugText::addEntry("Game Time: ", gameTime.getExactSeconds());
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
         //if (deltaTime.getExactSeconds()>=0.016)
         //if (deltaTime.getExactSeconds()>=avgFrameTime)
-        if (deltaTime.getExactSeconds()>=0.014)
+        double currentTime = currentRealTime.getTime();
+        catchUp += currentTime - previousTime;
+        previousTime = currentTime;
+        int updateLoops = 0;
+        timer updateTime;
+        updateTime.start();
+        std::cout << "Need to consume " << catchUp << " seconds, estimated updates: " << catchUp / MS_PER_UPDATE << "\n";
+        while(catchUp >= MS_PER_UPDATE && updateLoops <= MAX_UPDATE_LOOPS)
         {
+            updateLoops++;
             prof.startTiming("updateAgent");
             //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
             prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
-            pathManager.update(0.01);
-            newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
-            /*if (isTapped)
-            {
-                newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
-                isTapped = false;
-            }
-            else
-            {
-                if (!isPressed && in.isPressed(inputCode::U))
-                {
-                    isTapped = true;
-                    isPressed = true;
-                }
-                else
-                {
-                    isTapped = false;
-                }
-                if (!in.isPressed(inputCode::U))
-                {
-                    isPressed = false;
-                }
-            }*/
-            /*for (int i = 0; i < 2; ++i)
-            {
-                newWorld.update(windowPosition, &globalTime, MAX_WORLD_FAR_UPDATE);
-                globalTime.addSeconds(0.008);
-            }*/
+            pathManager.update(0.001);
+            gameTime.addSeconds(MS_PER_UPDATE);
+            std::cout << "  lop\n";
+            newWorld.update(windowPosition, &gameTime, MAX_WORLD_FAR_UPDATE);
+            catchUp -= MS_PER_UPDATE;
             prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
             //globalTime.print();
         }
+        totalUpdates += updateLoops;
+        extrapolateAmount = catchUp / MS_PER_UPDATE;
+        std::cout << "  Updated " << updateLoops << " times, finished with extrap " << extrapolateAmount << "; advanced " << updateLoops * MS_PER_UPDATE << " game seconds in "<< updateTime.getTime() << "\n";
         prof.stopTiming("frame");
+        std::cout << "      Game time: " << gameTime.getExactSeconds() << " real time: " << currentRealTime.getTime() << " left over catchup: " << catchUp << "\n";
     }
     //Remember to do this! UPDATE: Not any more - agents are pooled
     //delete testAgent;
     prof.outputAllResults();
     prof.outputAllResultsPercentages(totalTime.getTime());
-    
+
+    std::cout << "Total actual updates: " << totalUpdates << " over " << gameTime.getExactSeconds() << " seconds; Predicted updates: " << gameTime.getExactSeconds() / MS_PER_UPDATE << "\n";
     /*Agent testAgent;
     int difficulty;
     ProcessChain* testChain = processDir.getOptimalChain(&testAgent, NULL, 1, difficulty);

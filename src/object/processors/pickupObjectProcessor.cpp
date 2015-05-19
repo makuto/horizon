@@ -65,7 +65,7 @@ int PickupObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectMan
     return 1;
 }
 //Render the object (it is in view of player)
-void PickupObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win)
+void PickupObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window* win, RenderQueue* renderQueue)
 {
     Coord pos = obj->getPosition();
     ItemProcessor* thisItemProcessor = itemManager->getItemProcessor(obj->subType);
