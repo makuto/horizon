@@ -4,10 +4,10 @@ EXECUTABLE_NAME= LOCAL_horizon
 OBJ_DIR= LOCAL_obj
 LINK= g++ -std=c++11 -Wall -o "$(EXECUTABLE_NAME)" 
 LINKLIBS= -lBox2D -lbase2.0 -lsfml-graphics -lsfml-window -lsfml-system
-horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/micropather.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/imageManager.o $(OBJ_DIR)/renderQueue.o $(OBJ_DIR)/inputState.o $(OBJ_DIR)/time.o $(OBJ_DIR)/resourceTree.o $(OBJ_DIR)/item.o $(OBJ_DIR)/itemDatabase.o $(OBJ_DIR)/itemProcessor.o $(OBJ_DIR)/consumableItemProcessor.o $(OBJ_DIR)/itemManager.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/pickupObjectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/path.o $(OBJ_DIR)/pathManager.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/useItemProcess.o $(OBJ_DIR)/gotoResourceProcess.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/hungerNeedProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
+horizon: $(OBJ_DIR)/debugText.o $(OBJ_DIR)/pool.o $(OBJ_DIR)/quadTree.o $(OBJ_DIR)/simplexnoise.o $(OBJ_DIR)/micropather.o $(OBJ_DIR)/coord.o $(OBJ_DIR)/imageManager.o $(OBJ_DIR)/renderQueue.o $(OBJ_DIR)/inputState.o $(OBJ_DIR)/time.o $(OBJ_DIR)/eventManager.o $(OBJ_DIR)/resourceTree.o $(OBJ_DIR)/item.o $(OBJ_DIR)/itemDatabase.o $(OBJ_DIR)/itemProcessor.o $(OBJ_DIR)/consumableItemProcessor.o $(OBJ_DIR)/itemManager.o $(OBJ_DIR)/object.o $(OBJ_DIR)/objectProcessor.o $(OBJ_DIR)/pickupObjectProcessor.o $(OBJ_DIR)/agentProcessor.o $(OBJ_DIR)/objectProcessorDir.o $(OBJ_DIR)/objectManager.o $(OBJ_DIR)/cell.o $(OBJ_DIR)/world.o $(OBJ_DIR)/path.o $(OBJ_DIR)/pathManager.o $(OBJ_DIR)/needMath.o $(OBJ_DIR)/need.o $(OBJ_DIR)/process.o $(OBJ_DIR)/useItemProcess.o $(OBJ_DIR)/gotoResourceProcess.o $(OBJ_DIR)/processMap.o $(OBJ_DIR)/agent.o $(OBJ_DIR)/needProcessor.o $(OBJ_DIR)/hungerNeedProcessor.o $(OBJ_DIR)/processDirectory.o $(OBJ_DIR)/species.o $(OBJ_DIR)/main.o
 	@echo -----------Linking horizon-------------------------
 	mv *.o $(OBJ_DIR)
-	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o micropather.o coord.o imageManager.o renderQueue.o inputState.o time.o resourceTree.o item.o itemDatabase.o itemProcessor.o consumableItemProcessor.o itemManager.o object.o objectProcessor.o pickupObjectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o path.o pathManager.o needMath.o need.o process.o useItemProcess.o gotoResourceProcess.o processMap.o agent.o needProcessor.o hungerNeedProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
+	(cd $(OBJ_DIR) && $(LINK) debugText.o pool.o quadTree.o simplexnoise.o micropather.o coord.o imageManager.o renderQueue.o inputState.o time.o eventManager.o resourceTree.o item.o itemDatabase.o itemProcessor.o consumableItemProcessor.o itemManager.o object.o objectProcessor.o pickupObjectProcessor.o agentProcessor.o objectProcessorDir.o objectManager.o cell.o world.o path.o pathManager.o needMath.o need.o process.o useItemProcess.o gotoResourceProcess.o processMap.o agent.o needProcessor.o hungerNeedProcessor.o processDirectory.o species.o main.o $(LINKLIBS))
 	mv $(OBJ_DIR)/$(EXECUTABLE_NAME) .
 	#cppcheck --enable=all --std=c++11 --template=gcc -q -v src
 
@@ -41,6 +41,9 @@ $(OBJ_DIR)/coord.o: src/world/coord.hpp src/world/coord.cpp
 $(OBJ_DIR)/time.o: src/world/time.hpp src/world/time.cpp
 	$(FLAGS) src/world/time.hpp
 	$(FLAGS) src/world/time.cpp
+$(OBJ_DIR)/eventManager.o: src/world/eventManager.hpp src/world/eventManager.cpp
+	$(FLAGS) src/world/eventManager.hpp
+	$(FLAGS) src/world/eventManager.cpp
 $(OBJ_DIR)/resourceTree.o: src/world/resourceTree.hpp src/world/resourceTree.cpp
 	$(FLAGS) src/world/resourceTree.hpp
 	$(FLAGS) src/world/resourceTree.cpp

@@ -72,6 +72,9 @@ class ObjectManager
         //cell or NULL if there are no objects in the range.
         //Delete the array once you are done.
         std::vector<Object*>* getObjectsInRange(aabb& range);
+        //Cached version of getObjectsInRange; do not delete the array or
+        //manipulate it. Returns the cached array as well as the number of points
+        Object** getObjectsInRangeCache(aabb& range, int& size);
         
         //Returns a pointer to an uninitialized (nor constructed) object
         //or NULL if there are no free pool spaces. The object will be added

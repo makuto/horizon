@@ -87,10 +87,10 @@ void PathManager::update(float timeToUse)
 {
     timer currentTime;
     currentTime.start();
-
     for (std::map<unsigned int, PoolData<Path>* >::iterator it = activePaths.begin();
         it != activePaths.end(); ++it)
     {
+        it->second->data.getStatus();
         //Only calculate paths that need it (obviously)
         switch (it->second->data.getStatus())
         {

@@ -33,6 +33,7 @@ bool $tObjectProcessor::initObject(Object* newObj, int subType, Coord& position,
     newObj->boundOffsetX = -15;
     newObj->boundOffsetY = -15;
     newObj->manhattanRadius = 1000;
+    newObj->target = -1;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     return true;
 }

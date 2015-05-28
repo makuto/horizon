@@ -224,6 +224,12 @@ float World::estimateCellDifficulty(CellIndex& cellToEstimate)
     std::cout << "Estimated difficulty: " << difficulty << " via alg: " << ((numWaterTiles / totalTiles) + (numMountainTiles / totalTiles))  << " true difficulty: " << trueDifficulty << "\n\n";*/
     return difficulty;
 }
+//Searches all active ObjectManagers for an object with the provided ID
+//Returns NULL if the object wasn't found
+Object* findObject(int targetId)
+{
+    return NULL;
+}
 void World::render(Coord& viewPosition, Time* globalTime, float extrapolateAmount)
 {
     //Set the camera to the view relative to the cell it's in
@@ -339,7 +345,6 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
 {
     DebugText::addEntry("Pool usage (%): ", ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100);
     DebugText::addEntry("Unload delay (seconds): ", (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))));
-    //std::cout << "Pool usage: "  << cellPool.getTotalActiveData() << "/" << CELL_POOL_SIZE << " ( " << ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100 << "% ) \n";
     //Update close cells
     //Make viewPosition the top left corner of the close cells
     viewPosition.addVector(-UPDATE_CLOSE_DISTANCE_X, -UPDATE_CLOSE_DISTANCE_Y);
@@ -347,7 +352,6 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
     CellIndex* closeCells = getIntersectingCells(viewPosition,
     UPDATE_CLOSE_DISTANCE_X + CELL_WIDTH_PIXELS,
     UPDATE_CLOSE_DISTANCE_Y + CELL_HEIGHT_PIXELS, size);
-    std::cout << "  World update; num cells " << size << "\n";
     for (int i = 0; i < size; ++i)
     {
         Cell* currentCell = getCell(closeCells[i]);

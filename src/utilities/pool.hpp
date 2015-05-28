@@ -7,6 +7,8 @@
 /* --Pool--
  * Pool holds any data. It initializes it on construction, then manages the
  * data without new or delete, so it is faster.
+ *
+ * It is a doubly linked list for faster looping
  * */
 template<class T>
 class PoolData
@@ -15,6 +17,8 @@ class PoolData
         T data;
         bool isActive;
         PoolData<T>* nextFreeData;
+        PoolData<T>* nextUsedData;
+        PoolData<T>* prevUsedData;
 };
 
 template<class R>
@@ -23,6 +27,7 @@ class Pool
     private:
         std::vector<PoolData<R> > pool;
         PoolData<R>* firstFreeData;
+        PoolData<R>* firstUsedData;
         unsigned int size;
         unsigned int totalActiveData;
         void resetPool()
@@ -32,11 +37,15 @@ class Pool
             {
                 PoolData<R>* currentData = &pool[i];
                 currentData->nextFreeData = &pool[i + 1];
+                currentData->nextUsedData = NULL;
+                currentData->prevUsedData = NULL;
                 currentData->isActive = false;
             }
             //Last datum needs null
             PoolData<R>* lastData = &pool[size - 1];
             lastData->nextFreeData = NULL;
+            lastData->nextUsedData = NULL;
+            lastData->prevUsedData = NULL;
             lastData->isActive = false;
         }
     public:
@@ -44,6 +53,8 @@ class Pool
         {
             size = newSize;
             totalActiveData = 0;
+            firstFreeData = NULL;
+            firstUsedData = NULL;
             pool.resize(size);
             resetPool();
         }
@@ -57,6 +68,10 @@ class Pool
             {
                 PoolData<R>* freeData = firstFreeData;
                 firstFreeData = firstFreeData->nextFreeData;
+                if (firstUsedData != NULL) firstUsedData->nextUsedData = freeData;
+                freeData->nextUsedData = NULL;
+                freeData->prevUsedData = firstUsedData;
+                firstUsedData = freeData;
                 freeData->isActive = true;
                 totalActiveData++;
                 return freeData;
@@ -67,6 +82,8 @@ class Pool
         {
             dataToRemove->nextFreeData = firstFreeData;
             firstFreeData = dataToRemove;
+            if (firstFreeData->prevUsedData)
+                firstFreeData->prevUsedData->nextUsedData = firstFreeData->nextUsedData;
             totalActiveData--;
             dataToRemove->isActive = false;
         }
@@ -78,6 +95,18 @@ class Pool
             if (data->isActive) return data;
             else return NULL;
         }
+        //Uses prevUsedData to skip over inactive data. Break on NULL
+        PoolData<R>* getNextActiveData(PoolData<R>* currentData)
+        {
+            return currentData->prevUsedData;
+        }
+        //Returns the first active data (use in conjunction with getNextActiveData
+        //to traverse the pool. Returns NULL if the pool is empty
+        PoolData<R>* getFirstActiveData()
+        {
+            return firstUsedData;
+        }
+        
         unsigned int getTotalActiveData()
         {
             return totalActiveData;

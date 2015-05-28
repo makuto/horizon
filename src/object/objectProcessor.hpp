@@ -2,7 +2,7 @@
 #define OBJECTPROCESSOR_HPP
 #include <base2.0/ept/eptParser.hpp>
 #include <base2.0/graphics/graphics.hpp>
-#include <base2.0/input/input.hpp>
+#include "../utilities/inputState.hpp"
 #include <base2.0/tileMap/tileMap.hpp>
 #include "object.hpp"
 #include "../world/pathManager.hpp"
@@ -21,14 +21,14 @@ class ObjectProcessor
         int processorType;  //Set to -1 by default (error if left at -1)
         
         sprite testSpr;
-        inputManager* in;
+        InputState* in;
         float globalVecX;
         float globalVecY;
         PathManager* pathManager;
     public:
         ObjectProcessor();
         //Make your own setup functions for custom data
-        void setup(inputManager* newIn, PathManager* newPathManager);
+        void setup(InputState* newIn, PathManager* newPathManager);
         virtual ~ObjectProcessor();
         
         int getType();

@@ -28,6 +28,8 @@ const int PATH_CELL_TILE_INDENT = 20;
 //values result in less difficult routes (e.g. 100). At 100, paths will
 //go around mountains and oceans. At 1, these features are disregarded.
 const float CELL_DIFFICULTY_SCALE = 100;
+//Multiplied by manhattan distance estimate heuristic
+const float MANHATTAN_MULTIPLIER = 100;
 
 
 Path::Path()
@@ -331,7 +333,7 @@ float Path::LeastCostEstimate(void* startNode, void* endNode)
     unsigned int xDiff = x2 - x1;
     unsigned int yDiff = y2 - y1;
     
-    return (xDiff * xDiff) + (yDiff * yDiff);
+    return (abs(xDiff) + abs(yDiff)) * MANHATTAN_MULTIPLIER;
 }
 void Path::AdjacentCost(void* currentNode, std::vector<micropather::StateCost>* neighbors)
 {

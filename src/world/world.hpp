@@ -64,6 +64,10 @@ class World
         //Samples tile simplex noise values to estimate the pathfinding difficulty of a cell
         //Returns a float between 0 and 1 where 1 is the highest difficulty.
         float estimateCellDifficulty(CellIndex& cellToEstimate);
+
+        //Searches all active ObjectManagers for an object with the provided ID
+        //Returns NULL if the object wasn't found
+        Object* findObject(int targetId);
         
         //Displays the map. Pass a value from 0 to 1 for renderQueue extrapolation
         void render(Coord& viewPosition, Time* globalTime, float extrapolateAmount);

@@ -4,6 +4,7 @@
 #include "objectManager.hpp"
 #include <base2.0/math/math.hpp>
 #include <sstream>
+
 ObjectProcessor::ObjectProcessor()
 {
     in = NULL;
@@ -13,7 +14,7 @@ ObjectProcessor::ObjectProcessor()
 ObjectProcessor::~ObjectProcessor()
 {
 }
-void ObjectProcessor::setup(inputManager* newIn, PathManager* newPathManager)
+void ObjectProcessor::setup(InputState* newIn, PathManager* newPathManager)
 {
     in = newIn;
     pathManager = newPathManager;
@@ -44,13 +45,14 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->bounds.h = 30;
     newObj->boundOffsetX = -15;
     newObj->boundOffsetY = -15;
-    newObj->manhattanRadius = 1000;
+    newObj->manhattanRadius = 30;
+    newObj->target = -1;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     if (newObj->subType==3) //Path test
     {
         Coord goal;
         goal.setPosition(1, 1, 1024, 1024);
-        newObj->state = pathManager->requestNewPath(position, goal);
+        newObj->target = pathManager->requestNewPath(position, goal);
         //std::cout << "State: " << newObj->state << "\n";
         /*mainPath.init(manager->getWorld(), position, goal);
         mainPath.calculateCellPath();
@@ -66,7 +68,6 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     Coord prevPosition = obj->getPosition();
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
-    std::cout << " updating " << obj->id << " delta " << delta.getExactSeconds() << "\n";
     //obj->rotation += delta.getExactSeconds() * 200;
     float speed = 100; //Why doesn't 25 work?
     //float vecX = obj->getPosition().getTrueX() + 512;
@@ -106,10 +107,18 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     }
     else if (obj->subType == 2) //Human input test
     {
-        if (in->isPressed(inputCode::W)) vecY -= 2;
-        if (in->isPressed(inputCode::S)) vecY += 2;
-        if (in->isPressed(inputCode::A)) vecX -= 2;
-        if (in->isPressed(inputCode::D)) vecX += 2;
+        if (in->getInputState("movePlayerUp") > 0) vecY -= 2;
+        if (in->getInputState("movePlayerDown") > 0) vecY += 2;
+        if (in->getInputState("movePlayerLeft") > 0) vecX -= 2;
+        if (in->getInputState("movePlayerRight") > 0) vecX += 2;
+
+        //Attack
+        if (in->getInputState("playerAttack") > 0)
+        {
+            if (obj->state <=0) obj->state = 30; //Attack state
+        }
+        if (obj->state > 0) obj->state--; //Delay attack (cooldown)
+        
         coordinate vec;
         vec.x = vecX;
         vec.y = vecY;
@@ -132,7 +141,7 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     {
         Coord target;
         Coord objPos = obj->getPosition();
-        switch(pathManager->advanceAlongPath((unsigned int)obj->state, objPos, target))
+        switch(pathManager->advanceAlongPath((unsigned int)obj->target, objPos, target))
         {
             case 0: //Waiting for calculations
                 //std::cout << "Waiting for calculation\n";
@@ -147,7 +156,7 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
                 std::cout << "Path doesn't exist! Creating new path\n";
                 Coord goal;
                 goal.setPosition(rand() % 10, rand() % 10, rand() % 2048, rand() % 2048);
-                obj->state = pathManager->requestNewPath(objPos, goal);
+                obj->target = pathManager->requestNewPath(objPos, goal);
                 break;
             default: //Unknown return
                 break;
@@ -188,9 +197,56 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
                 break;
         }*/
     }
+    else if (obj->subType == 4) //Combat test
+    {
+        //TODO: Events! (How?)
+        //Object* targetObj = manager->getWorld()->findObject(obj->target);
+        aabb range(0, 0, 2048, 2048);
+        int size;
+        Object** nearObjs = manager->getObjectsInRangeCache(range, size);
+        Object* targetObj = NULL;
+        for (int i = 0; i < size; i++)
+        {
+            if (nearObjs[i]->id == obj->target)
+            {
+                targetObj = nearObjs[i];
+                break;
+            }
+        }
+        if (targetObj)
+        {
+            if (targetObj)
+            {
+                Coord objPos = obj->getPosition();
+                Coord targetPos = targetObj->getPosition();
+                float distance = objPos.getManhattanTo(targetPos);
+                if (distance > 30000 || distance < 1000) //Too far to chase; pathfind instead
+                {
+                    //obj->rotation++;
+                }
+                else
+                {
+                    obj->moveTowards(targetPos, 200, &delta, *manager);
+                }
+            }
+        }
+    }
     CellIndex prevCell = prevPosition.getCell();
     obj->velX = obj->getPosition().getRelativeCellX(prevCell) - prevPosition.getCellOffsetX();
     obj->velY = obj->getPosition().getRelativeCellY(prevCell) - prevPosition.getCellOffsetY();
+    float TURN_SPEED = 0.1;
+    if ((obj->velX != 0 || obj->velY != 0) && obj->subType != 2) //Calculate facing direction
+    {
+        float currentRotation = obj->rotation;
+        float newRotation = pointTowards(0, 0, obj->velX, obj->velY) + 90; //Rotate image
+        float diff = newRotation - currentRotation;
+        if (diff > 180) diff = diff - 360;
+        else if (diff < -180) diff = diff + 360;
+        //float oppDiff = 360 - diff;
+        //if (oppDiff < diff) diff = oppDiff;
+        //obj->rotation = (int)(currentRotation + (diff * TURN_SPEED)) % 360;
+        obj->rotation = (currentRotation + (diff * TURN_SPEED));
+    };
     obj->lastUpdate = *globalTime;
     return 1;
 }
@@ -203,8 +259,26 @@ void ObjectProcessor::renderObject(Object* obj, float viewX, float viewY, window
     win->draw(&testSpr);*/
     RenderInstance* instance = renderQueue->getInstance(RENDER_QUEUE_LAYER::ONGROUND, 0);
     if (instance) instance->position = obj->getPosition();
-    instance->imageId = "testAgent";
-    instance->subRectId = "agent";
+    instance->rotation=obj->rotation;
+    if (obj->subType==2)
+    {
+        Coord objPos = obj->getPosition();
+        float mouseX = in->getInputState("playerTargetX");
+        float mouseY = in->getInputState("playerTargetY");
+        //TODO: Normalize mouse input in InputState
+        int objX = objPos.getCellOffsetX() - viewX;
+        int objY = objPos.getCellOffsetY() - viewY;
+        float winHalfWidth = win->getWidth() / 2;
+        float winHalfHeight = win->getHeight() / 2;
+        mouseX = (mouseX - winHalfWidth) / winHalfWidth;
+        mouseY = (mouseY - winHalfHeight) / winHalfHeight;
+        objX = (objX - winHalfWidth) / winHalfWidth;
+        objY = (objY - winHalfHeight) / winHalfHeight;
+        obj->rotation = pointTowards(objX, objY, mouseX, mouseY) + 90;
+    }
+    instance->imageId = "testCombatant";
+    if (obj->state <= 20) instance->subRectId = "idle";
+    else instance->subRectId = "attack";
     instance->requestorId = obj->id;
     instance->originMode = RENDER_ORIGIN_MODE::CENTER;
     instance->velX = obj->velX;

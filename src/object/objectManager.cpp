@@ -183,6 +183,14 @@ void ObjectManager::getObjectsInRangeCache(aabb& range)
     numQueryPoints = 0;
     numQueryPoints = indexQuadTree->queryRange(range, queryArray, numQueryPoints, MAX_QUERY_POINTS);
 }
+//Cached version of getObjectsInRange; do not delete the array or
+//manipulate it. Returns the cached array as well as the number of points
+Object** ObjectManager::getObjectsInRangeCache(aabb& range, int& size)
+{
+    getObjectsInRangeCache(range);
+    size = numQueryPoints;
+    return queryArray;
+}
 //Returns a pointer to an uninitialized (nor constructed) object
 //or NULL if there are no free pool spaces. The object will be added
 //to the quadtree at the specified position. position will be set to
@@ -629,7 +637,6 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win, RenderQ
 }
 bool ObjectManager::updateObjects(Time* globalTime)
 {
-    std::cout << "updating objects cell " << parentCellID.x << " , " << parentCellID.y << "\n";
     bool hasObject = false;
     ObjectProcessor* processor = NULL;
     //TODO: It might actually be much faster to simply do a quadtree query

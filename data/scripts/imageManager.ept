@@ -4,6 +4,10 @@ testAgent:
     _file=data/images/agent.png;
     agent={0, 0, 32, 32};
     subRectTest={16, 16, 16, 16};
+testCombatant:
+    _file=data/images/combatant.png;
+    idle={32, 0, 32, 32};
+    attack={192, 0, 32, 32};
 testFood:
     _file=data/images/coconut.png;
     coconut={0, 0, 32, 32};

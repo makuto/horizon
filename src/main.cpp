@@ -41,6 +41,8 @@
 #include "utilities/imageManager.hpp"
 #include "utilities/inputState.hpp"
 
+#include "world/eventManager.hpp"
+
 void test()
 {
     window win(1024, 600, "eest");
@@ -258,7 +260,7 @@ int main()
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
     
     ObjectProcessor* test2 = new ObjectProcessor();
-    test2->setup(&in, &pathManager);
+    test2->setup(&input, &pathManager);
     test2->initialize(parser.getFile("fakePickupObj"));
     AgentProcessor* agentObjPro = new AgentProcessor(&testSpecies, &processDir);
     agentObjPro->initialize(parser.getFile("agentObj"));
@@ -362,7 +364,9 @@ int main()
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
-    originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
+    Object* playerTestObj = originObjMan->getNewInitializedObject(1, 2, 128, 128, 0); //Keyboard test object
+    Object* enemyTestObj = originObjMan->getNewInitializedObject(1, 4, 128, 64, 0); //Enemy test object
+    enemyTestObj->target = playerTestObj->id;
     originObjMan->getNewInitializedObject(1, 3, 512, 512, 0); //Path test object
     Object* pickupTestObj = originObjMan->getNewInitializedObject(3, 1, 1024, 1024, 0); //Pickup test object
     pickupTestObj->state = 1;
@@ -389,6 +393,24 @@ int main()
         //originObjMan->getNewInitializedObject(1, 1, i * 204.8, i * 204.8, i * 36);
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
+
+    //EventManager test
+    EventManager events;
+    Coord eventPos;
+    Time eventTime;
+    void* objPtr = NULL;
+    events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, 200, objPtr);
+    eventPos.addVector(500, 500);
+    events.addEvent(EVENT_TYPE::ITEM_DROPPED, eventPos, &eventTime, 100, objPtr);
+    //events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, -220.2, objPtr);
+    int size;
+    Event** eventQuery = events.getEventsInRangeCache(eventPos, 100, size);
+    std::cout << size << "\n";
+    for (int i = 0; i < size; i++)
+    {
+        std::cout << eventQuery[i]->radius << "\n";
+    }
+    //return 1;
 
     ///////////////////
     /*sprite tileSheet;
@@ -436,8 +458,8 @@ int main()
     //dayNightSpr.getBase()->scale(32, 32);
         
     win.shouldClear(false);
-    //win.getBase()->setVerticalSyncEnabled(false);
-    //win.getBase()->setFramerateLimit(60);
+    win.getBase()->setVerticalSyncEnabled(false);
+    win.getBase()->setFramerateLimit(0);
     //bool isTapped = false;
     //bool isPressed = false;
 
@@ -455,7 +477,7 @@ int main()
     double catchUp = 0;
     Time gameTime;
     gameTime.reset();
-    const double MS_PER_UPDATE = .016;
+    const double MS_PER_UPDATE = .008;
     const int MAX_UPDATE_LOOPS = 5;
     int totalUpdates = 0;
     currentRealTime.start();
@@ -479,11 +501,11 @@ int main()
         }
         thisAvg /= smoothAmount;
         if (thisAvg < 0) thisAvg = 0;
-        DebugText::addEntry("Avg Frame Time (seconds): ", avgFrameTime);
-        DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
+        //DebugText::addEntry("Avg Frame Time (seconds): ", avgFrameTime);
+        //DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
         avgFrameTime = thisAvg;
-        DebugText::addEntry("Avg Frame Time 10 (seconds): ", thisAvg);
-        DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
+        //DebugText::addEntry("Avg Frame Time 10 (seconds): ", thisAvg);
+        //DebugText::addEntry("Avg Frame Time (FPS): ", 1 / avgFrameTime);
         //float avgFrameTime = 0.016; //http://gafferongames.com/game-physics/fix-your-timestep/ ?
         //float avgFrameTime = frameTime.getTime(); //Current frame time
         if (in.isPressed(inputCode::LShift))
@@ -593,7 +615,6 @@ int main()
         ////Day night
         
         DebugText::render(&win, &textToRender);
-        DebugText::clear();
         win.update();
         prof.stopTiming("render");
         
@@ -601,10 +622,7 @@ int main()
         //globalTime.reset();
         //globalTime.addSeconds(worldTime.getTime());
         //globalTime.addSeconds(avgFrameTime);
-        globalTime.addSeconds(0.016);
-        DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
-        DebugText::addEntry("Window Cell Position: ", windowPosition.getCell().x, windowPosition.getCell().y);
-        DebugText::addEntry("Game Time: ", gameTime.getExactSeconds());
+        globalTime.addSeconds(MS_PER_UPDATE);
         //std::cout << worldTime.getTime() << "\n";
         previousUpdate.getDeltaTime(&globalTime, deltaTime);
         //previousUpdate = globalTime;
@@ -616,28 +634,33 @@ int main()
         int updateLoops = 0;
         timer updateTime;
         updateTime.start();
-        std::cout << "Need to consume " << catchUp << " seconds, estimated updates: " << catchUp / MS_PER_UPDATE << "\n";
+        //std::cout << "Need to consume " << catchUp << " seconds, estimated updates: " << catchUp / MS_PER_UPDATE << "\n";
         while(catchUp >= MS_PER_UPDATE && updateLoops <= MAX_UPDATE_LOOPS)
         {
-            updateLoops++;
-            prof.startTiming("updateAgent");
-            //testSpecies.updateAgent(testAgent, &globalTime, &deltaTime, &processDir);
-            prof.stopTiming("updateAgent");
             prof.startTiming("updateWorld");
+            DebugText::clear();
+            DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
+            DebugText::addEntry("Window Cell Position: ", windowPosition.getCell().x, windowPosition.getCell().y);
+            DebugText::addEntry("Game Time: ", gameTime.getExactSeconds());
+            updateLoops++;
+            
             pathManager.update(0.001);
             gameTime.addSeconds(MS_PER_UPDATE);
-            std::cout << "  lop\n";
             newWorld.update(windowPosition, &gameTime, MAX_WORLD_FAR_UPDATE);
             catchUp -= MS_PER_UPDATE;
-            prof.stopTiming("updateWorld");
             previousUpdate = globalTime;
+            prof.stopTiming("updateWorld");
             //globalTime.print();
         }
         totalUpdates += updateLoops;
-        extrapolateAmount = catchUp / MS_PER_UPDATE;
-        std::cout << "  Updated " << updateLoops << " times, finished with extrap " << extrapolateAmount << "; advanced " << updateLoops * MS_PER_UPDATE << " game seconds in "<< updateTime.getTime() << "\n";
+        //extrapolateAmount = catchUp / MS_PER_UPDATE;
+        //Interpolate instead of extrapolate (I think)
+        extrapolateAmount = 1 - (catchUp / MS_PER_UPDATE);
+        extrapolateAmount = -extrapolateAmount;
+        
+        //std::cout << "  Updated " << updateLoops << " times, finished with extrap " << extrapolateAmount << "; advanced " << updateLoops * MS_PER_UPDATE << " game seconds in "<< updateTime.getTime() << "\n";
         prof.stopTiming("frame");
-        std::cout << "      Game time: " << gameTime.getExactSeconds() << " real time: " << currentRealTime.getTime() << " left over catchup: " << catchUp << "\n";
+        //std::cout << "      Game time: " << gameTime.getExactSeconds() << " real time: " << currentRealTime.getTime() << " left over catchup: " << catchUp << "\n";
     }
     //Remember to do this! UPDATE: Not any more - agents are pooled
     //delete testAgent;

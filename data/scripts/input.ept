@@ -7,6 +7,11 @@ gameplay:
     movePlayerLeft=0;
     movePlayerRight=3;
 
+    //Combat
+    playerAttack=1000;
+    playerTargetX=2000;
+    playerTargetY=2001;
+
     //Move camera (arrow keys)
     viewUp=73;
     viewDown=74;

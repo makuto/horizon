@@ -84,7 +84,7 @@ float Coord::getManhattanTo(Coord& point)
     float bY = point.getRelativeCellY(pointIndex);
     float xDiff = aX - bX;
     float yDiff = aY - bY;
-    return (xDiff * xDiff) + (yDiff * yDiff);
+    return abs(xDiff) + abs(yDiff);
 }
 void Coord::print()
 {

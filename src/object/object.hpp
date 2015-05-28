@@ -38,6 +38,7 @@ class Object
         float boundOffsetY;
         float manhattanRadius;  //The radius of this object as a manhattan value (squared radius)
                                 //Used to determine if objects are "colliding" (they may not actually)
+        int target;     //Used for whatever you want; recommended for obj ids, path IDs, etc.
         //Use these functions to manipulate the object's position. 
         //These functions make sure quadtree and collisions are handled
         //(which is why ObjectManager is passed in)

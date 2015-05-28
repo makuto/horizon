@@ -40,6 +40,7 @@ bool PickupObjectProcessor::initObject(Object* newObj, int subType, Coord& posit
     newObj->boundOffsetX = -15;
     newObj->boundOffsetY = -15;
     newObj->manhattanRadius = 1000;
+    newObj->target = -1;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     newObj->state = 0;
     return true;
