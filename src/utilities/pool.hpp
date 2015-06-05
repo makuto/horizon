@@ -62,6 +62,13 @@ class Pool
         {
             
         }
+        void clear()
+        {
+            totalActiveData = 0;
+            firstFreeData = NULL;
+            firstUsedData = NULL;
+            resetPool();
+        }
         PoolData<R>* getNewData()
         {
             if (firstFreeData != NULL)

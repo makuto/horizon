@@ -258,9 +258,27 @@ int main()
     processMap.addProcess("testProcess", new Process);
     processMap.addProcess("useItem", useItemProcess);
     ProcessDirectory processDir(&parser, parser.getFile("needDirectory"), &processMap);
+
+    //EventManager test
+    EventManager events(&newWorld);
+    /*Coord eventPos;
+    Time eventTime;
+    void* objPtr = NULL;
+    events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, 200, objPtr);
+    eventPos.addVector(500, 500);
+    events.addEvent(EVENT_TYPE::ITEM_DROPPED, eventPos, &eventTime, 100, objPtr);
+    events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, -220.2, objPtr);
+    int size;
+    Event** eventQuery = events.getEventsInRangeCache(eventPos, 100, size);
+    std::cout << size << "\n";
+    for (int i = 0; i < size; i++)
+    {
+        std::cout << eventQuery[i]->radius << "\n";
+    }*/
+    //return 1;
     
     ObjectProcessor* test2 = new ObjectProcessor();
-    test2->setup(&input, &pathManager);
+    test2->setup(&input, &pathManager, &events);
     test2->initialize(parser.getFile("fakePickupObj"));
     AgentProcessor* agentObjPro = new AgentProcessor(&testSpecies, &processDir);
     agentObjPro->initialize(parser.getFile("agentObj"));
@@ -394,23 +412,6 @@ int main()
         originObjMan->getNewInitializedObject(1, 1, rand() % 2048, rand() % 2048, 0);
     }
 
-    //EventManager test
-    EventManager events;
-    Coord eventPos;
-    Time eventTime;
-    void* objPtr = NULL;
-    events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, 200, objPtr);
-    eventPos.addVector(500, 500);
-    events.addEvent(EVENT_TYPE::ITEM_DROPPED, eventPos, &eventTime, 100, objPtr);
-    //events.addEvent(EVENT_TYPE::ATTACK, eventPos, &eventTime, -220.2, objPtr);
-    int size;
-    Event** eventQuery = events.getEventsInRangeCache(eventPos, 100, size);
-    std::cout << size << "\n";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << eventQuery[i]->radius << "\n";
-    }
-    //return 1;
 
     ///////////////////
     /*sprite tileSheet;
@@ -637,27 +638,36 @@ int main()
         //std::cout << "Need to consume " << catchUp << " seconds, estimated updates: " << catchUp / MS_PER_UPDATE << "\n";
         while(catchUp >= MS_PER_UPDATE && updateLoops <= MAX_UPDATE_LOOPS)
         {
-            prof.startTiming("updateWorld");
             DebugText::clear();
             DebugText::addEntry("Global Time: ", globalTime.getExactSeconds());
             DebugText::addEntry("Window Cell Position: ", windowPosition.getCell().x, windowPosition.getCell().y);
             DebugText::addEntry("Game Time: ", gameTime.getExactSeconds());
-            updateLoops++;
+            prof.startTiming("updateWorld");
             
+            //Prevents spiral of death
+            updateLoops++;
+
+            //Flip event buffer and get cells to update (with active events)
+            int size;
+            CellIndex* eventCellsToUpdate = events.update(size);
+        
+            //Give paths time to update (TODO: Replace with percent of MS_PER_UPDATE)
             pathManager.update(0.001);
+            //Step the clock forward
             gameTime.addSeconds(MS_PER_UPDATE);
-            newWorld.update(windowPosition, &gameTime, MAX_WORLD_FAR_UPDATE);
+            //Update the world
+            newWorld.update(windowPosition, eventCellsToUpdate, size, &gameTime, MAX_WORLD_FAR_UPDATE_TIME);
+            
             catchUp -= MS_PER_UPDATE;
-            previousUpdate = globalTime;
+            //previousUpdate = globalTime;
             prof.stopTiming("updateWorld");
-            //globalTime.print();
         }
         totalUpdates += updateLoops;
         //extrapolateAmount = catchUp / MS_PER_UPDATE;
         //Interpolate instead of extrapolate (I think)
         extrapolateAmount = 1 - (catchUp / MS_PER_UPDATE);
         extrapolateAmount = -extrapolateAmount;
-        
+
         //std::cout << "  Updated " << updateLoops << " times, finished with extrap " << extrapolateAmount << "; advanced " << updateLoops * MS_PER_UPDATE << " game seconds in "<< updateTime.getTime() << "\n";
         prof.stopTiming("frame");
         //std::cout << "      Game time: " << gameTime.getExactSeconds() << " real time: " << currentRealTime.getTime() << " left over catchup: " << catchUp << "\n";

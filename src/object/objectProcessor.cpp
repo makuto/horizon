@@ -4,6 +4,7 @@
 #include "objectManager.hpp"
 #include <base2.0/math/math.hpp>
 #include <sstream>
+#include "../world/eventManager.hpp"
 
 ObjectProcessor::ObjectProcessor()
 {
@@ -14,10 +15,11 @@ ObjectProcessor::ObjectProcessor()
 ObjectProcessor::~ObjectProcessor()
 {
 }
-void ObjectProcessor::setup(InputState* newIn, PathManager* newPathManager)
+void ObjectProcessor::setup(InputState* newIn, PathManager* newPathManager, EventManager* newEvents)
 {
     in = newIn;
     pathManager = newPathManager;
+    events = newEvents;
 }
 int ObjectProcessor::getType()
 {
@@ -115,7 +117,12 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         //Attack
         if (in->getInputState("playerAttack") > 0)
         {
-            if (obj->state <=0) obj->state = 30; //Attack state
+            if (obj->state <=0)
+            {
+                obj->state = 30; //Attack state
+                Coord objPos = obj->getPosition();
+                events->addEvent(EVENT_TYPE::ATTACK, objPos, globalTime, 100, obj);
+            }
         }
         if (obj->state > 0) obj->state--; //Delay attack (cooldown)
         

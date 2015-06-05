@@ -12,8 +12,8 @@
  * */
 extern const std::string WORLDS_PATH;
 //Cells not near to the view (UPDATE_CLOSE_DISTANCE) will be updated
-//after close cells for MAX_WORLD_FAR_UPDATE before breaking
-extern const float MAX_WORLD_FAR_UPDATE;
+//after close cells for MAX_WORLD_FAR_UPDATE_TIME before breaking
+extern const float MAX_WORLD_FAR_UPDATE_TIME;
 class RenderQueue;
 class World
 {
@@ -46,14 +46,9 @@ class World
         //cell, while getCellIfExists simply returns NULL if it isn't
         //already in the pool
         Cell* getCellIfExists(CellIndex cell);
-        //Returns an array of pointers to all unique cells the range contains
-        //[UPDATE: Now using a cached array with size MAX_INTERSECTING_CELLS] 
+        //Returns an array of pointers to all unique cells the range contains.
+        //The array is cached and can return MAX_INTERSECTING_CELLS
         //There is no reliable ordering, so use indices if that is needed
-        //Note that this returns a maximum of four cells; cells must be
-        //larger than the view in order for this to display correctly
-        //TODO: Find better way to pass array, [FIXED; can now return
-        //MAX_INTERSECTING_CELLS] make sure returning only four is viable
-        //for other non-rendering uses
         CellIndex* getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size);
         //loadCell attempts to load the cell from the filesystem:
         //{WORLD_CELLS_PATH}/world{worldID}/cells/{cellToLoad.x}-{cellToLoad.y}/{cellToLoad.x}-{cellToLoad.y}.map
@@ -67,15 +62,15 @@ class World
 
         //Searches all active ObjectManagers for an object with the provided ID
         //Returns NULL if the object wasn't found
-        Object* findObject(int targetId);
+        //Object* findObject(int targetId); //TODO
         
         //Displays the map. Pass a value from 0 to 1 for renderQueue extrapolation
         void render(Coord& viewPosition, Time* globalTime, float extrapolateAmount);
         //Updates objects
-        //Objects nearest to viewPosition will be updated in real time,
+        //Objects nearest to viewPosition will be updated in real time, then requested cells,
         //then cells will be updated until extraTime is reached or the end of
         //the cells map. Update also frees any cells that have a touched delta
         //greater than CELL_UNLOAD_DELAY
-        void update(Coord viewPosition, Time* globalTime, float extraTime);
+        void update(Coord viewPosition, CellIndex* requestedCells, int requestedSize, Time* globalTime, float extraTime);
 };
 #endif

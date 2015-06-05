@@ -11,7 +11,7 @@ const std::string WORLDS_PATH = "worlds/";
 const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
-const float MAX_WORLD_FAR_UPDATE = 0.001;
+const float MAX_WORLD_FAR_UPDATE_TIME = 0.001;
 const unsigned int CELL_POOL_SIZE = 100;
 //Number of seconds a cell has been untouched before the cell is unloaded
 //Note that values larger than SECONDS_IN_DAY will be ignored because
@@ -125,7 +125,6 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
     int numRows = abs(topLeftCellIndex.y - bottomRCellIndex.y) + 1;
     //cellArray = new CellIndex[numCols * numRows];
     CellIndex* cellArray = cellArrayCache;
-    
     size = numCols * numRows;
     if ((unsigned int) size > MAX_INTERSECTING_CELLS)
     {
@@ -144,51 +143,6 @@ CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float 
         }
     }
     return cellArray;
-    /*//The bottom corner is in a different cell
-    if (bottomRCellIndex.x != topLeftCellIndex.x)
-    {
-        if (bottomRCellIndex.y != topLeftCellIndex.y)
-        {
-            cellArray = new CellIndex[4];
-            size = 4;
-            cellArray[0].x = topLeftCellIndex.x; //Top left
-            cellArray[0].y = topLeftCellIndex.y;
-            cellArray[1].x = bottomRCellIndex.x; //Bottom right
-            cellArray[1].y = bottomRCellIndex.y;
-            cellArray[2].x = bottomRCellIndex.x; //Top right
-            cellArray[2].y = topLeftCellIndex.y;
-            cellArray[3].x = topLeftCellIndex.x; //Bottom left
-            cellArray[3].y = bottomRCellIndex.y;
-        }
-        else
-        {
-            cellArray = new CellIndex[2];
-            size = 2;
-            cellArray[0].x = topLeftCellIndex.x; //Top left
-            cellArray[0].y = topLeftCellIndex.y;
-            cellArray[1].x = bottomRCellIndex.x; //Top right
-            cellArray[1].y = topLeftCellIndex.y;
-        }
-    }
-    //The bottom corner is in a different Y cell
-    else if (bottomRCellIndex.y != topLeftCellIndex.y)
-    {
-        cellArray = new CellIndex[2];
-        size = 2;
-        cellArray[0].x = topLeftCellIndex.x; //Top left
-        cellArray[0].y = topLeftCellIndex.y;
-        cellArray[1].x = topLeftCellIndex.x; //Bottom left
-        cellArray[1].y = bottomRCellIndex.y;
-    }
-    //Only the current cell is visible
-    else
-    {
-        cellArray = new CellIndex[1];
-        size = 1;
-        cellArray[0].x = topLeftCellIndex.x; //Top left
-        cellArray[0].y = topLeftCellIndex.y;
-    }
-    return cellArray;*/
 }
 float World::estimateCellDifficulty(CellIndex& cellToEstimate)
 {
@@ -224,12 +178,12 @@ float World::estimateCellDifficulty(CellIndex& cellToEstimate)
     std::cout << "Estimated difficulty: " << difficulty << " via alg: " << ((numWaterTiles / totalTiles) + (numMountainTiles / totalTiles))  << " true difficulty: " << trueDifficulty << "\n\n";*/
     return difficulty;
 }
-//Searches all active ObjectManagers for an object with the provided ID
+/*//Searches all active ObjectManagers for an object with the provided ID
 //Returns NULL if the object wasn't found
 Object* findObject(int targetId)
 {
     return NULL;
-}
+}*/
 void World::render(Coord& viewPosition, Time* globalTime, float extrapolateAmount)
 {
     //Set the camera to the view relative to the cell it's in
@@ -341,7 +295,7 @@ void World::render(Coord& viewPosition, Time* globalTime, float extrapolateAmoun
         
     }*/
 }
-void World::update(Coord viewPosition, Time* globalTime, float extraTime)
+void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedSize, Time* globalTime, float extraTime)
 {
     DebugText::addEntry("Pool usage (%): ", ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100);
     DebugText::addEntry("Unload delay (seconds): ", (CELL_UNLOAD_DELAY * (1 - ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE))));
@@ -362,7 +316,22 @@ void World::update(Coord viewPosition, Time* globalTime, float extraTime)
             currentCell->setTouched(*globalTime);
         }
     }
-    //Update other cells
+
+    //Update requested cells (e.g. cells with active events)
+    for (int i = 0; i < requestedSize; i++)
+    {
+        Cell* currentCell = getCellIfExists(requestedCells[i]);
+        if (currentCell)
+        {
+            //Skip any cells we updated in the view loop (above)
+            if (currentCell->getTouched().getExactSeconds()==globalTime->getExactSeconds())
+                continue;
+            currentCell->update(globalTime);
+            currentCell->setTouched(*globalTime);
+        }
+    }
+    
+    //Update other cells until time runs out
     //TODO: [DONE] Delete cells that are inactive for a long time
     timer currentTime;
     currentTime.start();

@@ -14,6 +14,7 @@
  * is polymorphic so new object behaviors can be implemented easily.
  * */
 class ObjectManager;
+class EventManager;
 class ObjectProcessor
 {
     protected:
@@ -25,10 +26,11 @@ class ObjectProcessor
         float globalVecX;
         float globalVecY;
         PathManager* pathManager;
+        EventManager* events;
     public:
         ObjectProcessor();
         //Make your own setup functions for custom data
-        void setup(InputState* newIn, PathManager* newPathManager);
+        void setup(InputState* newIn, PathManager* newPathManager, EventManager* newEvents);
         virtual ~ObjectProcessor();
         
         int getType();
