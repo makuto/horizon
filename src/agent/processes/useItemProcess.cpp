@@ -23,6 +23,7 @@ int UseItemProcess::getDifficulty(Agent* agent, Object* obj, Need* need, int ind
     if (index != 0) return 15; //Ballpark difficulty figure
     int difficulty = -1;
     //Look for an item in the inventory that will benefit the agent's need
+    //TODO: Inventory should maybe automatically return a list filtered like this
     for (int i = 0; i < AGENT_INVENTORY_SIZE; i++)
     {
         Item* currentItem = &agent->inventory[i];

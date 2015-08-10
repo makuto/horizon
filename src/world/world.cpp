@@ -1,6 +1,7 @@
 #ifndef WORLD_CPP
 #define WORLD_CPP
 #include <iostream>
+#include <sstream> //For building cell file paths
 #include <base2.0/timer/timer.hpp>
 #include "world.hpp"
 #include "../utilities/debugText.hpp"
@@ -8,6 +9,8 @@
 
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
+//Tells cell which world generation algorithm to use to make its tiles
+const int WORLD_GEN_ALGORITHM = 3;
 const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
@@ -24,7 +27,7 @@ const float CELL_UNLOAD_DELAY = 60;
 const int CELL_ESTIMATION_SKIP = 16;
 
 
-World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir, RenderQueue* newRenderQueue):cellPool(CELL_POOL_SIZE)
+World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID, ObjectProcessorDir* newDir, RenderQueue* newRenderQueue, CELL_UNLOAD_MODE newCellUnloadMode):cellPool(CELL_POOL_SIZE)
 {
     win = newWin;
     masterMap = newMasterMap;
@@ -38,13 +41,17 @@ World::World(window* newWin, dynamicMultilayerMap* newMasterMap, int newWorldID,
     processorDir = newDir;
     //TODO
     worldID = newWorldID;
+    
     cellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS];
+    worldCellArrayCache = new CellIndex[MAX_INTERSECTING_CELLS];
     nextCellToUpdate =  cells.begin();
     renderQueue = newRenderQueue;
+    cellUnloadMode = newCellUnloadMode;
 }
 World::~World()
 {
     delete[] cellArrayCache;
+    delete[] worldCellArrayCache;
     /*for (std::map<CellIndex, PoolData<Cell>*, CellIndexComparer>::iterator it = cells.begin();
     it != cells.end(); ++it)
     {
@@ -56,21 +63,49 @@ World::~World()
         masterMap->setLayer(i, oldLayers[i]);
     }
 }
+//Creates a file path to a Cell file (whether or not it exists)
+//Note that fileExtension is with the dot, e.g. ".mlep"
+std::string World::getPathToCellFile(CellIndex cellID, const std::string& fileExtension, bool isLegacy)
+{
+    std::ostringstream cellFileName;
+    if (isLegacy)
+    {
+        cellFileName << WORLDS_PATH << "world" << worldID <<"/cellsLegacy/"
+        << cellID.x << "-" << cellID.y << "/" << cellID.x << "-" << cellID.y << fileExtension;
+    }
+    else
+        cellFileName << WORLDS_PATH << "world" << worldID <<"/cells/" << cellID.x << "-" << cellID.y << fileExtension;
+        
+    return cellFileName.str();
+}
 Cell* World::loadCell(CellIndex cellToLoad)
 {
-    //Cell* newCell = new Cell(cellToLoad, this, processorDir);
+    //Get a free Cell from the pool
     PoolData<Cell>* newCell = cellPool.getNewData();
     if (newCell==NULL)
     {
         std::cout << "ERROR: world.loadCell(): Pool returned null!\n";
         return NULL;
     }
+    //Initialize Cell
     newCell->data.init(cellToLoad, this, processorDir, renderQueue);
-    if (!newCell->data.load(worldID))
+
+    //Generate the cell's path via WORLDS_PATH
+    std::string cellFileName = getPathToCellFile(cellToLoad, ".map", true);
+    
+    //Attempt to load the cell using the LEGACY load function
+    if (!newCell->data.load(cellFileName))
     {
-        cellPool.removeData(newCell);
-        return NULL;
+        //LEGACY load failed; try loading an RLEM map
+        cellFileName = getPathToCellFile(cellToLoad, ".rlem", false);
+        //Attempt to load the cell; if it fails, free the cell and return NULL
+        if (!newCell->data.loadTilesFromRLEmap(cellFileName))
+        {
+            cellPool.removeData(newCell);
+            return NULL;
+        }
     }
+
     cells[cellToLoad] = newCell;
     return &newCell->data;
 }
@@ -84,8 +119,10 @@ Cell* World::getCell(CellIndex cell)
         //Return the found cell
         return &findIt->second->data;
     }
+    
     //Cell wasn't found! See if it is on the hard drive
     Cell* newCell = loadCell(cell);
+    
     if (!newCell) //Cell isn't on hard drive; generate it now
     {
         //Need to create the cell
@@ -97,7 +134,7 @@ Cell* World::getCell(CellIndex cell)
         }
         newCell = &newPoolCell->data;
         newCell->init(cell, this, processorDir, renderQueue);
-        newCell->generate(worldID, worldID, 2); //Seed is simply worldID
+        newCell->generate(worldID, worldID, WORLD_GEN_ALGORITHM); //Seed is simply worldID
         cells[cell] = newPoolCell;
     }
     return newCell;
@@ -114,6 +151,37 @@ Cell* World::getCellIfExists(CellIndex cell)
     }
     //Cell doesn't exist
     return NULL;
+}
+//World needs a private cache for getIntersectingCells; otherwise,
+//any call to getIntersectingCells could affect update!
+CellIndex* World::privateGetIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
+{
+    CellIndex topLeftCellIndex = topLeftCorner.getCell();
+    Coord bottomR = topLeftCorner;
+    bottomR.addVector(width, height);
+    CellIndex bottomRCellIndex = bottomR.getCell();
+    int numCols = abs(topLeftCellIndex.x - bottomRCellIndex.x) + 1;
+    int numRows = abs(topLeftCellIndex.y - bottomRCellIndex.y) + 1;
+    //cellArray = new CellIndex[numCols * numRows];
+    CellIndex* cellArray = worldCellArrayCache;
+    size = numCols * numRows;
+    if ((unsigned int) size > MAX_INTERSECTING_CELLS)
+    {
+        std::cout << "ERROR: Intersecting cache size too small (needed " << size << " cells)!\n";
+        size = 0;
+        return cellArray;
+    }
+    int p = 0;
+    for (int i = topLeftCellIndex.y; i < topLeftCellIndex.y + numRows; ++i)
+    {
+        for (int n = topLeftCellIndex.x; n < topLeftCellIndex.x + numCols; ++n)
+        {
+            cellArray[p].x = n;
+            cellArray[p].y = i;
+            p++;
+        }
+    }
+    return cellArray;
 }
 CellIndex* World::getIntersectingCells(Coord& topLeftCorner, float width, float height, int& size)
 {
@@ -295,6 +363,42 @@ void World::render(Coord& viewPosition, Time* globalTime, float extrapolateAmoun
         
     }*/
 }
+void World::onCellUnload(Cell* cellToUnload)
+{
+    //Let the cell know we are destroying it
+    cellToUnload->onDestroy();
+
+    //Prepare filename to RLEM file in case the Cell will be saved
+    CellIndex cellToSaveIndex = cellToUnload->getCellID();
+    std::string filename = getPathToCellFile(cellToSaveIndex, ".rlem", false);
+    
+    //Do whatever unload mode requested
+    switch(cellUnloadMode)
+    {
+        //Save the Cell only if it's been modified & needs persistence
+        case CELL_UNLOAD_MODE::SAVE_ON_CHANGES:
+            if (cellToUnload->hasChanges())
+                cellToUnload->saveTilesAsRLEmap(filename);
+            break;
+        //Save the Cell if it was generated and doesn't exist in file
+        case CELL_UNLOAD_MODE::SAVE_ON_GENERATION:  
+            if (cellToUnload->wasGenerated())
+                cellToUnload->saveTilesAsRLEmap(filename); 
+            break;
+        //Save the Cell if it was generated and doesn't exist in file or has changes
+        case CELL_UNLOAD_MODE::SAVE_ON_GENERATION_OR_CHANGES:  
+            if (cellToUnload->wasGenerated() || cellToUnload->hasChanges())
+                cellToUnload->saveTilesAsRLEmap(filename); 
+            break;
+        //Save the Cell even if it has no changes & wasn't newly generated
+        case CELL_UNLOAD_MODE::FORCE_SAVE: 
+            cellToUnload->saveTilesAsRLEmap(filename); 
+            break;
+        //Any other mode discards the changes (if any)
+        default:
+            break;
+    }
+}
 void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedSize, Time* globalTime, float extraTime)
 {
     DebugText::addEntry("Pool usage (%): ", ((float)cellPool.getTotalActiveData() / (float)CELL_POOL_SIZE) * 100);
@@ -303,7 +407,7 @@ void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedS
     //Make viewPosition the top left corner of the close cells
     viewPosition.addVector(-UPDATE_CLOSE_DISTANCE_X, -UPDATE_CLOSE_DISTANCE_Y);
     int size;
-    CellIndex* closeCells = getIntersectingCells(viewPosition,
+    CellIndex* closeCells = privateGetIntersectingCells(viewPosition,
     UPDATE_CLOSE_DISTANCE_X + CELL_WIDTH_PIXELS,
     UPDATE_CLOSE_DISTANCE_Y + CELL_HEIGHT_PIXELS, size);
     for (int i = 0; i < size; ++i)
@@ -316,7 +420,6 @@ void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedS
             currentCell->setTouched(*globalTime);
         }
     }
-
     //Update requested cells (e.g. cells with active events)
     for (int i = 0; i < requestedSize; i++)
     {
@@ -330,7 +433,6 @@ void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedS
             currentCell->setTouched(*globalTime);
         }
     }
-    
     //Update other cells until time runs out
     //TODO: [DONE] Delete cells that are inactive for a long time
     timer currentTime;
@@ -367,7 +469,10 @@ void World::update(Coord viewPosition, CellIndex* requestedCells, int requestedS
                 nextCellToUpdate->second->data.setTouched(*globalTime);
                 continue;
             }
+
             //std::cout << "removing cell " << nextCellToUpdate->first.x << " , " << nextCellToUpdate->first.y << ", delta: "; delta.print();
+            //Cell is old; remove it to free up pool space
+            onCellUnload(&nextCellToUpdate->second->data);
             cellPool.removeData(nextCellToUpdate->second);
             cells.erase(nextCellToUpdate);
         }

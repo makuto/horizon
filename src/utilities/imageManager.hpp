@@ -24,6 +24,7 @@ class ImageManager
         ImageManager();
         ~ImageManager();
 
+        //Load all images in the spec
         bool load(eptFile* spec);
         //Returns the sprite with the specified handle, or NULL if it doesn't exist
         //Note that this function also resets the subrect and rotation of the sprite

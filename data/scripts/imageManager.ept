@@ -13,4 +13,6 @@ testFood:
     coconut={0, 0, 32, 32};
 tileMap:
     _file=data/images/terrain.png;
+limitedTileMap:
+    _file=data/images/limitedTerrain.png;
     

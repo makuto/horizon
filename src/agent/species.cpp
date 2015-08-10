@@ -55,8 +55,8 @@ int Species::updateAgent(Agent* agent, Object* obj, ObjectManager* objectManager
     //Find the lowest need and process that one
     unsigned char minVitalValue = 255;
     unsigned char minNonvitalValue = 255;
-    int minVitalIndex = -1;
-    int minNonvitalIndex = -1;
+    int minVitalIndex = 0;
+    int minNonvitalIndex = 0;
 
     //Update vital needs; watch for lowest need currentValue
     for (int i = 0; i < numVitalNeeds; ++i)

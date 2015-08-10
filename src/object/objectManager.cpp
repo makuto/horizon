@@ -633,7 +633,7 @@ void ObjectManager::renderObjects(float viewX, float viewY, window* win, RenderQ
         }
     }
     //Debug render quadtree
-    //indexQuadTree->render(win, -viewX, -viewY);
+    indexQuadTree->render(win, -viewX, -viewY);
 }
 bool ObjectManager::updateObjects(Time* globalTime)
 {

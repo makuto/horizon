@@ -8,6 +8,7 @@
 #include "../object/objectProcessorDir.hpp"
 #include "time.hpp"
 #include "../utilities/renderQueue.hpp"
+#include "../utilities/pool.hpp"
 
 extern const std::string MAKE_DIR_COMMAND;
 extern const int NUM_LAYERS;
@@ -45,10 +46,18 @@ class Cell
 
         //RenderQueue for Object layer rendering
         RenderQueue* renderQueue;
+
+        //Set to true if there are changes this Cell has on it that should
+        //be saved (TODO: Remember to set this if changes are made)
+        bool changed;
+        //Set to true if this cell was generated procedurally (if it is
+        //false, it was loaded from a file or got its data elsewhere)
+        bool generated;
         
         //If isMasterLayer is true, this function will skip over the master
         //layer header and load the raw tiles
         bool loadLayer(const std::string& filename, int layerNum, bool isMasterLayer);
+
     public:
         void setTouched(Time newValue);
         Time getTouched();
@@ -57,8 +66,22 @@ class Cell
         Cell();
         //Used to allow pooling
         void init(CellIndex newCellID, World* newWorld, ObjectProcessorDir* processorDir, RenderQueue* newRenderQueue);
+
+        //Called just before a cell is removed from its pool (manually by World)
+        //Used to save any changes made to this cell for persistence
+        void onDestroy();
+        
         ~Cell();
+        
         ObjectManager* getObjectManager();
+        CellIndex getCellID();
+
+        //Returns the value of changed, which is set to true of there are changes
+        //that should be saved
+        bool hasChanges();
+        //Returns the value of generated, which is set to true if this Cell
+        //was generated (if false, the Cell was probably loaded from file)
+        bool wasGenerated();
         
         //Used by ObjectManager because accessing world causes circular reference stuff :(
         Cell* getNeighborCell(CellIndex index);
@@ -66,14 +89,25 @@ class Cell
         
         //Loads everything a Cell needs. Returns false if
         //any cell files were not found
-        bool load(int worldID);
+        //This is a LEGACY function; use loadTilesFromRLEmap instead
+        bool load(const std::string& filename);
+        //Loads a RLE map
+        bool loadTilesFromRLEmap(const std::string& filename);
+        
         //Saves everything a Cell has
         //TODO: Once editTile functions are made, keep a changed bool
         //that will be checked so that freshly generated tiles are not
         //saved
         bool save(int worldID, dynamicMultilayerMap* map);
+
+        //Saves the map tiles using Run Length Encoding for compression.
+        //All layers are saved in a single file
+        bool saveTilesAsRLEmap(const std::string& filename);
+        
         //Generates a new cell with the specified algorithm
-        //Algorithms: 1 = simple fill
+        //Algorithms:
+        //  2 = simplex noise expecting 255 tile values
+        //  3 = simplex noise expecting 13 tile values (limited)
         void generate(int worldID, int seed, int algorithm);
 
         //Returns the tile at the x and y and layer; returns NULL if
@@ -101,6 +135,9 @@ class Cell
         //ViewX and Y are only used for renderObjects()
         void render(tileCamera& cam, float viewX, float viewY, dynamicMultilayerMap* map, window* win);
         void update(Time* globalTime);
+
+        //DELETEME
+        bool testRLESaveLoadFunctions(const std::string& filename);
         
 };
 #endif

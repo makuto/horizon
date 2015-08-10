@@ -134,7 +134,9 @@ int main()
     window win(1024, 600, "Horizon");
     win.setBackgroundColor(100, 100, 100, 100);
     inputManager in(&win);
-
+    //Display window while loading
+    win.shouldClose();
+    win.update();
     /*//Test InputState
     InputState testInput;
     testInput.setup(parser.getGroup("input.gameplay"), &in);
@@ -229,17 +231,23 @@ int main()
     
     //multilayerMap defaultMap;
     //if (!defaultMap.load(parser.getAttribute("files.worldDefaults.defaultMap"), 3)) return -1;
-    sprite tileSet;
-    if (!tileSet.load(parser.getAttribute("files.worldDefaults.tileSet").c_str())) return -1;
+    sprite* tileSet;
+    //if (!tileSet.load(parser.getAttribute("files.worldDefaults.tileSet").c_str())) return -1;
+    tileSet = imageManager.getSprite(parser.getAttribute("files.worldDefaults.tileSet"));
+    if (!tileSet) return -1;
     int worldToLoad = 0;
     //World newWorld(&win, &defaultMap, worldToLoad, &testDir);
     dynamicMultilayerMap dynamicMap(CELL_HEIGHT, CELL_WIDTH, NUM_LAYERS);
     dynamicTileMap* dynamicMasterMap = dynamicMap.getMasterMap();
     dynamicMasterMap->setTileSize(TILE_WIDTH, TILE_HEIGHT);
     dynamicMasterMap->setViewSize(win.getHeight() / TILE_HEIGHT, win.getWidth() / TILE_WIDTH);
-    dynamicMasterMap->setImage(&tileSet);
+    dynamicMasterMap->setImage(tileSet);
     ObjectProcessorDir testDir;
-    World newWorld(&win, &dynamicMap, worldToLoad, &testDir, &renderQueue);
+    ///////////
+    /////////// CREATE...THE WORLD!
+    ///////////
+    World newWorld(&win, &dynamicMap, worldToLoad, &testDir, &renderQueue,
+        CELL_UNLOAD_MODE::SAVE_ON_CHANGES);
 
     ResourceTree resourceTree(&newWorld);
     //Coord resPos;
@@ -471,6 +479,19 @@ int main()
     miniMapTimer.start();
     const float MINIMAP_UPDATE_RATE = 1;
 
+    /*//Test RLE (DELETEME)
+    CellIndex rleCellIndex;
+    rleCellIndex.x = 0;
+    rleCellIndex.y = -1;
+    Cell* testRLECell = newWorld.getCell(rleCellIndex);
+    if (!testRLECell) return -1;
+    testRLECell->generate(0, 0, 3);
+    if (testRLECell->testRLESaveLoadFunctions("testMap.rlem"))
+    {
+        std::cout << "Test passed!\n";
+    }
+    else std::cout << "TEST FAILED!\n";*/
+
     //Fixed timestep vars
     float extrapolateAmount = 0;
     timer currentRealTime;
@@ -478,10 +499,11 @@ int main()
     double catchUp = 0;
     Time gameTime;
     gameTime.reset();
-    const double MS_PER_UPDATE = .008;
+    const double MS_PER_UPDATE = .016;
     const int MAX_UPDATE_LOOPS = 5;
     int totalUpdates = 0;
     currentRealTime.start();
+
     //Main loop
     while (!win.shouldClose() && !in.isPressed(inputCode::Return) && !in.isPressed(inputCode::Escape))
     {

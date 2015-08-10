@@ -47,7 +47,7 @@ bool ObjectProcessor::initObject(Object* newObj, int subType, Coord& position, f
     newObj->bounds.h = 30;
     newObj->boundOffsetX = -15;
     newObj->boundOffsetY = -15;
-    newObj->manhattanRadius = 30;
+    newObj->manhattanRadius = 25;
     newObj->target = -1;
     newObj->bounds.setPosition(position.getCellOffsetX() + newObj->boundOffsetX, position.getCellOffsetY() + newObj->boundOffsetY);
     if (newObj->subType==3) //Path test
@@ -70,6 +70,7 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     Coord prevPosition = obj->getPosition();
     Time delta;
     obj->lastUpdate.getDeltaTime(globalTime, delta);
+    //std::cout << " delta: " << delta.getExactSeconds() << "\n";
     //obj->rotation += delta.getExactSeconds() * 200;
     float speed = 100; //Why doesn't 25 work?
     //float vecX = obj->getPosition().getTrueX() + 512;
@@ -121,10 +122,21 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
             {
                 obj->state = 30; //Attack state
                 Coord objPos = obj->getPosition();
-                events->addEvent(EVENT_TYPE::ATTACK, objPos, globalTime, 100, obj);
+                events->addEvent(EVENT_TYPE::ATTACK, objPos, globalTime, 10, obj);
             }
         }
-        if (obj->state > 0) obj->state--; //Delay attack (cooldown)
+        if (obj->state > 0)
+        {
+            float currentDelta = delta.getExactSeconds();
+            if (currentDelta > 0.007)
+            {
+                while (currentDelta > 0.001)
+                {
+                    obj->state-=1; //Delay attack (cooldown)
+                    currentDelta-=0.008;
+                }
+            }
+        }
         
         coordinate vec;
         vec.x = vecX;
@@ -206,7 +218,37 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
     }
     else if (obj->subType == 4) //Combat test
     {
-        //TODO: Events! (How?)
+        Coord objPos = obj->getPosition();
+        
+        //Handle events
+        int sizeA;
+        Event** currentEvents = events->getEventsInRangeCache(objPos, 30, sizeA);
+        for (int i = 0; i < sizeA; i++)
+        {
+            Event* currentEvent = currentEvents[i];
+            if (currentEvent->type==EVENT_TYPE::ATTACK)
+            {
+                Object* attacker = static_cast<Object*>(currentEvent->trigger);
+                if (attacker)
+                {
+                    Coord attackerPos = attacker->getPosition();
+                    CellIndex relIndex = objPos.getCell();
+                    float attackerX = attackerPos.getRelativeCellX(relIndex);
+                    float attackerY = attackerPos.getRelativeCellY(relIndex);
+                    float objX = objPos.getRelativeCellX(relIndex);
+                    float objY = objPos.getRelativeCellY(relIndex);
+                    //Make sure attacker is facing this object
+                    float facingDegrees = pointTowards(attackerX, attackerY, objX, objY) + 90;
+                    const float FACING_TOLERANCE_DEGREES = 50;
+                    if (fabs(facingDegrees - attacker->rotation) < FACING_TOLERANCE_DEGREES)
+                    {
+                        std::cout << "ATTACKED (time " << globalTime->getExactSeconds() << ") to face " << facingDegrees << " facing " << attacker->rotation << "\n";
+                        obj->moveTowards(attackerPos, -600, &delta, *manager);
+                    }
+                }
+            }
+        }
+        
         //Object* targetObj = manager->getWorld()->findObject(obj->target);
         aabb range(0, 0, 2048, 2048);
         int size;
@@ -222,19 +264,50 @@ int ObjectProcessor::updateObject(Object* obj, Time* globalTime, ObjectManager* 
         }
         if (targetObj)
         {
-            if (targetObj)
+            Coord objPos = obj->getPosition();
+            Coord targetPos = targetObj->getPosition();
+            float distance = objPos.getManhattanTo(targetPos);
+            if (distance > 300) //Too far to chase; pathfind instead
             {
-                Coord objPos = obj->getPosition();
-                Coord targetPos = targetObj->getPosition();
-                float distance = objPos.getManhattanTo(targetPos);
-                if (distance > 30000 || distance < 1000) //Too far to chase; pathfind instead
+                obj->rotation++;
+            }
+            else if (distance <= 50)
+            {
+                //Attack
+                if (obj->state <=0)
                 {
-                    //obj->rotation++;
+                    float TURN_SPEED = 0.9;
+                    CellIndex relIndex = objPos.getCell();
+                    Coord attackerPos = targetPos;
+                    //Rotate to face
+                    float attackerX = attackerPos.getRelativeCellX(relIndex);
+                    float attackerY = attackerPos.getRelativeCellY(relIndex);
+                    float objX = objPos.getRelativeCellX(relIndex);
+                    float objY = objPos.getRelativeCellY(relIndex);
+                    float currentRotation = obj->rotation;
+                    float newRotation = pointTowards(objX, objY, attackerX, attackerY) + 90; //Rotate image
+                    float diff = newRotation - currentRotation;
+                    if (diff > 180) diff = diff - 360;
+                    else if (diff < -180) diff = diff + 360;
+                    obj->rotation = (currentRotation + (diff * TURN_SPEED));
+                    
+                    obj->state = 30; //Attack state
+                    Coord objPos = obj->getPosition();
+                    events->addEvent(EVENT_TYPE::ATTACK, objPos, globalTime, 10, obj);
                 }
-                else
+                float currentDelta = delta.getExactSeconds();
+                if (currentDelta > 0.007)
                 {
-                    obj->moveTowards(targetPos, 200, &delta, *manager);
+                    while (currentDelta > 0.001)
+                    {
+                        obj->state-=1; //Delay attack (cooldown)
+                        currentDelta-=0.008;
+                    }
                 }
+            }
+            else
+            {
+                obj->moveTowards(targetPos, 200, &delta, *manager);
             }
         }
     }
@@ -373,7 +446,7 @@ int ObjectProcessor::onCollideObj(Object* collider, Coord& collideDisplacement, 
         collideDisplacement.setPosition(currentCell, 32, 32);
         return 0;
     }*/
-    collider->rotation++;
+    //collider->rotation++;
     return 1;
 }
 

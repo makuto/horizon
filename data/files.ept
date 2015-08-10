@@ -25,5 +25,5 @@ specialScripts:
     
 worldDefaults:
     //tileSet=data/images/castle.png;
-    tileSet=data/images/terrain.png;
+    tileSet=limitedTileMap;
     defaultMap=data/maps/default.map;
