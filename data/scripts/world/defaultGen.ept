@@ -1,0 +1,21 @@
+<defaultWorldGen.1>
+
+//Values to tweak the terrain generation
+terrain:
+    algorithm=2;
+    biomes=false;
+    
+    oceanRange={0, 100};
+    oceanTileRange={0, 3};
+    
+    beachRange={101, 120};
+    beachTileRange={4, 5};
+    
+    grassRange={121, 184};
+    grassTileRange={6, 8};
+
+    mountainRange={185, 244};
+    mountainTileRange={9, 11};
+
+    iceRange={245, 255};
+    iceTileRange={12, 12};

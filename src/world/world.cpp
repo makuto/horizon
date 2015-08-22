@@ -10,7 +10,7 @@
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
 //Tells cell which world generation algorithm to use to make its tiles
-const int WORLD_GEN_ALGORITHM = 3;
+const int WORLD_GEN_ALGORITHM = 2;
 const unsigned int MAX_INTERSECTING_CELLS = 10;
 const int UPDATE_CLOSE_DISTANCE_X = 2048;
 const int UPDATE_CLOSE_DISTANCE_Y = 2048;
