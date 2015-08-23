@@ -8,10 +8,10 @@
 //TODO: Remove system
 #include <stdlib.h>     /* system, NULL, EXIT_FAILURE */
 #include <base2.0/tileMap/tileCamera.hpp>
+#include <base2.0/noise/noise.hpp> //TODO: remove once terrainGeneration module is ready
 #include "world.hpp"
 #include "cell.hpp"
 #include "../object/objectManager.hpp"
-#include "../utilities/simplexnoise.h"
 #include <cmath>
 //Used in saveTileChanges
 #include <list>
@@ -212,6 +212,7 @@ bool Cell::load(const std::string& filename)
 }
 void Cell::generate(int worldID, int seed, int algorithm)
 {
+    Noise2d worldNoise(seed);   //DELETE ME! (later, of course)
     //I doubt there will be very many, so I'll just put it in switch
     switch (algorithm)
     {
@@ -223,11 +224,13 @@ void Cell::generate(int worldID, int seed, int algorithm)
                 {
                     float noiseX = x + (CELL_WIDTH * cellID.x);
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
-                    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
-                    noiseY /= 2;
+                    float FEATURE_SIZE = 2;
+                    noiseX /= FEATURE_SIZE; //TODO: Raise this value for more accurate floats far away?
+                    noiseY /= FEATURE_SIZE;
                     const float SCALE = 0.001;
                     //TODO: Put all these values in a text file
-                    float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    //float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    float value = worldNoise.scaledOctaveNoise2d(noiseX, noiseY, 0, 255, 10, SCALE, 0.55, 2);
                     //Winter bands
                     if (value > 142)
                     {
@@ -277,11 +280,12 @@ void Cell::generate(int worldID, int seed, int algorithm)
                 {
                     float noiseX = x + (CELL_WIDTH * cellID.x);
                     float noiseY = y + (CELL_HEIGHT * cellID.y);
-                    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
-                    noiseY /= 2;
+                    float FEATURE_SIZE = 2;
+                    noiseX /= FEATURE_SIZE; //TODO: Raise this value for more accurate floats far away?
+                    noiseY /= FEATURE_SIZE;
                     const float SCALE = 0.001;
                     //TODO: Put all these values in a text file
-                    float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    float value = worldNoise.scaledOctaveNoise2d(noiseX, noiseY, 0, 255, 10, SCALE, 0.55, 2);
                     //Winter bands
                     if (value > 142)
                     {

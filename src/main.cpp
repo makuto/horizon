@@ -5,6 +5,7 @@
 #include <base2.0/input/input.hpp>
 #include <base2.0/timer/timer.hpp>
 #include <base2.0/profiler/profiler.hpp>
+#include <base2.0/noise/noise.hpp>
 #include "agent/species.hpp"
 #include "agent/needProcessor.hpp"
 #include "agent/agent.hpp"
@@ -19,8 +20,6 @@
 #include "object/objectProcessorDir.hpp"
 #include "object/objectProcessor.hpp"
 #include "object/processors/agentProcessor.hpp"
-
-#include "utilities/simplexnoise.h"
 
 #include "utilities/debugText.hpp"
 
@@ -479,6 +478,7 @@ int main()
     miniMapTimer.start();
     const float MINIMAP_UPDATE_RATE = 1;
 
+    Noise2d worldNoise(worldToLoad);
     /*//Test RLE (DELETEME)
     CellIndex rleCellIndex;
     rleCellIndex.x = 0;
@@ -578,7 +578,8 @@ int main()
                         float x = noiseX;
                         float y = noiseY;
                         float scale = 0.001;
-                        float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, 0);
+                        //float value = scaled_octave_noise_3d(10, 0.55, scale, 0, 255, x, y, worldToLoad);
+                        float value = worldNoise.scaledOctaveNoise2d(x, y, 0, 255, 10, scale, 0.55, 2);
                         //Winter bands
                         if (value > 142)
                         {

@@ -3,18 +3,27 @@
 #include <SFML/Graphics.hpp>
 #include <base2.0/graphics/graphics.hpp>
 #include <base2.0/input/input.hpp>
-//#include <base2.0/tileMap/multilayerMap.hpp>
-#include "../utilities/simplexnoise.h"
+#include <base2.0/noise/noise.hpp>
 
+int SEED = 3245436;
+//Override old noise function
+float scaled_octave_noise_3d(float octaves, float persistence, float scale,
+float loBound, float hiBound, float x,float y, float z)
+{
+    static Noise2d noise(SEED);
+    return noise.scaledOctaveNoise2d(x, y, loBound, hiBound, octaves, scale, persistence, 2);
+}
 int main()
 {
     window win(1024, 600, "Terrain Testing");
     sprite output;
+    Noise2d noise(SEED);
     int width = 1024;
     int height = 600;
     sf::Uint8* pixels = new sf::Uint8[width * height * 4];
     float offsetX = 0;
     float offsetY = 0;
+    
     for (int i = 0; i < height; ++i)
     {
         for (int n = 0; n < width; n++)

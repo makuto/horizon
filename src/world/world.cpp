@@ -3,9 +3,9 @@
 #include <iostream>
 #include <sstream> //For building cell file paths
 #include <base2.0/timer/timer.hpp>
+#include <base2.0/noise/noise.hpp> //For estimateDifficulty
 #include "world.hpp"
 #include "../utilities/debugText.hpp"
-#include "../utilities/simplexnoise.h" //For estimateDifficulty
 
 //Where world should search for itself and its files
 const std::string WORLDS_PATH = "worlds/";
@@ -134,7 +134,7 @@ Cell* World::getCell(CellIndex cell)
         }
         newCell = &newPoolCell->data;
         newCell->init(cell, this, processorDir, renderQueue);
-        newCell->generate(worldID, worldID, WORLD_GEN_ALGORITHM); //Seed is simply worldID
+        newCell->generate(worldID, worldID, WORLD_GEN_ALGORITHM); //Seed is simply worldID for now
         cells[cell] = newPoolCell;
     }
     return newCell;
@@ -218,6 +218,8 @@ float World::estimateCellDifficulty(CellIndex& cellToEstimate)
     float totalTiles = 0;
     float numWaterTiles = 0;
     float numMountainTiles = 0;
+
+    static Noise2d worldNoise(0);   //DELETE ME! (later, of course)
     for (int y = 0; y < CELL_HEIGHT; y += CELL_ESTIMATION_SKIP)
     {
         for (int x = 0; x < CELL_WIDTH; x += CELL_ESTIMATION_SKIP)
@@ -229,7 +231,8 @@ float World::estimateCellDifficulty(CellIndex& cellToEstimate)
             noiseY /= 2;
             const float SCALE = 0.001;
             //TODO: Put all these values in a text file
-            float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, worldID);
+            //float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, worldID);
+            float value = worldNoise.scaledOctaveNoise2d(noiseX, noiseY, 0, 255, 10, SCALE, 0.55, 2);
             //TODO: Make a function that says what water and mountain is
             if (value < 142) numWaterTiles++;
             else if (value > 185) numMountainTiles++;
