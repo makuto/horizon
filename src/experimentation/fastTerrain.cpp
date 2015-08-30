@@ -214,14 +214,14 @@ int main()
                                     const float LEAF_VALUE = 50;
                                     biomeValue = 3 * 32; //Forest
                                     //Generate trees
-                                    float treeValue = scaled_octave_noise_3d(1, 0.55, treeScale, 0, 50, x, y, seed + 9594);
+                                    /*float treeValue = scaled_octave_noise_3d(1, 0.55, treeScale, 0, 50, x, y, seed + 9594);
                                     ///use another layer of noise to get less connected trees
                                     treeValue += scaled_octave_noise_3d(1, 0.55, treeScale, 0, 30, x, y, seed + 4883);
 
                                     biomeValue = (3 * 32) + ((int)value % 32);
                                     
                                     if (treeValue > LEAF_VALUE) biomeValue = 128;
-                                    if (treeValue > TRUNK_VALUE) biomeValue = 35;
+                                    if (treeValue > TRUNK_VALUE) biomeValue = 35;*/
                                 }
                                 if (precipitation > JUNGLE_PRECIPITATION)
                                 {
@@ -234,6 +234,11 @@ int main()
                         }
                     }
 
+                    //GRID
+                    const int GRID_SIZE = 16;
+                    if (i % GRID_SIZE == 0 && n % GRID_SIZE == 0)
+                        value = 255;
+                        
                     sf::Color colVal = lookup.getPixel(value, lookupY);
                     pixels[(i * width * 4) + (n * 4)] = colVal.r;
                     pixels[(i * width * 4) + (n * 4) + 1] = colVal.g;

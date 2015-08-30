@@ -20,6 +20,8 @@
  *
  * Note: You must compile with -std=c++11 if you want your data type's
  * constructors to be called.
+ *
+ * TODO: Need to construct inUse list to be in order (better locality)!
  * */
 
 //Generic data container. Holds the requested data as well as pointers to the next

@@ -1,0 +1,61 @@
+<limitedTileConversionSettings.1>
+
+//Deep ocean
+20:
+    x=0;
+    y=0;
+    
+//Ocean
+30:
+    x=1;
+    y=0;
+    
+//Shallow ocean
+35:
+    x=2;
+    y=0;
+//Shore
+40:
+    x=3;
+    y=0;
+
+//41 -> 45: Wet Beach
+45:
+    x=4;
+    y=0;
+
+//46 -> 55: Dry sand
+55:
+    x=5;
+    y=0;
+
+//56 -> 80: Low grass
+80:
+    x=6;
+    y=0;
+//81 -> 100: Mid grass
+100:
+    x=7;
+    y=0;
+//101 -> 145: High grass
+145:
+    x=8;
+    y=0;
+//146 -> 180: Mountain low
+180:
+    x=9;
+    y=0;
+//181 -> 220: Mountain mid
+220:
+    x=10;
+    y=0;
+//221 -> 230: Mountain high
+230:
+    x=11;
+    y=0;
+//231 -> 255: Ice/snow
+255:
+    x=12;
+    y=0;
+
+    

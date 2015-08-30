@@ -1,11 +1,104 @@
-#ifndef NOISEGENERATION_CPP
-#define NOISEGENERATION_CPP
-#include "noiseGeneration.hpp"
+#ifndef TERRAINGENERATION_CPP
+#define TERRAINGENERATION_CPP
+#include "terrainGeneration.hpp"
+#include <iostream>
 
-void getValueAt(
-void generateCellTerrain(int worldID, int seed, int algorithm, std::vector<std::vector<tile> >* cellTiles)
+//Creates TileConversionSettings from a .ept spec
+//Returns false if something failed
+bool createTileConversionSettingsFromSpec(eptFile* spec, TerrainGenSettings& terrainGenSettings, int valueRange)
 {
-    //I doubt there will be very many, so I'll just put it in switch
+    TileConversionSettings newConvSettings;
+    newConvSettings.lookupTable.resize(valueRange);
+
+    if (!spec)
+        return false;
+        
+    //Load the TileConversionSettings spec
+    std::string tileConversionSettingsSpecName = spec->getAttribute("_files.tileConversionSettings");
+    //This is bad
+    eptParser parser;
+    if (!parser.load(tileConversionSettingsSpecName.c_str()))
+        std::cout << "ERROR: createTileConversionSettingsFromSpec(): Couldn't load tileConversionSettings spec '"
+        <<  tileConversionSettingsSpecName << "'!\n";
+        return false;
+
+    eptFile* tileConversionSettingsSpec = parser.getFile(tileConversionSettingsSpecName);
+
+    if (!tileConversionSettingsSpec)
+        return false;
+
+    //For each group in the spec, add a new ValueRangeTile
+    //Group name is the startValue (forcing proper ordering)
+    std::string groupName;
+    eptGroup* currentGroup = tileConversionSettingsSpec->getGroupFromIndex(0, groupName);
+    for (int i = 1; currentGroup != NULL; i++)
+    {
+        //Prepare the ValueRangeTile
+        ValueRangeTile currentValueRangeTile;
+        currentValueRangeTile.tileToUse.x = attrToInt(currentGroup->getAttribute("x"));
+        currentValueRangeTile.tileToUse.y = attrToInt(currentGroup->getAttribute("y"));
+        currentValueRangeTile.endValue = attrToInt(groupName);
+
+        newConvSettings.valueRangeTiles.push_back(currentValueRangeTile);
+        
+        currentGroup = tileConversionSettingsSpec->getGroupFromIndex(i, groupName);
+    }
+
+    //Take the value range tiles and put them in the lookup table
+    int currentValue = 0;
+    for (std::vector<ValueRangeTile>::iterator it = newConvSettings.valueRangeTiles.begin();
+        it != newConvSettings.valueRangeTiles.end(); ++it)
+    {
+        tile currentTile = (*it).tileToUse;
+        int endValue = (*it).endValue;
+        for (; currentValue <= endValue; currentValue++)
+        {
+            newConvSettings.lookupTable.push_back(currentTile);
+        }
+    }
+
+    if (valueRange != currentValue)
+        std::cout << "WARNING: createTileConversionSettingsFromSpec(): Expected " << valueRange << " tile values; got " << currentValue << "\n";
+
+    return true;
+    
+    //TODO: Throw this all away due to biomes...? (need to rethink terrain gen a bit)
+}
+//Creates a TerrainGenSettings from a .ept spec
+TerrainGenSettings createTerrainGenSettingsFromSpec(eptFile* spec, float seed)
+{
+    TerrainGenSettings newTerrainGenSettings;
+    int valueRange = attrToInt(spec->getAttribute("terrainGenSettings.valueRange"));
+    newTerrainGenSettings.valueRange = valueRange;
+    
+    createTileConversionSettingsFromSpec(spec, newTerrainGenSettings, valueRange);
+
+    newTerrainGenSettings.algorithm = attrToInt(spec->getAttribute("terrainGenSettings.algorithm"));
+    newTerrainGenSettings.positionScale = attrToInt(spec->getAttribute("terrainGenSettings.positionScale"));
+    newTerrainGenSettings.octaves = attrToInt(spec->getAttribute("terrainGenSettings.octaves"));
+    
+    
+    newTerrainGenSettings.seed = seed;
+
+    return newTerrainGenSettings;
+}
+float getElevationAt(CellIndex cell, int x, int y, TerrainGenSettings* terrainGenSettings)
+{
+    float noiseX = x + (CELL_WIDTH * cell.x);
+    float noiseY = y + (CELL_HEIGHT * cell.y);
+    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
+    noiseY /= 2;
+    const float SCALE = 0.001;
+    
+    //TODO: Put all these values in a text file
+    //float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+    float value = 0;
+    
+    return value;
+}
+void generateCellTerrain(int worldID, int seed, int algorithm, CellIndex cell, std::vector<std::vector<tile> >* cellTiles)
+{
+ /*   //I doubt there will be very many, so I'll just put it in switch
     switch (algorithm)
     {
         //Simplex noise world; expects 0-255 colors (terrain.png); no biomes
@@ -14,13 +107,7 @@ void generateCellTerrain(int worldID, int seed, int algorithm, std::vector<std::
             {
                 for (int x = 0; x < CELL_WIDTH; ++x)
                 {
-                    float noiseX = x + (CELL_WIDTH * cellID.x);
-                    float noiseY = y + (CELL_HEIGHT * cellID.y);
-                    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
-                    noiseY /= 2;
-                    const float SCALE = 0.001;
-                    //TODO: Put all these values in a text file
-                    float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    float value = getElevationAt(cell, x, y);
                     //Winter bands
                     if (value > 142)
                     {
@@ -68,13 +155,7 @@ void generateCellTerrain(int worldID, int seed, int algorithm, std::vector<std::
             {
                 for (int x = 0; x < CELL_WIDTH; ++x)
                 {
-                    float noiseX = x + (CELL_WIDTH * cellID.x);
-                    float noiseY = y + (CELL_HEIGHT * cellID.y);
-                    noiseX /= 2; //TODO: Raise this value for more accurate floats far away?
-                    noiseY /= 2;
-                    const float SCALE = 0.001;
-                    //TODO: Put all these values in a text file
-                    float value = scaled_octave_noise_3d(10, 0.55, SCALE, 0, 255, noiseX, noiseY, seed);
+                    float value = getElevationAt(cell, x, y);
                     //Winter bands
                     if (value > 142)
                     {
@@ -125,11 +206,6 @@ void generateCellTerrain(int worldID, int seed, int algorithm, std::vector<std::
             break;
     }
     calculateDifficulty();
-    generated = true;
-}
-//Wrapper function to simplex noise lib
-float scaledOctaveNoise3d(float octaves, float persistence, float scale, float x, float y, float z)
-{
-    return scaled_octave_noise_3d(octaves, persistence, scale, x, y, z);
+    generated = true;*/
 }
 #endif
